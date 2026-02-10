@@ -32,8 +32,8 @@ export class ExpensesService {
 
         // Resolver relaciones de forma segura (conductor es obligatorio)
         if (createExpenseDto.driverId) {
-            const driver = await this.usersRepository.findOne({ 
-                where: { id: createExpenseDto.driverId } 
+            const driver = await this.usersRepository.findOne({
+                where: { id: createExpenseDto.driverId }
             });
             if (!driver) {
                 throw new Error(`Driver con id ${createExpenseDto.driverId} no encontrado`);
@@ -43,8 +43,8 @@ export class ExpensesService {
 
         // Vehículo es opcional
         if (createExpenseDto.vehicleId) {
-            const vehicle = await this.vehiclesRepository.findOne({ 
-                where: { id: createExpenseDto.vehicleId } 
+            const vehicle = await this.vehiclesRepository.findOne({
+                where: { id: createExpenseDto.vehicleId }
             });
             if (vehicle) {
                 expense.vehicle = vehicle;
@@ -53,8 +53,8 @@ export class ExpensesService {
 
         // Viaje es opcional
         if (createExpenseDto.tripId) {
-            const trip = await this.tripsRepository.findOne({ 
-                where: { id: createExpenseDto.tripId } 
+            const trip = await this.tripsRepository.findOne({
+                where: { id: createExpenseDto.tripId }
             });
             if (trip) {
                 expense.trip = trip;
