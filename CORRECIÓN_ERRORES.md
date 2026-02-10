@@ -1,6 +1,7 @@
 # Corrección de Errores - Control de Flotas
 
 ## Resumen Ejecutivo
+
 Se realizó una auditoría exhaustiva del código del proyecto "Sistema de Control de Gastos y Consignaciones para Flotas de Carga" y se corrigieron **25+ errores críticos** relacionados con:
 
 - **Relaciones de Base de Datos** (TypeORM)
@@ -14,9 +15,11 @@ Se realizó una auditoría exhaustiva del código del proyecto "Sistema de Contr
 ## 🔴 Errores Críticos Corregidos
 
 ### 1. **Relación Incorrecta en Consignments**
+
 **Archivo:** `src/consignments/consignment.entity.ts`
 
 **Problema:**
+
 ```typescript
 // ❌ INCORRECTO
 @OneToMany(() => Expense, (expense) => expense.trip, { cascade: true })
@@ -24,6 +27,7 @@ expenses: Expense[];
 ```
 
 **Corrección:**
+
 ```typescript
 // ✅ CORRECTO
 @OneToMany(() => Expense, (expense) => expense.consignment, { cascade: true })
@@ -35,7 +39,9 @@ expenses: Expense[];
 ---
 
 ### 2. **Relación Faltante en Expense**
-**Archivos:** 
+
+**Archivos:**
+
 - `src/expenses/expense.entity.ts`
 - `src/consignments/consignment.entity.ts`
 
@@ -43,6 +49,7 @@ expenses: Expense[];
 La entidad `Expense` no tenía relación ManyToOne hacia `Consignment`.
 
 **Corrección:**
+
 ```typescript
 @ManyToOne(() => Consignment, (consignment) => consignment.expenses, {
     nullable: true,
@@ -57,6 +64,7 @@ consignment: Consignment;
 ### 3. **Módulos Incompletos (Falta de Inyecciones)**
 
 **Archivos Corregidos:**
+
 - `src/expenses/expenses.module.ts`
 - `src/consignments/consignments.module.ts`
 - `src/trips/trips.module.ts`
@@ -68,6 +76,7 @@ consignment: Consignment;
 Los servicios utilizaban repositorios de múltiples entidades, pero los módulos solo importaban la entidad principal.
 
 **Ejemplo de Corrección (Expenses Module):**
+
 ```typescript
 // ❌ INCORRECTO
 @Module({
@@ -89,28 +98,30 @@ Los servicios utilizaban repositorios de múltiples entidades, pero los módulos
 ### 4. **DTOs sin Validaciones Apropiadas**
 
 **Archivos Corregidos:**
+
 - `src/trips/dto/update-trip.dto.ts`
 - `src/maintenance/dto/create-maintenance.dto.ts`
 - `src/maintenance/dto/update-maintenance.dto.ts`
 - `src/users/dto/update-user.dto.ts`
 
 **Ejemplo (Update Trip DTO):**
+
 ```typescript
 // ❌ INCORRECTO
 export class UpdateTripDto extends PartialType(CreateTripDto) {
-    status?: string;
-    endDate?: Date;
+  status?: string;
+  endDate?: Date;
 }
 
 // ✅ CORRECTO
 export class UpdateTripDto extends PartialType(CreateTripDto) {
-    @IsOptional()
-    @IsEnum(['IN_PROGRESS', 'COMPLETED', 'CANCELLED'])
-    status?: string;
+  @IsOptional()
+  @IsEnum(["IN_PROGRESS", "COMPLETED", "CANCELLED"])
+  status?: string;
 
-    @IsOptional()
-    @IsDateString()
-    endDate?: Date;
+  @IsOptional()
+  @IsDateString()
+  endDate?: Date;
 }
 ```
 
@@ -121,6 +132,7 @@ export class UpdateTripDto extends PartialType(CreateTripDto) {
 ### 5. **Tipos de Enums Incorrectos en Servicios**
 
 **Archivos Corregidos:**
+
 - `src/expenses/expenses.service.ts`
 - `src/consignments/consignments.service.ts`
 - `src/users/users.service.ts`
@@ -129,13 +141,18 @@ export class UpdateTripDto extends PartialType(CreateTripDto) {
 Los servicios usaban strings en lugar de tipos de enums para comparaciones.
 
 **Ejemplo (Expenses Service):**
+
 ```typescript
 // ❌ INCORRECTO
-where: { status: 'PENDING' as any }
+where: {
+  status: "PENDING" as any;
+}
 
 // ✅ CORRECTO
-import { ExpenseStatus } from './expense.entity';
-where: { status: ExpenseStatus.PENDING }
+import { ExpenseStatus } from "./expense.entity";
+where: {
+  status: ExpenseStatus.PENDING;
+}
 ```
 
 **Impacto:** Violaciones de tipado fuerte; falta de seguridad en tipos.
@@ -145,6 +162,7 @@ where: { status: ExpenseStatus.PENDING }
 ### 6. **Campos Nullable Mal Declarados en Entidades**
 
 **Archivos Corregidos:**
+
 - `src/evidence/evidence.entity.ts`
 - `src/maintenance/maintenance-record.entity.ts`
 
@@ -152,6 +170,7 @@ where: { status: ExpenseStatus.PENDING }
 Propiedades con `nullable: true` pero sin declarar `| null` en TypeScript.
 
 **Ejemplo (Evidence Entity):**
+
 ```typescript
 // ❌ INCORRECTO
 @Column({ nullable: true })
@@ -169,6 +188,7 @@ description: string | null;
 ### 7. **Servicios con Métodos Faltantes**
 
 **Users Service:**
+
 ```typescript
 // ❌ FALTABAN (agregados):
 - findByEmail(email: string)
@@ -182,12 +202,14 @@ description: string | null;
 ```
 
 **Expense Service:**
+
 ```typescript
 // ✅ MEJORADO - Relaciones completas
-relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment']
+relations: ["driver", "vehicle", "trip", "evidence", "consignment"];
 ```
 
 **Consignment Service:**
+
 ```typescript
 // ✅ MEJORADO - Lógica de cierre con cálculo de saldos
 async closeConsignment(id: number) {
@@ -206,6 +228,7 @@ async closeConsignment(id: number) {
 ### 8. **Controladores Mejorados**
 
 **Users Controller:**
+
 ```typescript
 // ✅ AGREGADO (métodos nuevos)
 @Get('drivers')
@@ -226,11 +249,12 @@ async closeConsignment(id: number) {
 **Problema:** El servicio de Evidence no resolvía la relación de Expense.
 
 **Corrección:**
+
 ```typescript
 async create(createEvidenceDto: CreateEvidenceDto) {
     const evidence = new Evidence();
     // ... asignaciones ...
-    
+
     if (createEvidenceDto.expenseId) {
         const expense = await this.expenseRepository.findOne({
             where: { id: createEvidenceDto.expenseId },
@@ -240,7 +264,7 @@ async create(createEvidenceDto: CreateEvidenceDto) {
         }
         evidence.expense = expense;
     }
-    
+
     return await this.evidenceRepository.save(evidence);
 }
 ```
@@ -254,6 +278,7 @@ async create(createEvidenceDto: CreateEvidenceDto) {
 **Problema:** El servicio no resolvía las relaciones de Vehicle ni User.
 
 **Corrección:**
+
 ```typescript
 // Agregados decoradores @InjectRepository para:
 - Vehicle (para resolver vehicleId)
@@ -269,14 +294,15 @@ async create(createEvidenceDto: CreateEvidenceDto) {
 ### 11. **Trips Service - Cálculo de Saldos**
 
 **Agregado:**
+
 ```typescript
 async completeTrip(id: number) {
     const trip = await this.findById(id);
-    
+
     // Calcula:
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalConsigned = consignments.reduce((sum, cons) => sum + cons.amount, 0);
-    
+
     return update with:
     - status: 'COMPLETED'
     - totalExpenses
@@ -291,21 +317,22 @@ async completeTrip(id: number) {
 
 ## 📊 Estadísticas de Correcciones
 
-| Categoría | Cantidad | Estado |
-|-----------|----------|--------|
-| Relaciones TypeORM | 3 | ✅ Corregidas |
-| Módulos incompletos | 6 | ✅ Completados |
-| DTOs sin validaciones | 4 | ✅ Validadas |
-| Enums incorrectos | 5 | ✅ Tipados |
-| Campos nullable | 12 | ✅ Corregidos |
-| Métodos faltantes | 15+ | ✅ Añadidos |
-| **TOTAL** | **45+** | ✅ **CORREGIDOS** |
+| Categoría             | Cantidad | Estado            |
+| --------------------- | -------- | ----------------- |
+| Relaciones TypeORM    | 3        | ✅ Corregidas     |
+| Módulos incompletos   | 6        | ✅ Completados    |
+| DTOs sin validaciones | 4        | ✅ Validadas      |
+| Enums incorrectos     | 5        | ✅ Tipados        |
+| Campos nullable       | 12       | ✅ Corregidos     |
+| Métodos faltantes     | 15+      | ✅ Añadidos       |
+| **TOTAL**             | **45+**  | ✅ **CORREGIDOS** |
 
 ---
 
 ## ✅ Resultados Finales
 
 ### Compilación
+
 ```bash
 ✅ npm run build - SUCCESS (sin errors)
 ```
