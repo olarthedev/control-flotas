@@ -5,9 +5,9 @@ import { EvidenceController } from './evidence.controller';
 import { Evidence } from './evidence.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Evidence])],
-  controllers: [EvidenceController],
-  providers: [EvidenceService],
-  exports: [EvidenceService],
+    imports: [TypeOrmModule.forFeature([Evidence])],
+    controllers: [EvidenceController],
+    providers: [EvidenceService],
+    exports: [EvidenceService],
 })
-export class EvidenceModule {}
+export class EvidenceModule { }

@@ -5,9 +5,9 @@ import { TripsController } from './trips.controller';
 import { Trip } from './trip.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Trip])],
-  controllers: [TripsController],
-  providers: [TripsService],
-  exports: [TripsService],
+    imports: [TypeOrmModule.forFeature([Trip])],
+    controllers: [TripsController],
+    providers: [TripsService],
+    exports: [TripsService],
 })
-export class TripsModule {}
+export class TripsModule { }

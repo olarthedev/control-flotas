@@ -5,9 +5,9 @@ import { MaintenanceController } from './maintenance.controller';
 import { MaintenanceRecord } from './maintenance-record.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MaintenanceRecord])],
-  controllers: [MaintenanceController],
-  providers: [MaintenanceService],
-  exports: [MaintenanceService],
+    imports: [TypeOrmModule.forFeature([MaintenanceRecord])],
+    controllers: [MaintenanceController],
+    providers: [MaintenanceService],
+    exports: [MaintenanceService],
 })
-export class MaintenanceModule {}
+export class MaintenanceModule { }

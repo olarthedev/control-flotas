@@ -10,7 +10,7 @@ export class VehiclesService {
   constructor(
     @InjectRepository(Vehicle)
     private vehiclesRepository: Repository<Vehicle>,
-  ) {}
+  ) { }
 
   async create(createVehicleDto: CreateVehicleDto) {
     const vehicle = this.vehiclesRepository.create(createVehicleDto);
