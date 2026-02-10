@@ -42,14 +42,14 @@ export class MaintenanceRecord {
     cost: number; // Costo del mantenimiento
 
     @Column({ nullable: true })
-    invoiceNumber: string; // Número de factura
+    invoiceNumber: string | null; // Número de factura
 
     @Column({ nullable: true })
-    provider: string; // Taller o proveedor
+    provider: string | null; // Taller o proveedor
 
     // ================== SEGUIMIENTO TÉCNICO ==================
     @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-    mileageAtMaintenance: number; // Kilometraje al momento
+    mileageAtMaintenance: number | null; // Kilometraje al momento
 
     @Column({
         type: 'decimal',
@@ -57,13 +57,13 @@ export class MaintenanceRecord {
         scale: 2,
         nullable: true,
     })
-    nextMaintenanceMileage: number; // Próximo mantenimiento sugerido a esta distancia
+    nextMaintenanceMileage: number | null; // Próximo mantenimiento sugerido a esta distancia
 
     @Column({ type: 'timestamp', nullable: true })
-    nextMaintenanceDate: Date; // Próximo mantenimiento sugerido en esta fecha
+    nextMaintenanceDate: Date | null; // Próximo mantenimiento sugerido en esta fecha
 
     @Column({ type: 'text', nullable: true })
-    technicalNotes: string; // Notas técnicas
+    technicalNotes: string | null; // Notas técnicas
 
     // ================== ESTADO ==================
     @Column({
