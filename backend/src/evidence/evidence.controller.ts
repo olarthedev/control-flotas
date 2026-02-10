@@ -6,12 +6,15 @@ import {
     Patch,
     Param,
     Delete,
+    UseInterceptors,
 } from '@nestjs/common';
+import { ClassSerializerInterceptor } from '@nestjs/common';
 import { EvidenceService } from './evidence.service';
 import { CreateEvidenceDto } from './dto/create-evidence.dto';
 import { UpdateEvidenceDto } from './dto/update-evidence.dto';
 
 @Controller('evidence')
+@UseInterceptors(ClassSerializerInterceptor)
 export class EvidenceController {
     constructor(private readonly evidenceService: EvidenceService) { }
 

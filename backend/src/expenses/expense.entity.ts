@@ -11,6 +11,7 @@ import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { Trip } from '../trips/trip.entity';
 import { Evidence } from '../evidence/evidence.entity';
+import { Consignment } from '../consignments/consignment.entity';
 
 export enum ExpenseType {
     FUEL = 'FUEL',
@@ -93,6 +94,11 @@ export class Expense {
 
     @ManyToOne(() => Trip, (trip) => trip.expenses, { nullable: true })
     trip: Trip; // Viaje en el que ocurrió el gasto
+
+    @ManyToOne(() => Consignment, (consignment) => consignment.expenses, {
+        nullable: true,
+    })
+    consignment: Consignment; // Consignación a la que pertenece el gasto
 
     @OneToMany(() => Evidence, (evidence) => evidence.expense, {
         cascade: true,

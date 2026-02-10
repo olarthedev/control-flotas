@@ -31,13 +31,13 @@ export class Evidence {
 
     // ================== METADATOS ==================
     @Column({ nullable: true })
-    description: string; // Descripción de la foto (ej: "Recibo de SOAT")
+    description: string | null; // Descripción de la foto (ej: "Recibo de SOAT")
 
     @Column({ default: false })
     isPrimary: boolean; // Indica si es la foto principal del gasto
 
     @Column({ type: 'text', nullable: true })
-    notes: string; // Notas adicionales sobre la evidencia
+    notes: string | null; // Notas adicionales sobre la evidencia
 
     // ================== VALIDACIÓN ==================
     @Column({ default: true })

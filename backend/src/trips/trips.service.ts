@@ -6,6 +6,8 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
+import { Expense } from '../expenses/expense.entity';
+import { Consignment } from '../consignments/consignment.entity';
 
 @Injectable()
 export class TripsService {
@@ -16,6 +18,10 @@ export class TripsService {
         private usersRepository: Repository<User>,
         @InjectRepository(Vehicle)
         private vehiclesRepository: Repository<Vehicle>,
+        @InjectRepository(Expense)
+        private expenseRepository: Repository<Expense>,
+        @InjectRepository(Consignment)
+        private consignmentRepository: Repository<Consignment>,
     ) { }
 
     async create(createTripDto: CreateTripDto) {
@@ -26,6 +32,7 @@ export class TripsService {
         trip.destination = createTripDto.destination ?? null;
         trip.description = createTripDto.description ?? null;
         trip.plannedBudget = createTripDto.plannedBudget ?? 0;
+        trip.status = 'IN_PROGRESS';
 
         // resolve relations
         if (createTripDto.driverId) {
@@ -86,9 +93,29 @@ export class TripsService {
     }
 
     async completeTrip(id: number) {
+        const trip = await this.findById(id);
+        if (!trip) {
+            throw new Error('Viaje no encontrado');
+        }
+
+        // Calcular total de gastos
+        const expenses = await this.expenseRepository.find({
+            where: { trip: { id } },
+        });
+
+        const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+        const consignments = await this.consignmentRepository.find({
+            where: { trip: { id } },
+        });
+
+        const totalConsigned = consignments.reduce((sum, cons) => sum + Number(cons.amount), 0);
+
         return await this.update(id, {
             status: 'COMPLETED',
             endDate: new Date(),
-        });
+            totalExpenses: totalExpenses,
+            totalConsigned: totalConsigned,
+            difference: totalConsigned - totalExpenses,
+        } as any);
     }
 }

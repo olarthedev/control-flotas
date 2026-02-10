@@ -79,7 +79,7 @@ export class Consignment {
     @ManyToOne(() => Trip, (trip) => trip.consignments, { nullable: true })
     trip: Trip; // Viaje asociado (opcional)
 
-    @OneToMany(() => Expense, (expense) => expense.trip, { cascade: true })
+    @OneToMany(() => Expense, (expense) => expense.consignment, { cascade: true })
     expenses: Expense[]; // Gastos relacionados a esta consignación
 
     // ================== AUDITORÍA ==================

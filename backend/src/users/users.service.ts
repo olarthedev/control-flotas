@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -12,7 +13,7 @@ export class UsersService {
     ) { }
 
     async create(createUserDto: CreateUserDto) {
-        const user = this.usersRepository.create(createUserDto as any);
+        const user = this.usersRepository.create(createUserDto);
         return await this.usersRepository.save(user);
     }
 
@@ -22,5 +23,44 @@ export class UsersService {
 
     async findById(id: number) {
         return await this.usersRepository.findOne({ where: { id } });
+    }
+
+    async findByEmail(email: string) {
+        return await this.usersRepository.findOne({ where: { email } });
+    }
+
+    async findDrivers() {
+        return await this.usersRepository.find({
+            where: { role: UserRole.DRIVER },
+        });
+    }
+
+    async findAdmins() {
+        return await this.usersRepository.find({
+            where: { role: UserRole.ADMIN },
+        });
+    }
+
+    async findActive() {
+        return await this.usersRepository.find({
+            where: { isActive: true },
+        });
+    }
+
+    async update(id: number, updateUserDto: UpdateUserDto) {
+        await this.usersRepository.update(id, updateUserDto);
+        return this.findById(id);
+    }
+
+    async remove(id: number) {
+        return await this.usersRepository.delete(id);
+    }
+
+    async deactivate(id: number) {
+        return await this.update(id, { isActive: false } as any);
+    }
+
+    async activate(id: number) {
+        return await this.update(id, { isActive: true } as any);
     }
 }
