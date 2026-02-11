@@ -41,10 +41,10 @@ export class MaintenanceRecord {
     @Column({ type: 'decimal', precision: 10, scale: 2 })
     cost: number; // Costo del mantenimiento
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     invoiceNumber: string | null; // Número de factura
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     provider: string | null; // Taller o proveedor
 
     // ================== SEGUIMIENTO TÉCNICO ==================
@@ -76,7 +76,7 @@ export class MaintenanceRecord {
     @Column({ default: false })
     requiresFollowUp: boolean; // Requiere seguimiento
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     followUpNotes: string; // Notas de seguimiento
 
     // ================== RELACIONES ==================

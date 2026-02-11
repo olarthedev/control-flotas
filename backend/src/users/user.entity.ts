@@ -41,10 +41,10 @@ export class User {
     @Column({ default: true })
     isActive: boolean;
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     phone?: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     licenseNumber?: string; // Número de licencia (para conductores)
 
     // ================== RELACIONES ==================

@@ -48,10 +48,10 @@ export class Expense {
     @Column({ type: 'timestamp' })
     expenseDate: Date; // Fecha/hora del gasto (automática de inicio)
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     description: string | null; // Descripción o concepto
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     notes: string | null; // Observaciones adicionales
 
     // ================== VALIDACIÓN Y ESTADO ==================
@@ -74,13 +74,13 @@ export class Expense {
     @Column({ default: false })
     needsObservation: boolean; // Flag si el gasto es muy alto
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     rejectionReason: string | null; // Razón del rechazo
 
     @Column({ type: 'timestamp', nullable: true })
     validatedAt: Date | null; // Fecha de validación
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     validatedBy: string | null; // Usuario que validó
 
     // ================== RELACIONES ==================
