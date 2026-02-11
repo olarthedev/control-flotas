@@ -30,7 +30,7 @@ export class Evidence {
     fileSize: number; // Tamaño en bytes
 
     // ================== METADATOS ==================
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     description: string | null; // Descripción de la foto (ej: "Recibo de SOAT")
 
     @Column({ default: false })
@@ -43,7 +43,7 @@ export class Evidence {
     @Column({ default: true })
     isValid: boolean; // Si la evidencia es clara/válida
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     validationNotes: string; // Notas sobre la validez de la foto
 
     // ================== RELACIONES ==================

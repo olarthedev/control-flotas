@@ -29,7 +29,7 @@ export class Vehicle {
     @Column()
     year: number; // Año del vehículo
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     vin: string; // Número de serie
 
     @Column()

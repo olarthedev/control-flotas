@@ -33,7 +33,7 @@ export class Consignment {
     @Column({ type: 'timestamp' })
     consignmentDate: Date; // Fecha de entrega del dinero
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     consignmentNotes: string | null; // Notas sobre la consignación
 
     // ================== SEGUIMIENTO FINANCIERO ==================
@@ -63,7 +63,7 @@ export class Consignment {
     @Column({ type: 'timestamp', nullable: true })
     closingDate: Date | null; // Fecha de cierre de la consignación
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     closingNotes: string | null; // Notas al cerrar
 
     @Column({ default: false })

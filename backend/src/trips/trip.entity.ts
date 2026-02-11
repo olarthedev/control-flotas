@@ -26,10 +26,10 @@ export class Trip {
     @Column({ type: 'timestamp', nullable: true })
     endDate: Date | null; // Fecha/hora de finalización
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     origin: string | null; // Punto de partida
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     destination: string | null; // Destino
 
     @Column({ type: 'text', nullable: true })
