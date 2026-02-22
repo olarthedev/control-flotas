@@ -19,46 +19,55 @@ import { UpdateExpenseDto } from './dto/update-expense.dto';
 export class ExpensesController {
     constructor(private readonly expensesService: ExpensesService) { }
 
+    /** POST /expenses */
     @Post()
     create(@Body() createExpenseDto: CreateExpenseDto) {
         return this.expensesService.create(createExpenseDto);
     }
 
+    /** GET /expenses */
     @Get()
     findAll() {
         return this.expensesService.findAll();
     }
 
+    /** GET /expenses/pending */
     @Get('pending')
     findPending() {
         return this.expensesService.findPendingExpenses();
     }
 
+    /** GET /expenses/without-evidence */
     @Get('without-evidence')
     findWithoutEvidence() {
         return this.expensesService.findExpensesWithoutEvidence();
     }
 
+    /** GET /expenses/driver/:driverId */
     @Get('driver/:driverId')
     findByDriver(@Param('driverId') driverId: string) {
         return this.expensesService.findByDriver(+driverId);
     }
 
+    /** GET /expenses/trip/:tripId */
     @Get('trip/:tripId')
     findByTrip(@Param('tripId') tripId: string) {
         return this.expensesService.findByTrip(+tripId);
     }
 
+    /** GET /expenses/vehicle/:vehicleId */
     @Get('vehicle/:vehicleId')
     findByVehicle(@Param('vehicleId') vehicleId: string) {
         return this.expensesService.findByVehicle(+vehicleId);
     }
 
+    /** GET /expenses/:id */
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.expensesService.findById(+id);
     }
 
+    /** PATCH /expenses/:id */
     @Patch(':id')
     update(
         @Param('id') id: string,
@@ -67,6 +76,7 @@ export class ExpensesController {
         return this.expensesService.update(+id, updateExpenseDto);
     }
 
+    /** DELETE /expenses/:id */
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.expensesService.remove(+id);

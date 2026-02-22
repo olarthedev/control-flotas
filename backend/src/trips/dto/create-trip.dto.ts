@@ -10,7 +10,7 @@ export class CreateTripDto {
 
     @IsDateString({}, { message: 'startDate debe ser una fecha válida' })
     @IsNotEmpty({ message: 'startDate es requerido' })
-    startDate: Date;
+    startDate: string; // use string so IsDateString validates before transformation
 
     @IsOptional()
     @IsString({ message: 'origin debe ser texto' })

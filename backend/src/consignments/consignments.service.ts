@@ -24,7 +24,10 @@ export class ConsignmentsService {
         private expenseRepository: Repository<Expense>,
     ) { }
 
-    async create(createConsignmentDto: CreateConsignmentDto) {
+    /**
+     * Create a new consignment and initialize its balances.
+     */
+    async create(createConsignmentDto: CreateConsignmentDto): Promise<Consignment> {
         const consignment = new Consignment();
         consignment.consignmentNumber = createConsignmentDto.consignmentNumber;
         consignment.amount = createConsignmentDto.amount;
@@ -54,20 +57,23 @@ export class ConsignmentsService {
         return await this.consignmentsRepository.save(consignment);
     }
 
-    async findAll() {
+    /** Get every consignment with relations. */
+    async findAll(): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
             relations: ['driver', 'vehicle', 'trip', 'expenses'],
         });
     }
 
-    async findById(id: number) {
+    /** Find one consignment by id. */
+    async findById(id: number): Promise<Consignment | null> {
         return await this.consignmentsRepository.findOne({
             where: { id },
             relations: ['driver', 'vehicle', 'trip', 'expenses'],
         });
     }
 
-    async findByDriver(driverId: number) {
+    /** Consignments belonging to a specific driver. */
+    async findByDriver(driverId: number): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
             where: { driver: { id: driverId } },
             relations: ['driver', 'vehicle', 'trip', 'expenses'],
@@ -75,26 +81,41 @@ export class ConsignmentsService {
         });
     }
 
-    async findActive() {
+    /** Only consignments in ACTIVE status */
+    async findActive(): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
             where: { status: ConsignmentStatus.ACTIVE },
             relations: ['driver', 'vehicle', 'trip', 'expenses'],
         });
     }
 
-    async update(id: number, updateConsignmentDto: UpdateConsignmentDto) {
+    /** Update a consignment; throws if not found. */
+    async update(id: number, updateConsignmentDto: UpdateConsignmentDto): Promise<Consignment> {
+        const existing = await this.findById(id);
+        if (!existing) {
+            throw new (require('@nestjs/common').NotFoundException)('Consignment not found');
+        }
         await this.consignmentsRepository.update(id, updateConsignmentDto as any);
-        return this.findById(id);
+        return this.findById(id) as Promise<Consignment>;
     }
 
+    /** Delete a consignment. */
     async remove(id: number) {
-        return await this.consignmentsRepository.delete(id);
+        const result = await this.consignmentsRepository.delete(id);
+        if (result.affected === 0) {
+            throw new (require('@nestjs/common').NotFoundException)('Consignment not found');
+        }
+        return result;
     }
 
-    async closeConsignment(id: number) {
+    /**
+     * Close a consignment by calculating approved expenses and adjusting
+     * balance, surplus, deficit and fullyClosed flag.
+     */
+    async closeConsignment(id: number): Promise<Consignment> {
         const consignment = await this.findById(id);
         if (!consignment) {
-            throw new Error('Consignación no encontrada');
+            throw new (require('@nestjs/common').NotFoundException)('Consignment not found');
         }
 
         // Calcular totales de gastos aprobados

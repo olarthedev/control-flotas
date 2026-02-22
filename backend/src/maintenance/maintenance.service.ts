@@ -18,7 +18,11 @@ export class MaintenanceService {
         private userRepository: Repository<User>,
     ) { }
 
-    async create(createMaintenanceDto: CreateMaintenanceDto) {
+    /**
+     * Create a maintenance record; the vehicle relationship is required.
+     * Throws NotFoundException if the vehicle id is invalid.
+     */
+    async create(createMaintenanceDto: CreateMaintenanceDto): Promise<MaintenanceRecord> {
         const maintenance = new MaintenanceRecord();
         maintenance.type = createMaintenanceDto.type;
         maintenance.title = createMaintenanceDto.title;
@@ -38,7 +42,9 @@ export class MaintenanceService {
                 where: { id: createMaintenanceDto.vehicleId },
             });
             if (!vehicle) {
-                throw new Error(`Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`);
+                throw new (require('@nestjs/common').NotFoundException)(
+                    `Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`,
+                );
             }
             maintenance.vehicle = vehicle;
         }
@@ -46,20 +52,23 @@ export class MaintenanceService {
         return await this.maintenanceRepository.save(maintenance);
     }
 
-    async findAll() {
+    /** Get every maintenance record with relations. */
+    async findAll(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    async findById(id: number) {
+    /** Find record by id. */
+    async findById(id: number): Promise<MaintenanceRecord | null> {
         return await this.maintenanceRepository.findOne({
             where: { id },
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    async findByVehicle(vehicleId: number) {
+    /** Records for a specific vehicle. */
+    async findByVehicle(vehicleId: number): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             where: { vehicle: { id: vehicleId } },
             relations: ['vehicle', 'performedBy'],
@@ -67,14 +76,16 @@ export class MaintenanceService {
         });
     }
 
-    async findPending() {
+    /** Records that are still pending. */
+    async findPending(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             where: { status: 'PENDING' },
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    async findByType(type: string) {
+    /** Filter by maintenance type. */
+    async findByType(type: string): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             where: { type: type as any },
             relations: ['vehicle', 'performedBy'],
@@ -82,15 +93,26 @@ export class MaintenanceService {
         });
     }
 
-    async update(id: number, updateMaintenanceDto: UpdateMaintenanceDto) {
+    /** Update a maintenance record; throws if not found. */
+    async update(id: number, updateMaintenanceDto: UpdateMaintenanceDto): Promise<MaintenanceRecord> {
+        const existing = await this.findById(id);
+        if (!existing) {
+            throw new (require('@nestjs/common').NotFoundException)('Maintenance record not found');
+        }
         await this.maintenanceRepository.update(id, updateMaintenanceDto as any);
-        return this.findById(id);
+        return this.findById(id) as Promise<MaintenanceRecord>;
     }
 
+    /** Delete record by id. */
     async remove(id: number) {
-        return await this.maintenanceRepository.delete(id);
+        const result = await this.maintenanceRepository.delete(id);
+        if (result.affected === 0) {
+            throw new (require('@nestjs/common').NotFoundException)('Maintenance record not found');
+        }
+        return result;
     }
 
+    /** Mark a maintenance record as completed. */
     async completeMaintenanceRecord(id: number) {
         return await this.update(id, { status: 'COMPLETED' } as any);
     }
