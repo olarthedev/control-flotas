@@ -22,7 +22,11 @@ export class ExpensesService {
         private tripsRepository: Repository<Trip>,
     ) { }
 
-    async create(createExpenseDto: CreateExpenseDto) {
+    /**
+     * Create a new expense record, resolving required relations.
+     * Throws NotFoundException if the specified driver does not exist.
+     */
+    async create(createExpenseDto: CreateExpenseDto): Promise<Expense> {
         const expense = new Expense();
         expense.type = createExpenseDto.type;
         expense.amount = createExpenseDto.amount;
@@ -36,7 +40,9 @@ export class ExpensesService {
                 where: { id: createExpenseDto.driverId }
             });
             if (!driver) {
-                throw new Error(`Driver con id ${createExpenseDto.driverId} no encontrado`);
+                throw new (require('@nestjs/common').NotFoundException)(
+                    `Driver con id ${createExpenseDto.driverId} no encontrado`,
+                );
             }
             expense.driver = driver;
         }
@@ -64,20 +70,25 @@ export class ExpensesService {
         return await this.expensesRepository.save(expense);
     }
 
-    async findAll() {
+    /**
+     * Retrieve all expenses with full relations.
+     */
+    async findAll(): Promise<Expense[]> {
         return await this.expensesRepository.find({
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
         });
     }
 
-    async findById(id: number) {
+    /** Find expense by id. */
+    async findById(id: number): Promise<Expense | null> {
         return await this.expensesRepository.findOne({
             where: { id },
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
         });
     }
 
-    async findByDriver(driverId: number) {
+    /** Expenses submitted by a specific driver. */
+    async findByDriver(driverId: number): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { driver: { id: driverId } },
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
@@ -85,7 +96,8 @@ export class ExpensesService {
         });
     }
 
-    async findByTrip(tripId: number) {
+    /** Expenses associated to a trip. */
+    async findByTrip(tripId: number): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { trip: { id: tripId } },
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
@@ -93,7 +105,8 @@ export class ExpensesService {
         });
     }
 
-    async findByVehicle(vehicleId: number) {
+    /** Expenses charged to a vehicle. */
+    async findByVehicle(vehicleId: number): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { vehicle: { id: vehicleId } },
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
@@ -101,16 +114,29 @@ export class ExpensesService {
         });
     }
 
-    async update(id: number, updateExpenseDto: UpdateExpenseDto) {
+    /**
+     * Update an expense. Throws NotFoundException if not present.
+     */
+    async update(id: number, updateExpenseDto: UpdateExpenseDto): Promise<Expense> {
+        const existing = await this.findById(id);
+        if (!existing) {
+            throw new (require('@nestjs/common').NotFoundException)('Expense not found');
+        }
         await this.expensesRepository.update(id, updateExpenseDto);
-        return this.findById(id);
+        return this.findById(id) as Promise<Expense>;
     }
 
+    /** Delete an expense. */
     async remove(id: number) {
-        return await this.expensesRepository.delete(id);
+        const result = await this.expensesRepository.delete(id);
+        if (result.affected === 0) {
+            throw new (require('@nestjs/common').NotFoundException)('Expense not found');
+        }
+        return result;
     }
 
-    async findPendingExpenses() {
+    /** Pending expenses that require approval. */
+    async findPendingExpenses(): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { status: ExpenseStatus.PENDING },
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
@@ -118,7 +144,8 @@ export class ExpensesService {
         });
     }
 
-    async findExpensesWithoutEvidence() {
+    /** Expenses that lack any attached evidence. */
+    async findExpensesWithoutEvidence(): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { hasEvidence: false },
             relations: ['driver', 'vehicle', 'trip', 'consignment'],

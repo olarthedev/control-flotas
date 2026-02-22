@@ -18,31 +18,37 @@ import { UpdateEvidenceDto } from './dto/update-evidence.dto';
 export class EvidenceController {
     constructor(private readonly evidenceService: EvidenceService) { }
 
+    /** POST /evidence */
     @Post()
     create(@Body() createEvidenceDto: CreateEvidenceDto) {
         return this.evidenceService.create(createEvidenceDto);
     }
 
+    /** GET /evidence */
     @Get()
     findAll() {
         return this.evidenceService.findAll();
     }
 
+    /** GET /evidence/invalid */
     @Get('invalid')
     findInvalid() {
         return this.evidenceService.findInvalid();
     }
 
+    /** GET /evidence/expense/:expenseId */
     @Get('expense/:expenseId')
     findByExpense(@Param('expenseId') expenseId: string) {
         return this.evidenceService.findByExpense(+expenseId);
     }
 
+    /** GET /evidence/:id */
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.evidenceService.findById(+id);
     }
 
+    /** PATCH /evidence/:id */
     @Patch(':id')
     update(
         @Param('id') id: string,
@@ -51,6 +57,7 @@ export class EvidenceController {
         return this.evidenceService.update(+id, updateEvidenceDto);
     }
 
+    /** DELETE /evidence/:id */
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.evidenceService.remove(+id);

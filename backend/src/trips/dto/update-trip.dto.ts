@@ -11,5 +11,5 @@ export class UpdateTripDto extends PartialType(CreateTripDto) {
 
     @IsOptional()
     @IsDateString({}, { message: 'endDate debe ser una fecha válida' })
-    endDate?: Date;
+    endDate?: string; // keep as string for validation
 }

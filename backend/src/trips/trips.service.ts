@@ -24,7 +24,8 @@ export class TripsService {
         private consignmentRepository: Repository<Consignment>,
     ) { }
 
-    async create(createTripDto: CreateTripDto) {
+    /** Create a new trip and resolve related entities. */
+    async create(createTripDto: CreateTripDto): Promise<Trip> {
         const trip = new Trip();
         trip.tripNumber = createTripDto.tripNumber;
         trip.startDate = new Date(createTripDto.startDate);
@@ -47,20 +48,23 @@ export class TripsService {
         return await this.tripsRepository.save(trip);
     }
 
-    async findAll() {
+    /** Return all trips with related data. */
+    async findAll(): Promise<Trip[]> {
         return await this.tripsRepository.find({
             relations: ['driver', 'vehicle', 'expenses', 'consignments'],
         });
     }
 
-    async findById(id: number) {
+    /** Find a trip by ID. */
+    async findById(id: number): Promise<Trip | null> {
         return await this.tripsRepository.findOne({
             where: { id },
             relations: ['driver', 'vehicle', 'expenses', 'consignments'],
         });
     }
 
-    async findByDriver(driverId: number) {
+    /** Trips driven by a particular driver. */
+    async findByDriver(driverId: number): Promise<Trip[]> {
         return await this.tripsRepository.find({
             where: { driver: { id: driverId } },
             relations: ['driver', 'vehicle', 'expenses', 'consignments'],
@@ -68,7 +72,8 @@ export class TripsService {
         });
     }
 
-    async findByVehicle(vehicleId: number) {
+    /** Trips associated with a specific vehicle. */
+    async findByVehicle(vehicleId: number): Promise<Trip[]> {
         return await this.tripsRepository.find({
             where: { vehicle: { id: vehicleId } },
             relations: ['driver', 'vehicle', 'expenses', 'consignments'],
@@ -76,26 +81,38 @@ export class TripsService {
         });
     }
 
-    async findInProgress() {
+    /** Only trips that are still in progress. */
+    async findInProgress(): Promise<Trip[]> {
         return await this.tripsRepository.find({
             where: { status: 'IN_PROGRESS' },
             relations: ['driver', 'vehicle', 'expenses', 'consignments'],
         });
     }
 
-    async update(id: number, updateTripDto: UpdateTripDto) {
+    /** Update trip data; throws if not found. */
+    async update(id: number, updateTripDto: UpdateTripDto): Promise<Trip> {
+        const existing = await this.findById(id);
+        if (!existing) {
+            throw new (require('@nestjs/common').NotFoundException)('Trip not found');
+        }
         await this.tripsRepository.update(id, updateTripDto);
-        return this.findById(id);
+        return this.findById(id) as Promise<Trip>;
     }
 
+    /** Delete a trip by id. */
     async remove(id: number) {
-        return await this.tripsRepository.delete(id);
+        const result = await this.tripsRepository.delete(id);
+        if (result.affected === 0) {
+            throw new (require('@nestjs/common').NotFoundException)('Trip not found');
+        }
+        return result;
     }
 
-    async completeTrip(id: number) {
+    /** Complete a trip calculating expenses/consignments totals. */
+    async completeTrip(id: number): Promise<Trip> {
         const trip = await this.findById(id);
         if (!trip) {
-            throw new Error('Viaje no encontrado');
+            throw new (require('@nestjs/common').NotFoundException)('Trip not found');
         }
 
         // Calcular total de gastos

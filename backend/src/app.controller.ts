@@ -18,11 +18,19 @@ export class AppController {
     private readonly tripRepo: Repository<Trip>,
   ) { }
 
+  /**
+   * GET /
+   * Health check / greeting endpoint.
+   */
   @Get()
   getHello(): string {
     return this.appService.getHello();
   }
 
+  /**
+   * GET /metrics
+   * Return simple aggregate counts for dashboard use.
+   */
   @Get('metrics')
   async getMetrics() {
     const [users, vehicles, trips] = await Promise.all([

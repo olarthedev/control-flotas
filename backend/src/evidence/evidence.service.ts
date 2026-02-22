@@ -15,7 +15,11 @@ export class EvidenceService {
         private expenseRepository: Repository<Expense>,
     ) { }
 
-    async create(createEvidenceDto: CreateEvidenceDto) {
+    /**
+     * Create a new evidence record and optionally attach to an expense.
+     * Throws NotFoundException if the referenced expense does not exist.
+     */
+    async create(createEvidenceDto: CreateEvidenceDto): Promise<Evidence> {
         const evidence = new Evidence();
         evidence.fileName = createEvidenceDto.fileName;
         evidence.filePath = createEvidenceDto.filePath;
@@ -31,7 +35,9 @@ export class EvidenceService {
                 where: { id: createEvidenceDto.expenseId },
             });
             if (!expense) {
-                throw new Error(`Expense con id ${createEvidenceDto.expenseId} no encontrado`);
+                throw new (require('@nestjs/common').NotFoundException)(
+                    `Expense con id ${createEvidenceDto.expenseId} no encontrado`,
+                );
             }
             evidence.expense = expense;
         }
@@ -39,39 +45,53 @@ export class EvidenceService {
         return await this.evidenceRepository.save(evidence);
     }
 
-    async findAll() {
+    /** Retrieve every piece of evidence, including linked expense. */
+    async findAll(): Promise<Evidence[]> {
         return await this.evidenceRepository.find({
             relations: ['expense'],
         });
     }
 
-    async findById(id: number) {
+    /** Find a specific evidence by id. */
+    async findById(id: number): Promise<Evidence | null> {
         return await this.evidenceRepository.findOne({
             where: { id },
             relations: ['expense'],
         });
     }
 
-    async findByExpense(expenseId: number) {
+    /** Evidence items attached to a particular expense. */
+    async findByExpense(expenseId: number): Promise<Evidence[]> {
         return await this.evidenceRepository.find({
             where: { expense: { id: expenseId } },
             relations: ['expense'],
         });
     }
 
-    async findInvalid() {
+    /** Evidence marked as invalid. */
+    async findInvalid(): Promise<Evidence[]> {
         return await this.evidenceRepository.find({
             where: { isValid: false },
             relations: ['expense'],
         });
     }
 
-    async update(id: number, updateEvidenceDto: UpdateEvidenceDto) {
+    /** Update evidence. Throws if not found. */
+    async update(id: number, updateEvidenceDto: UpdateEvidenceDto): Promise<Evidence> {
+        const existing = await this.findById(id);
+        if (!existing) {
+            throw new (require('@nestjs/common').NotFoundException)('Evidence not found');
+        }
         await this.evidenceRepository.update(id, updateEvidenceDto);
-        return this.findById(id);
+        return this.findById(id) as Promise<Evidence>;
     }
 
+    /** Delete an evidence record. */
     async remove(id: number) {
-        return await this.evidenceRepository.delete(id);
+        const result = await this.evidenceRepository.delete(id);
+        if (result.affected === 0) {
+            throw new (require('@nestjs/common').NotFoundException)('Evidence not found');
+        }
+        return result;
     }
 }
