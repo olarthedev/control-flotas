@@ -9,10 +9,12 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 
+@ApiTags('trips')
 @Controller('trips')
 @UseInterceptors(ClassSerializerInterceptor)
 export class TripsController {
