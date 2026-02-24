@@ -5,6 +5,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // permitir peticiones desde el frontend (puedes afinar los orígenes si quieres)
+  app.enableCors();
+
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Control Flotas API')
