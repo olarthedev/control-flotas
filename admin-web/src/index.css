@@ -1,3 +1,10 @@
+@import "tailwindcss";
+
+/* El resto de tu código :root y a { ... } se queda igual debajo */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  
+}
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

@@ -16,7 +16,7 @@ export function Dashboard() {
         // ejemplo simple: podrías tener un endpoint en el backend que
         // devuelva varios contadores para el dashboard
         axios
-            .get('http://localhost:3000/metrics')
+            .get('http://localhost:3001/metrics')
             .then((res) => {
                 setCounts(res.data);
             })
@@ -29,14 +29,14 @@ export function Dashboard() {
             });
     }, []);
 
-    if (loading) return <p>Cargando...</p>;
-    if (error) return <p>Error: {error}</p>;
+    if (loading) return <p className="text-center py-4">Cargando...</p>;
+    if (error) return <p className="text-center py-4 text-red-500">Error: {error}</p>;
 
     return (
-        <div>
-            <h2>Dashboard</h2>
+        <div className="max-w-lg mx-auto p-6">
+            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
             {counts ? (
-                <ul>
+                <ul className="space-y-2">
                     <li>Usuarios: {counts.users}</li>
                     <li>Vehículos: {counts.vehicles}</li>
                     <li>Viajes: {counts.trips}</li>
