@@ -1,49 +1,41 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { StatCard } from "../components/StatCard";
+import { FaDollarSign, FaExclamationTriangle, FaTruck } from "react-icons/fa";
 
-interface Counts {
-    users: number;
-    vehicles: number;
-    trips: number;
-}
+export const Dashboard = () => {
+  return (
+    <div className="space-y-6">
 
-export function Dashboard() {
-    const [counts, setCounts] = useState<Counts | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+      <h1 className="text-2xl font-bold text-gray-800">
+        Panel de Control
+      </h1>
 
-    useEffect(() => {
-        // ejemplo simple: podrías tener un endpoint en el backend que
-        // devuelva varios contadores para el dashboard
-        axios
-            .get('http://localhost:3001/metrics')
-            .then((res) => {
-                setCounts(res.data);
-            })
-            .catch((err) => {
-                console.error(err);
-                setError('No se pudo cargar la información');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, []);
+      <div className="grid grid-cols-3 gap-6">
 
-    if (loading) return <p className="text-center py-4">Cargando...</p>;
-    if (error) return <p className="text-center py-4 text-red-500">Error: {error}</p>;
+        <StatCard
+          title="Gastos Operativos"
+          value="$1,335,000"
+          icon={<FaDollarSign />}
+          badge="+8%"
+          badgeColor="red"
+        />
 
-    return (
-        <div className="max-w-lg mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
-            {counts ? (
-                <ul className="space-y-2">
-                    <li>Usuarios: {counts.users}</li>
-                    <li>Vehículos: {counts.vehicles}</li>
-                    <li>Viajes: {counts.trips}</li>
-                </ul>
-            ) : (
-                <p>No hay datos disponibles.</p>
-            )}
-        </div>
-    );
-}
+        <StatCard
+          title="Pendientes Revisión"
+          value="2"
+          icon={<FaExclamationTriangle />}
+          badge="Bajo"
+          badgeColor="yellow"
+        />
+
+        <StatCard
+          title="Vehículos Activos"
+          value="2"
+          icon={<FaTruck />}
+          badge="Operativo"
+          badgeColor="green"
+        />
+
+      </div>
+    </div>
+  );
+};
