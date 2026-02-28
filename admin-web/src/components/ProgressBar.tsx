@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface ProgressBarProps {
   percent: number;
   label?: string;

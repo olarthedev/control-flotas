@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface AlertCardProps {
   message: string;
   severity?: 'info' | 'warning' | 'error' | 'success';
