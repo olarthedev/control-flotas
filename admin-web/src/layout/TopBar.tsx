@@ -1,12 +1,9 @@
-import React from 'react';
-
 export function TopBar() {
   return (
-    <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-      <div className="text-lg font-semibold">Panel de Control</div>
+    <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm">
+      <div></div>
       <div className="flex items-center space-x-4">
-        {/* placeholder for notifications/profile */}
-        <span className="text-sm text-gray-600">Administrador Central</span>
+        {/* placeholder for future notifications/profile */}
       </div>
     </header>
   );
