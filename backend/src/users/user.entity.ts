@@ -48,9 +48,6 @@ export class User {
     licenseNumber?: string; // Número de licencia (para conductores)
 
     // ================== RELACIONES ==================
-    @OneToMany(() => Vehicle, (vehicle) => vehicle.driver)
-    vehiclesAssigned: Vehicle[];
-
     @OneToMany(() => Expense, (expense) => expense.driver)
     expenses: Expense[];
 

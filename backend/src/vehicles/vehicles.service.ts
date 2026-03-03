@@ -26,7 +26,7 @@ export class VehiclesService {
    */
   async findAll(): Promise<Vehicle[]> {
     return await this.vehiclesRepository.find({
-      relations: ['driver', 'expenses', 'maintenanceRecords', 'trips'],
+      relations: ['expenses', 'maintenanceRecords', 'trips'],
     });
   }
 
@@ -36,7 +36,7 @@ export class VehiclesService {
   async findById(id: number): Promise<Vehicle | null> {
     return await this.vehiclesRepository.findOne({
       where: { id },
-      relations: ['driver', 'expenses', 'maintenanceRecords', 'trips'],
+      relations: ['expenses', 'maintenanceRecords', 'trips'],
     });
   }
 
@@ -46,7 +46,7 @@ export class VehiclesService {
   async findByLicensePlate(licensePlate: string): Promise<Vehicle | null> {
     return await this.vehiclesRepository.findOne({
       where: { licensePlate },
-      relations: ['driver', 'expenses', 'maintenanceRecords', 'trips'],
+      relations: ['expenses', 'maintenanceRecords', 'trips'],
     });
   }
 
@@ -55,8 +55,7 @@ export class VehiclesService {
    */
   async findActive(): Promise<Vehicle[]> {
     return await this.vehiclesRepository.find({
-      where: { isActive: true },
-      relations: ['driver', 'expenses', 'maintenanceRecords', 'trips'],
+      relations: ['expenses', 'maintenanceRecords', 'trips'],
     });
   }
 
@@ -100,15 +99,4 @@ export class VehiclesService {
     return result;
   }
 
-  /**
-   * Toggle the `isActive` flag on a vehicle.
-   */
-  async toggleActive(id: number) {
-    const vehicle = await this.findById(id);
-    if (!vehicle) {
-      throw new (require('@nestjs/common').NotFoundException)('Vehicle not found');
-    }
-    vehicle.isActive = !vehicle.isActive;
-    return await this.vehiclesRepository.save(vehicle);
-  }
 }

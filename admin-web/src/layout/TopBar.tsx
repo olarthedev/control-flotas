@@ -1,9 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Search, ChevronDown } from "lucide-react";
 import { MdDirectionsBus } from "react-icons/md";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 export const TopBar: React.FC = () => {
     const [dateTime, setDateTime] = useState("");
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
+
+    const placeholdersByPath: Record<string, string> = {
+        "/": "Buscar en dashboard...",
+        "/vehicles": "Buscar vehículo, placa o tipo...",
+        "/drivers": "Buscar conductor...",
+        "/expenses": "Buscar gasto...",
+        "/maintenance": "Buscar mantenimiento...",
+        "/reports": "Buscar reporte...",
+        "/notifications": "Buscar notificación...",
+        "/settings": "Buscar configuración...",
+    };
+
+    const searchPlaceholder = placeholdersByPath[location.pathname] ?? "Buscar en esta pantalla...";
 
     useEffect(() => {
         const updateTime = () => {
@@ -22,6 +39,30 @@ export const TopBar: React.FC = () => {
         const interval = setInterval(updateTime, 60000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        setSearchValue(searchParams.get("q") ?? "");
+    }, [location.pathname, searchParams]);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            const current = searchParams.get("q") ?? "";
+            const next = searchValue.trim();
+
+            if (current === next) return;
+
+            const updatedParams = new URLSearchParams(searchParams);
+            if (next) {
+                updatedParams.set("q", next);
+            } else {
+                updatedParams.delete("q");
+            }
+
+            setSearchParams(updatedParams, { replace: true });
+        }, 250);
+
+        return () => clearTimeout(timeout);
+    }, [searchValue, searchParams, setSearchParams]);
 
     return (
         <header className="h-[64px] bg-white border-b border-gray-100 flex items-center justify-between px-10">
@@ -63,7 +104,9 @@ export const TopBar: React.FC = () => {
 
                         <input
                             type="text"
-                            placeholder="Buscar..."
+                            placeholder={searchPlaceholder}
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
                             className="ml-2 bg-transparent outline-none text-sm w-full text-gray-800 placeholder:text-gray-400"
                         />
 

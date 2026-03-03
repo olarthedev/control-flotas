@@ -63,12 +63,6 @@ export class VehiclesController {
     return this.vehiclesService.update(+id, updateVehicleDto);
   }
 
-  /** PATCH /vehicles/:id/toggle-active */
-  @Patch(':id/toggle-active')
-  toggleActive(@Param('id') id: string) {
-    return this.vehiclesService.toggleActive(+id);
-  }
-
   /** DELETE /vehicles/:id */
   @Delete(':id')
   remove(@Param('id') id: string) {
