@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ExpenseStatus } from '../expenses/expense.entity';
+import { DriverSummaryDto } from './dto/driver-summary.dto';
 
 @Injectable()
 export class UsersService {
@@ -50,6 +52,42 @@ export class UsersService {
     async findDrivers(): Promise<User[]> {
         return await this.usersRepository.find({
             where: { role: UserRole.DRIVER },
+        });
+    }
+
+    /**
+     * Retrieve summarized data for driver cards in the admin dashboard.
+     */
+    async findDriverSummaries(): Promise<DriverSummaryDto[]> {
+        const drivers = await this.usersRepository.find({
+            where: { role: UserRole.DRIVER },
+            relations: ['expenses', 'trips', 'trips.vehicle'],
+            order: { id: 'ASC' },
+        });
+
+        return drivers.map((driver) => {
+            const pendingBalance = (driver.expenses ?? [])
+                .filter((expense) => expense.status === ExpenseStatus.PENDING)
+                .reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+
+            const sortedTrips = [...(driver.trips ?? [])].sort((a, b) => {
+                const first = new Date(b.startDate).getTime();
+                const second = new Date(a.startDate).getTime();
+                return first - second;
+            });
+
+            const assignedVehiclePlate =
+                sortedTrips.find((trip) => trip.vehicle?.licensePlate)?.vehicle?.licensePlate ?? null;
+
+            return {
+                id: driver.id,
+                fullName: driver.fullName,
+                email: driver.email,
+                monthlySalary: Number(driver.monthlySalary ?? 0),
+                pendingBalance,
+                assignedVehiclePlate,
+                isActive: driver.isActive,
+            };
         });
     }
 

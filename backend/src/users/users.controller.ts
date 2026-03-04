@@ -35,6 +35,12 @@ export class UsersController {
         return this.usersService.findDrivers();
     }
 
+    /** GET /users/drivers/summary */
+    @Get('drivers/summary')
+    findDriverSummaries() {
+        return this.usersService.findDriverSummaries();
+    }
+
     /** GET /users/admins */
     @Get('admins')
     findAdmins() {

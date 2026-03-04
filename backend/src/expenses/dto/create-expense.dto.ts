@@ -15,7 +15,7 @@ export class CreateExpenseDto {
 
     @IsDateString({}, { message: 'expenseDate debe ser una fecha válida en formato ISO' })
     @IsNotEmpty({ message: 'expenseDate es requerido' })
-    expenseDate: Date;
+    expenseDate: string;
 
     @IsOptional()
     @IsString({ message: 'description debe ser texto' })
