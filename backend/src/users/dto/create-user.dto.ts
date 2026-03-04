@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsOptional, Matches, IsEnum, IsNumber, Min } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsOptional, Matches, IsEnum, IsNumber, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from '../user.entity';
 
@@ -40,4 +40,13 @@ export class CreateUserDto {
     @IsNumber({}, { message: 'monthlySalary debe ser numérico' })
     @Min(0, { message: 'monthlySalary no puede ser negativo' })
     monthlySalary?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: 'assignedVehicleId debe ser numérico' })
+    assignedVehicleId?: number;
+
+    @IsOptional()
+    @IsBoolean({ message: 'isActive debe ser un booleano' })
+    isActive?: boolean;
 }

@@ -5,12 +5,14 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     OneToMany,
+    ManyToOne,
 } from 'typeorm';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { Expense } from '../expenses/expense.entity';
 import { Consignment } from '../consignments/consignment.entity';
 import { Trip } from '../trips/trip.entity';
 import { MaintenanceRecord } from '../maintenance/maintenance-record.entity';
+import { Exclude } from 'class-transformer';
 
 export enum UserRole {
     ADMIN = 'ADMIN',
@@ -29,6 +31,7 @@ export class User {
     email: string;
 
     @Column()
+    @Exclude()
     password: string;
 
     @Column({
@@ -49,6 +52,9 @@ export class User {
 
     @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
     monthlySalary: number;
+
+    @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })
+    assignedVehicle?: Vehicle | null;
 
     // ================== RELACIONES ==================
     @OneToMany(() => Expense, (expense) => expense.driver)

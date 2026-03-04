@@ -9,6 +9,8 @@ export interface DriverFormData {
     phone?: string;
     licenseNumber?: string;
     monthlySalary?: number;
+    isActive: boolean;
+    assignedVehicleId?: number;
 }
 
 interface DriverModalProps {
@@ -17,9 +19,10 @@ interface DriverModalProps {
     onSave: (driver: DriverFormData) => Promise<void>;
     mode: 'create' | 'edit';
     driver?: DriverFormData;
+    vehicles: { id: number; label: string }[];
 }
 
-export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverModalProps) {
+export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }: DriverModalProps) {
     const [formData, setFormData] = useState<DriverFormData>({
         fullName: '',
         email: '',
@@ -27,6 +30,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverMod
         phone: '',
         licenseNumber: '',
         monthlySalary: undefined,
+        isActive: true,
+        assignedVehicleId: undefined,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -54,6 +59,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverMod
                 phone: '',
                 licenseNumber: '',
                 monthlySalary: undefined,
+                isActive: true,
+                assignedVehicleId: undefined,
             });
             setError(null);
             setIsSubmitting(false);
@@ -72,6 +79,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverMod
                 phone: driver.phone ?? '',
                 licenseNumber: driver.licenseNumber ?? '',
                 monthlySalary: driver.monthlySalary,
+                isActive: driver.isActive,
+                assignedVehicleId: driver.assignedVehicleId,
             });
             return;
         }
@@ -83,6 +92,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverMod
             phone: '',
             licenseNumber: '',
             monthlySalary: undefined,
+            isActive: true,
+            assignedVehicleId: undefined,
         });
     }, [isOpen, mode, driver]);
 
@@ -101,13 +112,29 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverMod
         }
     };
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = event.target;
 
         if (name === 'monthlySalary') {
             setFormData((previous) => ({
                 ...previous,
                 monthlySalary: value ? Number(value) : undefined,
+            }));
+            return;
+        }
+
+        if (name === 'isActive') {
+            setFormData((previous) => ({
+                ...previous,
+                isActive: value === 'true',
+            }));
+            return;
+        }
+
+        if (name === 'assignedVehicleId') {
+            setFormData((previous) => ({
+                ...previous,
+                assignedVehicleId: value ? Number(value) : undefined,
             }));
             return;
         }
@@ -236,6 +263,44 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver }: DriverMod
                                 onChange={handleInputChange}
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="isActive" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Estado
+                            </label>
+                            <select
+                                id="isActive"
+                                name="isActive"
+                                value={String(formData.isActive)}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            >
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label htmlFor="assignedVehicleId" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Vehículo asignado
+                            </label>
+                            <select
+                                id="assignedVehicleId"
+                                name="assignedVehicleId"
+                                value={formData.assignedVehicleId ?? ''}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            >
+                                <option value="">Sin asignar</option>
+                                {vehicles.map((vehicle) => (
+                                    <option key={vehicle.id} value={vehicle.id}>
+                                        {vehicle.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 

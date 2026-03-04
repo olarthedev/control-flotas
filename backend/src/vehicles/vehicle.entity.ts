@@ -9,6 +9,7 @@ import {
 import { Expense } from '../expenses/expense.entity';
 import { MaintenanceRecord } from '../maintenance/maintenance-record.entity';
 import { Trip } from '../trips/trip.entity';
+import { User } from '../users/user.entity';
 
 @Entity('vehicles')
 export class Vehicle {
@@ -64,6 +65,9 @@ export class Vehicle {
 
     @OneToMany(() => Trip, (trip) => trip.vehicle, { cascade: true })
     trips: Trip[];
+
+    @OneToMany(() => User, (user) => user.assignedVehicle)
+    assignedDrivers: User[];
 
     // ================== AUDITORÍA ==================
     @CreateDateColumn()

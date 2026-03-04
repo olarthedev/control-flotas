@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ExpenseStatus } from '../expenses/expense.entity';
 import { DriverSummaryDto } from './dto/driver-summary.dto';
+import { Vehicle } from '../vehicles/vehicle.entity';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
         private usersRepository: Repository<User>,
+        @InjectRepository(Vehicle)
+        private vehiclesRepository: Repository<Vehicle>,
     ) { }
 
     /**
@@ -20,7 +24,17 @@ export class UsersService {
      * @returns The persisted user entity
      */
     async create(createUserDto: CreateUserDto): Promise<User> {
-        const user = this.usersRepository.create(createUserDto);
+        const { assignedVehicleId, password, ...userPayload } = createUserDto;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = this.usersRepository.create({ ...userPayload, password: hashedPassword });
+
+        if (assignedVehicleId) {
+            const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
+            if (vehicle) {
+                user.assignedVehicle = vehicle;
+            }
+        }
+
         return await this.usersRepository.save(user);
     }
 
@@ -29,7 +43,7 @@ export class UsersService {
      * @returns Array of user entities
      */
     async findAll(): Promise<User[]> {
-        return await this.usersRepository.find();
+        return await this.usersRepository.find({ relations: ['assignedVehicle'] });
     }
 
     /**
@@ -38,20 +52,24 @@ export class UsersService {
      * @returns The user entity or undefined if not found
      */
     async findById(id: number): Promise<User | null> {
-        return await this.usersRepository.findOne({ where: { id } });
+        return await this.usersRepository.findOne({
+            where: { id },
+            relations: ['assignedVehicle'],
+        });
     }
 
     /**
      * Lookup a user by email address.
      */
     async findByEmail(email: string): Promise<User | null> {
-        return await this.usersRepository.findOne({ where: { email } });
+        return await this.usersRepository.findOne({ where: { email }, relations: ['assignedVehicle'] });
     }
 
     /** Retrieve all users with role DRIVER */
     async findDrivers(): Promise<User[]> {
         return await this.usersRepository.find({
             where: { role: UserRole.DRIVER },
+            relations: ['assignedVehicle'],
         });
     }
 
@@ -77,7 +95,9 @@ export class UsersService {
             });
 
             const assignedVehiclePlate =
-                sortedTrips.find((trip) => trip.vehicle?.licensePlate)?.vehicle?.licensePlate ?? null;
+                driver.assignedVehicle?.licensePlate
+                ?? sortedTrips.find((trip) => trip.vehicle?.licensePlate)?.vehicle?.licensePlate
+                ?? null;
 
             return {
                 id: driver.id,
@@ -95,6 +115,7 @@ export class UsersService {
     async findAdmins(): Promise<User[]> {
         return await this.usersRepository.find({
             where: { role: UserRole.ADMIN },
+            relations: ['assignedVehicle'],
         });
     }
 
@@ -102,6 +123,7 @@ export class UsersService {
     async findActive(): Promise<User[]> {
         return await this.usersRepository.find({
             where: { isActive: true },
+            relations: ['assignedVehicle'],
         });
     }
 
@@ -114,7 +136,24 @@ export class UsersService {
             // throw proper HTTP exception when user doesn't exist
             throw new (require('@nestjs/common').NotFoundException)('User not found');
         }
-        await this.usersRepository.update(id, updateUserDto);
+
+        const { assignedVehicleId, password, ...userPayload } = updateUserDto;
+
+        if (assignedVehicleId !== undefined) {
+            if (assignedVehicleId === null) {
+                existing.assignedVehicle = null;
+            } else {
+                const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
+                existing.assignedVehicle = vehicle ?? null;
+            }
+        }
+
+        if (password) {
+            existing.password = await bcrypt.hash(password, 10);
+        }
+
+        Object.assign(existing, userPayload);
+        await this.usersRepository.save(existing);
         return this.findById(id) as Promise<User>;
     }
 

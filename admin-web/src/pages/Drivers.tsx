@@ -12,6 +12,7 @@ import {
     type DriverSummary,
     updateDriver,
 } from '../services/drivers.service';
+import { fetchVehicles } from '../services/vehicles.service';
 
 export function DriversPage() {
     const [searchParams] = useSearchParams();
@@ -25,6 +26,7 @@ export function DriversPage() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [driverToDelete, setDriverToDelete] = useState<DriverSummary | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [vehicleOptions, setVehicleOptions] = useState<{ id: number; label: string }[]>([]);
 
     const loadDrivers = async () => {
         try {
@@ -42,6 +44,24 @@ export function DriversPage() {
 
     useEffect(() => {
         loadDrivers();
+    }, []);
+
+    useEffect(() => {
+        const loadVehicles = async () => {
+            try {
+                const data = await fetchVehicles();
+                setVehicleOptions(
+                    data.map((vehicle) => ({
+                        id: vehicle.id,
+                        label: `${vehicle.plate} - ${vehicle.name}`,
+                    })),
+                );
+            } catch (err) {
+                console.error('Error loading vehicles for drivers modal:', err);
+            }
+        };
+
+        loadVehicles();
     }, []);
 
     const searchTerm = (searchParams.get('q') ?? '').trim().toLowerCase();
@@ -85,6 +105,8 @@ export function DriversPage() {
                 licenseNumber: driver.licenseNumber ?? '',
                 monthlySalary: driver.monthlySalary,
                 password: '',
+                isActive: driver.isActive,
+                assignedVehicleId: driver.assignedVehicle?.id,
             });
             setIsModalOpen(true);
         } catch (err) {
@@ -93,31 +115,56 @@ export function DriversPage() {
     };
 
     const handleSaveDriver = async (driverData: DriverFormData) => {
-        if (modalMode === 'create') {
-            await createDriver({
-                fullName: driverData.fullName,
-                email: driverData.email,
-                password: driverData.password || '',
-                phone: driverData.phone || undefined,
-                licenseNumber: driverData.licenseNumber || undefined,
-                monthlySalary: driverData.monthlySalary,
-                role: 'DRIVER',
-            });
-        } else {
-            if (!driverData.id) return;
+        try {
+            if (modalMode === 'create') {
+                await createDriver({
+                    fullName: driverData.fullName,
+                    email: driverData.email,
+                    password: driverData.password || '',
+                    phone: driverData.phone || undefined,
+                    licenseNumber: driverData.licenseNumber || undefined,
+                    monthlySalary: driverData.monthlySalary,
+                    role: 'DRIVER',
+                    assignedVehicleId: driverData.assignedVehicleId,
+                });
+            } else {
+                if (!driverData.id) return;
 
-            await updateDriver(driverData.id, {
-                fullName: driverData.fullName,
-                email: driverData.email,
-                password: driverData.password?.trim() ? driverData.password : undefined,
-                phone: driverData.phone || undefined,
-                licenseNumber: driverData.licenseNumber || undefined,
-                monthlySalary: driverData.monthlySalary,
-            });
+                await updateDriver(driverData.id, {
+                    fullName: driverData.fullName,
+                    email: driverData.email,
+                    password: driverData.password?.trim() ? driverData.password : undefined,
+                    phone: driverData.phone || undefined,
+                    licenseNumber: driverData.licenseNumber || undefined,
+                    monthlySalary: driverData.monthlySalary,
+                    isActive: driverData.isActive,
+                    assignedVehicleId: driverData.assignedVehicleId,
+                });
+
+                // Actualizar el driver en la lista local de forma inmediata
+                const vehicleLabel = vehicleOptions.find((v) => v.id === driverData.assignedVehicleId)?.label;
+                const vehiclePlate = vehicleLabel?.split(' - ')[0] || null;
+
+                setDrivers((current) =>
+                    current.map((driver) =>
+                        driver.id === driverData.id
+                            ? {
+                                ...driver,
+                                fullName: driverData.fullName,
+                                email: driverData.email,
+                                monthlySalary: driverData.monthlySalary || driver.monthlySalary,
+                                isActive: driverData.isActive,
+                                assignedVehiclePlate: vehiclePlate,
+                            }
+                            : driver,
+                    ),
+                );
+            }
+
+            setIsModalOpen(false);
+        } catch (err) {
+            console.error('Error saving driver:', err);
         }
-
-        await loadDrivers();
-        setIsModalOpen(false);
     };
 
     const handleDeleteDriver = (driverId: number) => {
@@ -314,6 +361,7 @@ export function DriversPage() {
                 onSave={handleSaveDriver}
                 mode={modalMode}
                 driver={selectedDriver}
+                vehicles={vehicleOptions}
             />
 
             <DeleteDriverModal

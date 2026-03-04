@@ -21,6 +21,12 @@ export interface DriverDetail {
     monthlySalary?: number;
     role: 'DRIVER' | 'ADMIN';
     isActive: boolean;
+    assignedVehicle?: {
+        id: number;
+        licensePlate: string;
+        brand: string;
+        model: string;
+    } | null;
 }
 
 export interface CreateDriverDto {
@@ -31,6 +37,8 @@ export interface CreateDriverDto {
     licenseNumber?: string;
     monthlySalary?: number;
     role: 'DRIVER';
+    isActive?: boolean;
+    assignedVehicleId?: number;
 }
 
 export interface UpdateDriverDto {
@@ -40,6 +48,8 @@ export interface UpdateDriverDto {
     phone?: string;
     licenseNumber?: string;
     monthlySalary?: number;
+    isActive?: boolean;
+    assignedVehicleId?: number;
 }
 
 export async function fetchDriverSummaries(): Promise<DriverSummary[]> {
