@@ -1,14 +1,9 @@
 @import "tailwindcss";
 
-/* El resto de tu código :root y a { ... } se queda igual debajo */
-
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color: rgba(255, 255, 255, 0.87);
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -28,11 +23,13 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: #0f172a;
+  background: #f8fafc;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 16px !important;
+  line-height: 1.25 !important;
 }
 
 @media (prefers-color-scheme: light) {

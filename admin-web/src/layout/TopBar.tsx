@@ -12,7 +12,7 @@ export const TopBar: React.FC = () => {
     const placeholdersByPath: Record<string, string> = {
         "/": "Buscar en dashboard...",
         "/vehicles": "Buscar vehículo, placa o tipo...",
-        "/drivers": "Buscar conductor...",
+        "/drivers": "Search driver, email or vehicle...",
         "/expenses": "Buscar gasto...",
         "/maintenance": "Buscar mantenimiento...",
         "/reports": "Buscar reporte...",

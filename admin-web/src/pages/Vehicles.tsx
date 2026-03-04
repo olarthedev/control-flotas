@@ -145,10 +145,10 @@ export function VehiclesPage() {
         <section className="space-y-4">
             <header className="flex items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-[#0f1f47]">
+                    <h1 className="text-[16px] font-semibold tracking-tight text-[#0f1f47]">
                         Flota Vehicular
                     </h1>
-                    <p className="mt-1 text-sm italic text-slate-400">
+                    <p className="mt-1 text-sm font-normal italic text-slate-400">
                         ⚡ "Alerta IA: El vehículo ABC-123 requiere cambio de aceite en los próximos 500km."
                     </p>
                 </div>
