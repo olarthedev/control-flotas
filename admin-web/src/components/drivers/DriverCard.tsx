@@ -85,8 +85,8 @@ export function DriverCard({
             <footer className="mt-5 flex items-center justify-between">
                 <span
                     className={`rounded-full px-3 py-1 text-[11px] font-bold ${isActive
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-slate-100 text-slate-500'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
                         }`}
                 >
                     {isActive ? 'ACTIVE' : 'INACTIVE'}

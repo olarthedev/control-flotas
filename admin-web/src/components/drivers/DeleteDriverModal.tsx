@@ -36,16 +36,14 @@ export function DeleteDriverModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
-                className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
-                    isVisible ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'
+                    }`}
                 onClick={isDeleting ? undefined : onClose}
             />
 
             <div
-                className={`relative z-10 mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl transition-all duration-200 ${
-                    isVisible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'
-                }`}
+                className={`relative z-10 mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl transition-all duration-200 ${isVisible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'
+                    }`}
             >
                 <header className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">

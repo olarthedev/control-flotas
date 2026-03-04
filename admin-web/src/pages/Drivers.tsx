@@ -273,8 +273,8 @@ export function DriversPage() {
 
                                     <td className="px-6 py-4">
                                         <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${driver.isActive
-                                                ? 'bg-emerald-50 text-emerald-700'
-                                                : 'bg-slate-100 text-slate-500'
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : 'bg-slate-100 text-slate-500'
                                             }`}>
                                             {driver.isActive ? 'ACTIVE' : 'INACTIVE'}
                                         </span>
