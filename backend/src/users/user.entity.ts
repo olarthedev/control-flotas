@@ -47,10 +47,10 @@ export class User {
     @Column({ type: 'text', nullable: true })
     licenseNumber?: string; // Número de licencia (para conductores)
 
-    // ================== RELACIONES ==================
-    @OneToMany(() => Vehicle, (vehicle) => vehicle.driver)
-    vehiclesAssigned: Vehicle[];
+    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    monthlySalary: number;
 
+    // ================== RELACIONES ==================
     @OneToMany(() => Expense, (expense) => expense.driver)
     expenses: Expense[];
 
