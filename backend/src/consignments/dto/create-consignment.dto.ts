@@ -16,7 +16,7 @@ export class CreateConsignmentDto {
 
     @IsDateString({}, { message: 'consignmentDate debe ser una fecha válida' })
     @IsNotEmpty({ message: 'consignmentDate es requerido' })
-    consignmentDate: Date;
+    consignmentDate: string;
 
     @IsNumber({}, { message: 'driverId debe ser un número' })
     @IsNotEmpty({ message: 'driverId es requerido' })

@@ -52,9 +52,20 @@ export interface UpdateDriverDto {
     assignedVehicleId?: number;
 }
 
+type NumericLike = number | string | null | undefined;
+
+function toNumber(value: NumericLike): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export async function fetchDriverSummaries(): Promise<DriverSummary[]> {
     const { data } = await axios.get<DriverSummary[]>(`${API_BASE_URL}/users/drivers/summary`);
-    return data;
+    return data.map((driver) => ({
+        ...driver,
+        monthlySalary: toNumber(driver.monthlySalary),
+        pendingBalance: toNumber(driver.pendingBalance),
+    }));
 }
 
 export async function createDriver(payload: CreateDriverDto): Promise<void> {
@@ -63,7 +74,10 @@ export async function createDriver(payload: CreateDriverDto): Promise<void> {
 
 export async function getDriverById(id: number): Promise<DriverDetail> {
     const { data } = await axios.get<DriverDetail>(`${API_BASE_URL}/users/${id}`);
-    return data;
+    return {
+        ...data,
+        monthlySalary: data.monthlySalary != null ? toNumber(data.monthlySalary) : undefined,
+    };
 }
 
 export async function updateDriver(id: number, payload: UpdateDriverDto): Promise<void> {

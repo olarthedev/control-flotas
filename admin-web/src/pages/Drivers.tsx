@@ -4,6 +4,9 @@ import { useSearchParams } from 'react-router-dom';
 import { DriverCard } from '../components/drivers/DriverCard';
 import { DriverModal, type DriverFormData } from '../components/drivers/DriverModal';
 import { DeleteDriverModal } from '../components/drivers/DeleteDriverModal';
+import { DriverPaymentModal } from '../components/drivers/DriverPaymentModal';
+import { DriverPaymentHistoryModal } from '../components/drivers/DriverPaymentHistoryModal';
+import { Toast, type ToastType } from '../components/Toast';
 import {
     createDriver,
     deleteDriver,
@@ -13,6 +16,12 @@ import {
     updateDriver,
 } from '../services/drivers.service';
 import { fetchVehicles } from '../services/vehicles.service';
+import {
+    createDriverPayment,
+    fetchDriverPaymentHistory,
+    resetDriverPaymentMonth,
+    type DriverPayment,
+} from '../services/consignments.service';
 
 export function DriversPage() {
     const [searchParams] = useSearchParams();
@@ -27,6 +36,12 @@ export function DriversPage() {
     const [driverToDelete, setDriverToDelete] = useState<DriverSummary | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [vehicleOptions, setVehicleOptions] = useState<{ id: number; label: string }[]>([]);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [selectedDriverForPayments, setSelectedDriverForPayments] = useState<DriverSummary | null>(null);
+    const [paymentHistory, setPaymentHistory] = useState<DriverPayment[]>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
     const loadDrivers = async () => {
         try {
@@ -141,24 +156,8 @@ export function DriversPage() {
                     assignedVehicleId: driverData.assignedVehicleId,
                 });
 
-                // Actualizar el driver en la lista local de forma inmediata
-                const vehicleLabel = vehicleOptions.find((v) => v.id === driverData.assignedVehicleId)?.label;
-                const vehiclePlate = vehicleLabel?.split(' - ')[0] || null;
-
-                setDrivers((current) =>
-                    current.map((driver) =>
-                        driver.id === driverData.id
-                            ? {
-                                ...driver,
-                                fullName: driverData.fullName,
-                                email: driverData.email,
-                                monthlySalary: driverData.monthlySalary || driver.monthlySalary,
-                                isActive: driverData.isActive,
-                                assignedVehiclePlate: vehiclePlate,
-                            }
-                            : driver,
-                    ),
-                );
+                // Recargar la lista para reflejar el nuevo saldo pendiente calculado en el backend
+                await loadDrivers();
             }
 
             setIsModalOpen(false);
@@ -173,6 +172,105 @@ export function DriversPage() {
 
         setDriverToDelete(selected);
         setIsDeleteModalOpen(true);
+    };
+
+    const handleOpenPayModal = (driverId: number) => {
+        const selected = drivers.find((driver) => driver.id === driverId);
+        if (!selected) return;
+
+        setSelectedDriverForPayments(selected);
+        setIsPaymentModalOpen(true);
+    };
+
+    const handleOpenHistoryModal = async (driverId: number) => {
+        const selected = drivers.find((driver) => driver.id === driverId);
+        if (!selected) return;
+
+        setSelectedDriverForPayments(selected);
+        setIsHistoryModalOpen(true);
+
+        try {
+            setIsLoadingHistory(true);
+            const history = await fetchDriverPaymentHistory(driverId);
+            setPaymentHistory(history);
+        } catch (err) {
+            console.error('Error loading payment history:', err);
+            setPaymentHistory([]);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    const handleConfirmPayment = async (amount: number) => {
+        if (!selectedDriverForPayments) return;
+
+        const payment = await createDriverPayment(selectedDriverForPayments.id, amount);
+        const newBalance = Math.max(0, Number(selectedDriverForPayments.pendingBalance ?? 0) - amount);
+
+        setDrivers((current) =>
+            current.map((driver) =>
+                driver.id === selectedDriverForPayments.id
+                    ? {
+                        ...driver,
+                        pendingBalance: newBalance,
+                    }
+                    : driver,
+            ),
+        );
+
+        setSelectedDriverForPayments((current) => {
+            if (!current) return current;
+
+            return {
+                ...current,
+                pendingBalance: newBalance,
+            };
+        });
+
+        setPaymentHistory((current) => [payment, ...current]);
+
+        // Mostrar notificación
+        if (newBalance === 0) {
+            setToast({
+                message: `¡Excelente! Se ha pagado el salario completo de ${selectedDriverForPayments.fullName}. El saldo ha sido completado exitosamente.`,
+                type: 'success',
+            });
+        } else {
+            setToast({
+                message: `Abono registrado exitosamente. Saldo pendiente: $${newBalance.toLocaleString('es-CO')}`,
+                type: 'success',
+            });
+        }
+    };
+
+    const handleResetDriverMonth = async (driverId: number) => {
+        try {
+            const updated = await resetDriverPaymentMonth(driverId);
+            await loadDrivers();
+
+            if (selectedDriverForPayments?.id === driverId && isHistoryModalOpen) {
+                const history = await fetchDriverPaymentHistory(driverId);
+                setPaymentHistory(history);
+            }
+
+            if (updated > 0) {
+                setToast({
+                    message: `Nuevo período mensual iniciado. ${updated} abono(s) del mes anterior fueron cerrados.`,
+                    type: 'info',
+                });
+            } else {
+                setToast({
+                    message: 'No había abonos activos para cerrar. Ya puedes registrar abonos del nuevo mes.',
+                    type: 'info',
+                });
+            }
+        } catch (resetError) {
+            console.error('Error resetting driver month:', resetError);
+            setToast({
+                message: 'No se pudo iniciar el nuevo mes del conductor.',
+                type: 'error',
+            });
+        }
     };
 
     const confirmDeleteDriver = async () => {
@@ -277,6 +375,9 @@ export function DriversPage() {
                             isActive={driver.isActive}
                             onEdit={handleEditDriver}
                             onDelete={handleDeleteDriver}
+                            onPay={handleOpenPayModal}
+                            onViewHistory={handleOpenHistoryModal}
+                            onResetMonth={handleResetDriverMonth}
                         />
                     ))}
                 </div>
@@ -314,7 +415,7 @@ export function DriversPage() {
                                         ${Number(driver.monthlySalary ?? 0).toLocaleString('en-US')}
                                     </td>
 
-                                    <td className="px-6 py-4 text-[16px] font-semibold text-rose-500">
+                                    <td className={`px-6 py-4 text-[16px] font-semibold ${Number(driver.pendingBalance ?? 0) === 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                                         ${Number(driver.pendingBalance ?? 0).toLocaleString('en-US')}
                                     </td>
 
@@ -329,6 +430,25 @@ export function DriversPage() {
 
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
+                                            {Number(driver.pendingBalance ?? 0) === 0 ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleResetDriverMonth(driver.id)}
+                                                    className="rounded-md px-2.5 py-1 text-[11px] font-bold text-[#5848f4] transition hover:bg-indigo-100 hover:text-indigo-700"
+                                                    aria-label="Iniciar nuevo mes"
+                                                >
+                                                    NUEVO MES
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenPayModal(driver.id)}
+                                                    className="rounded-md px-2.5 py-1 text-[11px] font-bold text-[#5848f4] transition hover:bg-indigo-100 hover:text-indigo-700"
+                                                    aria-label="Abonar salario"
+                                                >
+                                                    ABONAR
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 onClick={() => handleEditDriver(driver.id)}
@@ -375,6 +495,31 @@ export function DriversPage() {
                 onConfirm={confirmDeleteDriver}
                 isDeleting={isDeleting}
             />
+
+            <DriverPaymentModal
+                isOpen={isPaymentModalOpen}
+                driverName={selectedDriverForPayments?.fullName ?? ''}
+                pendingBalance={Number(selectedDriverForPayments?.pendingBalance ?? 0)}
+                onClose={() => setIsPaymentModalOpen(false)}
+                onConfirm={handleConfirmPayment}
+            />
+
+            <DriverPaymentHistoryModal
+                isOpen={isHistoryModalOpen}
+                driverName={selectedDriverForPayments?.fullName ?? ''}
+                payments={paymentHistory}
+                isLoading={isLoadingHistory}
+                onClose={() => setIsHistoryModalOpen(false)}
+            />
+
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    duration={5000}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </section>
     );
 }

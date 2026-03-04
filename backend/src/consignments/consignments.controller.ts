@@ -42,6 +42,12 @@ export class ConsignmentsController {
         return this.consignmentsService.findByDriver(+driverId);
     }
 
+    /** PATCH /consignments/driver/:driverId/reset-month */
+    @Patch('driver/:driverId/reset-month')
+    resetDriverMonth(@Param('driverId') driverId: string) {
+        return this.consignmentsService.closeDriverActiveConsignments(+driverId);
+    }
+
     /** GET /consignments/:id */
     @Get(':id')
     findOne(@Param('id') id: string) {

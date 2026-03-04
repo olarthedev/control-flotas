@@ -5,9 +5,9 @@ import * as bcrypt from 'bcrypt';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ExpenseStatus } from '../expenses/expense.entity';
 import { DriverSummaryDto } from './dto/driver-summary.dto';
 import { Vehicle } from '../vehicles/vehicle.entity';
+import { ConsignmentStatus } from '../consignments/consignment.entity';
 
 @Injectable()
 export class UsersService {
@@ -79,14 +79,18 @@ export class UsersService {
     async findDriverSummaries(): Promise<DriverSummaryDto[]> {
         const drivers = await this.usersRepository.find({
             where: { role: UserRole.DRIVER },
-            relations: ['expenses', 'trips', 'trips.vehicle'],
+            relations: ['expenses', 'trips', 'trips.vehicle', 'consignments'],
             order: { id: 'ASC' },
         });
 
         return drivers.map((driver) => {
-            const pendingBalance = (driver.expenses ?? [])
-                .filter((expense) => expense.status === ExpenseStatus.PENDING)
-                .reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+            const monthlySalary = Number(driver.monthlySalary ?? 0);
+
+            const totalAbonos = (driver.consignments ?? [])
+                .filter((consignment) => consignment.status === ConsignmentStatus.ACTIVE)
+                .reduce((sum, consignment) => sum + Number(consignment.amount ?? 0), 0);
+
+            const pendingBalance = Math.max(0, monthlySalary - totalAbonos);
 
             const sortedTrips = [...(driver.trips ?? [])].sort((a, b) => {
                 const first = new Date(b.startDate).getTime();

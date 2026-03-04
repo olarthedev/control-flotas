@@ -1,6 +1,31 @@
 import { useEffect, useState } from 'react';
 import { MdClose } from 'react-icons/md';
 
+function formatAmount(value: string): string {
+    // Remover caracteres no numéricos
+    const numericValue = value.replace(/\D/g, '');
+    if (!numericValue) return '';
+
+    // Agregar separadores: . para el primer grupo de miles, ' para millones
+    let formatted = '';
+    const digits = numericValue.split('').reverse();
+
+    for (let i = 0; i < digits.length; i++) {
+        if (i > 0 && i % 3 === 0) {
+            // Primera separación (posición 3) usa punto, las demás apóstrofe
+            formatted = (i === 3 ? '.' : "'") + formatted;
+        }
+        formatted = digits[i] + formatted;
+    }
+
+    return formatted;
+}
+
+function parseAmount(formatted: string): number {
+    const parsed = Number(formatted.replace(/[.']/g, ''));
+    return isNaN(parsed) ? 0 : parsed;
+}
+
 export interface DriverFormData {
     id?: number;
     fullName: string;
@@ -37,6 +62,7 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
     const [error, setError] = useState<string | null>(null);
     const [shouldRender, setShouldRender] = useState(isOpen);
     const [isVisible, setIsVisible] = useState(false);
+    const [salaryDisplay, setSalaryDisplay] = useState<string>('');
 
     useEffect(() => {
         if (isOpen) {
@@ -62,6 +88,7 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
                 isActive: true,
                 assignedVehicleId: undefined,
             });
+            setSalaryDisplay('');
             setError(null);
             setIsSubmitting(false);
         }
@@ -82,6 +109,7 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
                 isActive: driver.isActive,
                 assignedVehicleId: driver.assignedVehicleId,
             });
+            setSalaryDisplay(driver.monthlySalary ? formatAmount(driver.monthlySalary.toString()) : '');
             return;
         }
 
@@ -95,6 +123,7 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
             isActive: true,
             assignedVehicleId: undefined,
         });
+        setSalaryDisplay('');
     }, [isOpen, mode, driver]);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -112,16 +141,20 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
         }
     };
 
+    const handleSalaryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const raw = event.target.value;
+        // Remover cualquier separador que pueda estar en el value
+        const numericValue = parseAmount(raw);
+        const formatted = numericValue > 0 ? formatAmount(numericValue.toString()) : '';
+        setSalaryDisplay(formatted);
+        setFormData((previous) => ({
+            ...previous,
+            monthlySalary: numericValue > 0 ? numericValue : undefined,
+        }));
+    };
+
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = event.target;
-
-        if (name === 'monthlySalary') {
-            setFormData((previous) => ({
-                ...previous,
-                monthlySalary: value ? Number(value) : undefined,
-            }));
-            return;
-        }
 
         if (name === 'isActive') {
             setFormData((previous) => ({
@@ -226,15 +259,19 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
                             <label htmlFor="monthlySalary" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
                                 Salario mensual
                             </label>
-                            <input
-                                id="monthlySalary"
-                                name="monthlySalary"
-                                type="number"
-                                min={0}
-                                value={formData.monthlySalary ?? ''}
-                                onChange={handleInputChange}
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
+                            <div className="flex items-center rounded-lg border border-gray-300 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+                                <span className="mr-2 text-base font-semibold text-slate-400">$</span>
+                                <input
+                                    id="monthlySalary"
+                                    name="monthlySalary"
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={salaryDisplay}
+                                    onChange={handleSalaryChange}
+                                    className="w-full bg-transparent text-sm text-gray-900 outline-none"
+                                    placeholder="0"
+                                />
+                            </div>
                         </div>
                     </div>
 

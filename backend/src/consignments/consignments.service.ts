@@ -81,6 +81,35 @@ export class ConsignmentsService {
         });
     }
 
+    /**
+     * Close all ACTIVE consignments for a driver (used to start a new salary month).
+     */
+    async closeDriverActiveConsignments(driverId: number): Promise<{ updated: number }> {
+        const activeConsignments = await this.consignmentsRepository.find({
+            where: {
+                driver: { id: driverId },
+                status: ConsignmentStatus.ACTIVE,
+            },
+        });
+
+        if (!activeConsignments.length) {
+            return { updated: 0 };
+        }
+
+        const ids = activeConsignments.map((consignment) => consignment.id);
+
+        await this.consignmentsRepository.update(
+            { id: In(ids) },
+            {
+                status: ConsignmentStatus.CLOSED,
+                closingDate: new Date(),
+                closingNotes: 'Cierre mensual automático desde módulo de conductores',
+            },
+        );
+
+        return { updated: ids.length };
+    }
+
     /** Only consignments in ACTIVE status */
     async findActive(): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
@@ -130,7 +159,7 @@ export class ConsignmentsService {
         const balance = consignment.amount - totalApproved;
 
         const updateData: any = {
-            status: 'CLOSED',
+            status: ConsignmentStatus.CLOSED,
             closingDate: new Date(),
             totalApprovedExpenses: totalApproved,
             balance: balance,

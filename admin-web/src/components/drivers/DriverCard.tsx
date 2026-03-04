@@ -11,6 +11,9 @@ interface DriverCardProps {
     isActive: boolean;
     onEdit?: (id: number) => void;
     onDelete?: (id: number) => void;
+    onPay?: (id: number) => void;
+    onViewHistory?: (id: number) => void;
+    onResetMonth?: (id: number) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -27,6 +30,9 @@ export function DriverCard({
     isActive,
     onEdit,
     onDelete,
+    onPay,
+    onViewHistory,
+    onResetMonth,
 }: DriverCardProps) {
     const initial = fullName.trim().charAt(0).toUpperCase() || 'D';
 
@@ -73,7 +79,9 @@ export function DriverCard({
 
                 <div className="flex items-center justify-between gap-3">
                     <dt className="text-slate-400">Saldo Pendiente:</dt>
-                    <dd className="font-semibold text-rose-500">{formatCurrency(pendingBalance)}</dd>
+                    <dd className={`font-semibold ${pendingBalance === 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        {formatCurrency(pendingBalance)}
+                    </dd>
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
@@ -83,20 +91,45 @@ export function DriverCard({
             </dl>
 
             <footer className="mt-5 flex items-center justify-between">
-                <span
-                    className={`rounded-full px-3 py-1 text-[11px] font-bold ${isActive
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-slate-100 text-slate-500'
-                        }`}
-                >
-                    {isActive ? 'ACTIVE' : 'INACTIVE'}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span
+                        className={`rounded-full px-3 py-1 text-[11px] font-bold ${isActive
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-slate-100 text-slate-500'
+                            }`}
+                    >
+                        {isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                    {pendingBalance === 0 && (
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700">
+                            ✓ PAGO
+                        </span>
+                    )}
+                </div>
 
                 <div className="flex items-center gap-3 text-[11px] font-bold tracking-wide">
-                    <button type="button" className="text-[#5848f4] hover:opacity-80">
-                        ABONAR
-                    </button>
-                    <button type="button" className="text-slate-400 hover:text-slate-500">
+                    {pendingBalance === 0 ? (
+                        <button
+                            type="button"
+                            onClick={() => onResetMonth?.(id)}
+                            className="rounded px-2.5 py-1.5 text-[#5848f4] transition-all duration-200 hover:bg-indigo-100 hover:text-indigo-700 hover:shadow-sm"
+                        >
+                            NUEVO MES
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => onPay?.(id)}
+                            className="rounded px-2.5 py-1.5 text-[#5848f4] transition-all duration-200 hover:bg-indigo-100 hover:text-indigo-700 hover:shadow-sm"
+                        >
+                            ABONAR
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => onViewHistory?.(id)}
+                        className="rounded px-2.5 py-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 hover:shadow-sm"
+                    >
                         HISTORIAL
                     </button>
                 </div>
