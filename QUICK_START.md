@@ -3,6 +3,7 @@
 ## ⚡ 30 Segundos para Empezar
 
 ### 1. Asegúrate que todo esté corriendo
+
 ```bash
 # Terminal 1: Backend
 cd backend
@@ -14,16 +15,19 @@ npm run dev
 ```
 
 ### 2. Abre el navegador
+
 ```
 http://localhost:5173
 ```
 
 ### 3. Ve a Gastos
+
 ```
 Sidebar → Gastos
 ```
 
 ### 4. ¡Listo! 🎉
+
 Deberías ver un grid de vehículos con resumen de gastos.
 
 ---
@@ -42,12 +46,12 @@ Deberías ver un grid de vehículos con resumen de gastos.
 
 ## 🎯 Lo Que Cambió
 
-| Antes | Después |
-|-------|---------|
-| Una vista confusa | Grid limpio de vehículos |
-| Todos los recibos mezclados | Gastos agrupados por vehículo |
-| Sin filtros | Filtros avanzados (estado, tipo, fecha) |
-| Difícil de navegar | Jerarquía clara y profesional |
+| Antes                       | Después                                 |
+| --------------------------- | --------------------------------------- |
+| Una vista confusa           | Grid limpio de vehículos                |
+| Todos los recibos mezclados | Gastos agrupados por vehículo           |
+| Sin filtros                 | Filtros avanzados (estado, tipo, fecha) |
+| Difícil de navegar          | Jerarquía clara y profesional           |
 
 ---
 
@@ -56,9 +60,10 @@ Deberías ver un grid de vehículos con resumen de gastos.
 ✅ 5 vehículos diferentes  
 ✅ 20 gastos en varios estados  
 ✅ 7 tipos de gastos  
-✅ Fechas realistas  
+✅ Fechas realistas
 
 Todo fue agregado automáticamente al ejecutar el script:
+
 ```bash
 cd backend
 node scripts/seed-expenses.js
@@ -97,11 +102,13 @@ services/
 ## 🔍 Búsqueda y Filtros
 
 ### En Vista Principal
+
 ```
 🔍 Buscar: Placa, Conductor, Marca
 ```
 
 ### En Vista Detalle
+
 ```
 🔧 Filtros:
   - Estado (Pendiente, Aprobado, Observado, Rechazado)
@@ -121,22 +128,25 @@ services/
 ✅ Detalles expandibles  
 ✅ Toast notifications  
 ✅ Loading & empty states  
-✅ 100% funcional  
+✅ 100% funcional
 
 ---
 
 ## 🐛 Troubleshooting
 
 ### "No veo los gastos"
+
 1. Backend debe estar en `http://localhost:3001`
 2. Recarga la página (F5)
 3. Revisa la consola (F12 → Console)
 
 ### "Los filtros no funcionan como espero"
+
 - Los filtros son **acumulativos** (AND)
 - Ejemplo: Estado "Pendiente" + Tipo "Combustible" = Pendientes de Combustible únicamente
 
 ### "La binlog dice error de API"
+
 - Asegúrate que backend esté corriendo
 - Puerto debe ser 3001
 - Revisa `http://localhost:3001/expenses` en el navegador
@@ -189,6 +199,7 @@ Status: PRODUCTION READY
 **¡Disfruta tu nueva interfaz de gastos!** 🎉
 
 Para soporte: Revisa los documentos o ejecuta:
+
 ```bash
 cd admin-web && npm run build
 ```

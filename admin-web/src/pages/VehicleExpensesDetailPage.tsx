@@ -138,7 +138,7 @@ export function VehicleExpensesDetailPage() {
             try {
                 const vehicleList = await fetchExpensesGroupedByVehicle();
                 setVehicleOptions(vehicleList);
-                
+
                 // Seleccionar el primer vehículo automáticamente
                 if (vehicleList.length > 0) {
                     setSelectedVehicleId(vehicleList[0].vehicleId);
