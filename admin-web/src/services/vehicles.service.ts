@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { apiConfig } from '../config/api';
 
 export interface Vehicle {
     id: number;
@@ -72,7 +71,7 @@ export interface UpdateVehicleDto extends Partial<CreateVehicleDto> { }
 
 export async function fetchVehicles(): Promise<VehicleCardData[]> {
     try {
-        const { data } = await axios.get<Vehicle[]>(`${API_BASE_URL}/vehicles`);
+        const { data } = await axios.get<Vehicle[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`);
 
         return data.map(vehicle => ({
             id: vehicle.id,
@@ -92,7 +91,7 @@ export async function fetchVehicles(): Promise<VehicleCardData[]> {
 
 export async function createVehicle(vehicleData: CreateVehicleDto): Promise<Vehicle> {
     try {
-        const { data } = await axios.post<Vehicle>(`${API_BASE_URL}/vehicles`, vehicleData);
+        const { data } = await axios.post<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`, vehicleData);
         return data;
     } catch (error) {
         console.error('Error creating vehicle:', error);
@@ -102,7 +101,7 @@ export async function createVehicle(vehicleData: CreateVehicleDto): Promise<Vehi
 
 export async function updateVehicle(id: number, vehicleData: UpdateVehicleDto): Promise<Vehicle> {
     try {
-        const { data } = await axios.patch<Vehicle>(`${API_BASE_URL}/vehicles/${id}`, vehicleData);
+        const { data } = await axios.patch<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`, vehicleData);
         return data;
     } catch (error) {
         console.error('Error updating vehicle:', error);
@@ -112,7 +111,7 @@ export async function updateVehicle(id: number, vehicleData: UpdateVehicleDto): 
 
 export async function getVehicleById(id: number): Promise<Vehicle> {
     try {
-        const { data } = await axios.get<Vehicle>(`${API_BASE_URL}/vehicles/${id}`);
+        const { data } = await axios.get<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
         return data;
     } catch (error) {
         console.error('Error fetching vehicle:', error);
@@ -122,7 +121,7 @@ export async function getVehicleById(id: number): Promise<Vehicle> {
 
 export async function deleteVehicle(id: number): Promise<void> {
     try {
-        await axios.delete(`${API_BASE_URL}/vehicles/${id}`);
+        await axios.delete(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
     } catch (error) {
         console.error('Error deleting vehicle:', error);
         throw error;

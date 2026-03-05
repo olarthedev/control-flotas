@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { apiConfig } from '../config/api';
 
 export type ExpenseStatus = 'PENDING' | 'APPROVED' | 'OBSERVED' | 'REJECTED';
 
@@ -75,7 +74,7 @@ function normalizeExpense(item: ExpenseResponse): ExpenseItem {
 }
 
 export async function fetchExpenses(): Promise<ExpenseItem[]> {
-    const { data } = await axios.get<ExpenseResponse[]>(`${API_BASE_URL}/expenses`);
+    const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}`);
     return data.map(normalizeExpense);
 }
 
@@ -83,7 +82,7 @@ export async function updateExpenseStatus(
     id: number,
     payload: { status: ExpenseStatus; rejectionReason?: string | null; validatedBy?: string },
 ): Promise<ExpenseItem> {
-    const { data } = await axios.patch<ExpenseResponse>(`${API_BASE_URL}/expenses/${id}`, {
+    const { data } = await axios.patch<ExpenseResponse>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}/${id}`, {
         ...payload,
         validatedAt: new Date().toISOString(),
     });

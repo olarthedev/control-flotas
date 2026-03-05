@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { apiConfig } from '../config/api';
 
 export interface DriverSummary {
     id: number;
@@ -60,7 +59,7 @@ function toNumber(value: NumericLike): number {
 }
 
 export async function fetchDriverSummaries(): Promise<DriverSummary[]> {
-    const { data } = await axios.get<DriverSummary[]>(`${API_BASE_URL}/users/drivers/summary`);
+    const { data } = await axios.get<DriverSummary[]>(`${apiConfig.BASE_URL}/users/drivers/summary`);
     return data.map((driver) => ({
         ...driver,
         monthlySalary: toNumber(driver.monthlySalary),
@@ -69,11 +68,11 @@ export async function fetchDriverSummaries(): Promise<DriverSummary[]> {
 }
 
 export async function createDriver(payload: CreateDriverDto): Promise<void> {
-    await axios.post(`${API_BASE_URL}/users`, payload);
+    await axios.post(`${apiConfig.BASE_URL}/users`, payload);
 }
 
 export async function getDriverById(id: number): Promise<DriverDetail> {
-    const { data } = await axios.get<DriverDetail>(`${API_BASE_URL}/users/${id}`);
+    const { data } = await axios.get<DriverDetail>(`${apiConfig.BASE_URL}/users/${id}`);
     return {
         ...data,
         monthlySalary: data.monthlySalary != null ? toNumber(data.monthlySalary) : undefined,
@@ -81,9 +80,9 @@ export async function getDriverById(id: number): Promise<DriverDetail> {
 }
 
 export async function updateDriver(id: number, payload: UpdateDriverDto): Promise<void> {
-    await axios.patch(`${API_BASE_URL}/users/${id}`, payload);
+    await axios.patch(`${apiConfig.BASE_URL}/users/${id}`, payload);
 }
 
 export async function deleteDriver(id: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/users/${id}`);
+    await axios.delete(`${apiConfig.BASE_URL}/users/${id}`);
 }

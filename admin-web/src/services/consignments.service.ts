@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { apiConfig } from '../config/api';
 
 export type ConsignmentStatus = 'ACTIVE' | 'CLOSED' | 'DISPUTED';
 
@@ -59,6 +58,11 @@ function buildPaymentNumber(): string {
     return `ABONO-${suffix}`;
 }
 
+function buildConsignmentNumber(): string {
+    const suffix = Math.floor(1000 + Math.random() * 9000);
+    return `CONSIG-${suffix}`;
+}
+
 export async function createDriverPayment(driverId: number, amount: number): Promise<DriverPayment> {
     const payload = {
         consignmentNumber: buildPaymentNumber(),
@@ -68,7 +72,7 @@ export async function createDriverPayment(driverId: number, amount: number): Pro
         consignmentNotes: 'Abono de salario generado desde módulo de conductores',
     };
 
-    const { data } = await axios.post<DriverPaymentResponse>(`${API_BASE_URL}/consignments`, payload);
+    const { data } = await axios.post<DriverPaymentResponse>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.CONSIGNMENTS}`, payload);
 
     return {
         id: data.id,
@@ -78,8 +82,37 @@ export async function createDriverPayment(driverId: number, amount: number): Pro
     };
 }
 
+export async function createConsignment(
+    driverId: number,
+    vehicleId: number,
+    amount: number,
+    notes?: string,
+    date?: string
+): Promise<ConsignmentItem> {
+    const payload = {
+        consignmentNumber: buildConsignmentNumber(),
+        amount,
+        consignmentDate: date || new Date().toISOString(),
+        driverId,
+        vehicleId,
+        consignmentNotes: notes || 'Consignación semanal',
+    };
+
+    const { data } = await axios.post<ConsignmentResponse>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.CONSIGNMENTS}`, payload);
+
+    return {
+        id: data.id,
+        consignmentNumber: data.consignmentNumber,
+        amount: Number(data.amount ?? 0),
+        consignmentDate: data.consignmentDate,
+        status: data.status,
+        driver: data.driver,
+        vehicle: data.vehicle,
+    };
+}
+
 export async function fetchDriverPaymentHistory(driverId: number): Promise<DriverPayment[]> {
-    const { data } = await axios.get<DriverPaymentResponse[]>(`${API_BASE_URL}/consignments/driver/${driverId}`);
+    const { data } = await axios.get<DriverPaymentResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.DRIVERS_PAYMENTS(driverId)}`);
 
     return data.map((item) => ({
         id: item.id,
@@ -90,7 +123,7 @@ export async function fetchDriverPaymentHistory(driverId: number): Promise<Drive
 }
 
 export async function fetchAllConsignments(): Promise<ConsignmentItem[]> {
-    const { data } = await axios.get<ConsignmentResponse[]>(`${API_BASE_URL}/consignments`);
+    const { data } = await axios.get<ConsignmentResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.CONSIGNMENTS}`);
 
     return data.map((item) => ({
         id: item.id,
@@ -104,6 +137,6 @@ export async function fetchAllConsignments(): Promise<ConsignmentItem[]> {
 }
 
 export async function resetDriverPaymentMonth(driverId: number): Promise<number> {
-    const { data } = await axios.patch<ResetMonthResponse>(`${API_BASE_URL}/consignments/driver/${driverId}/reset-month`);
+    const { data } = await axios.patch<ResetMonthResponse>(`${apiConfig.BASE_URL}/consignments/driver/${driverId}/reset-month`);
     return Number(data.updated ?? 0);
 }

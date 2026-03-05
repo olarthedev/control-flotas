@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -79,7 +79,7 @@ export class UsersService {
     async findDriverSummaries(): Promise<DriverSummaryDto[]> {
         const drivers = await this.usersRepository.find({
             where: { role: UserRole.DRIVER },
-            relations: ['expenses', 'trips', 'trips.vehicle', 'consignments'],
+            relations: ['expenses', 'trips', 'trips.vehicle', 'consignments', 'assignedVehicle'],
             order: { id: 'ASC' },
         });
 
@@ -138,7 +138,7 @@ export class UsersService {
         const existing = await this.findById(id);
         if (!existing) {
             // throw proper HTTP exception when user doesn't exist
-            throw new (require('@nestjs/common').NotFoundException)('User not found');
+            throw new NotFoundException('User not found');
         }
 
         const { assignedVehicleId, password, ...userPayload } = updateUserDto;
@@ -165,7 +165,7 @@ export class UsersService {
     async remove(id: number) {
         const result = await this.usersRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('User not found');
+            throw new NotFoundException('User not found');
         }
         return result;
     }
