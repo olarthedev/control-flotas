@@ -1,68 +1,88 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  MdDashboard,
-  MdAttachMoney,
-  MdBuild,
-  MdPeople,
-  MdDirectionsBus,
-  MdNotifications,
-  MdSettings,
-  MdLogout
-} from "react-icons/md";
+  Bell,
+  Bus,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  UserRound,
+  Wallet,
+  Wrench,
+} from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  isCollapsed: boolean;
+  isExpanded: boolean;
+  sidebarWidth: number;
+  onHoverChange: (isHovered: boolean) => void;
+}
+
+export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }: SidebarProps) {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
   const menuSections = [
     {
       title: "PRINCIPAL",
-      items: [{ path: "/", label: "Dashboard", icon: MdDashboard }]
+      items: [{ path: "/", label: "Dashboard", icon: LayoutDashboard }]
     },
     {
       title: "OPERACIONES",
       items: [
-        { path: "/expenses", label: "Gastos", icon: MdAttachMoney, badge: "3" },
-        { path: "/maintenance", label: "Mantenimiento", icon: MdBuild }
+        { path: "/expenses", label: "Gastos", icon: Wallet, badge: "3" },
+        { path: "/maintenance", label: "Mantenimiento", icon: Wrench }
       ]
     },
     {
       title: "RECURSOS",
       items: [
-        { path: "/drivers", label: "Conductores", icon: MdPeople },
-        { path: "/vehicles", label: "Vehículos", icon: MdDirectionsBus }
+        { path: "/drivers", label: "Conductores", icon: UserRound },
+        { path: "/vehicles", label: "Vehículos", icon: Bus }
       ]
     },
     {
       title: "SISTEMA",
       items: [
-        { path: "/notifications", label: "Notificaciones", icon: MdNotifications },
-        { path: "/settings", label: "Configuración", icon: MdSettings }
+        { path: "/notifications", label: "Notificaciones", icon: Bell },
+        { path: "/settings", label: "Configuración", icon: Settings }
       ]
     }
   ];
 
   return (
     <aside
+      data-sidebar-hover-zone="true"
       className={`
     fixed
     top-16
     left-0
     h-[calc(100vh-64px)]
-    w-64
     bg-[#f6f7fb]
     border-r border-gray-200
     flex flex-col
-    z-40
+    transition-[width] duration-300 ease-out
+    ${isCollapsed && isExpanded ? "z-[65]" : "z-40"}
+    ${isCollapsed && isExpanded ? "shadow-xl" : ""}
   `}
+      style={{ width: `${sidebarWidth}px` }}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={(event) => {
+        const next = event.relatedTarget as HTMLElement | null;
+        if (next?.closest('[data-sidebar-hover-zone="true"]')) {
+          return;
+        }
+        onHoverChange(false);
+      }}
     >
       {/* MENU */}
-      <nav className="flex-1 px-3 pt-4 space-y-6 overflow-y-auto overflow-x-hidden">
+      <nav className={`flex-1 pt-4 space-y-6 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ease-out ${isCollapsed && !isExpanded ? "px-1.5" : "px-3"}`}>
         {menuSections.map(section => (
           <div key={section.title}>
-            <h3 className="px-3 mb-2 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
-              {section.title}
-            </h3>
+            {isExpanded && (
+              <h3 className="px-3 mb-2 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+                {section.title}
+              </h3>
+            )}
 
             <div className="space-y-1">
               {section.items.map(item => {
@@ -73,10 +93,13 @@ export function Sidebar() {
                   <Link
                     key={item.path}
                     to={item.path}
+                    title={item.label}
                     className={`
-                group relative flex items-center justify-between
-                px-3 py-2.5 rounded-xl
-                transition-all duration-200
+                group relative flex items-center
+                ${isExpanded ? "justify-between" : "justify-center"}
+                  ${isExpanded ? "px-3 py-2.5" : "mx-auto h-10 w-10 px-0"}
+                  rounded-xl
+                  transition-all duration-300 ease-out
                 ${active
                         ? "bg-[#e9e8fb] text-[#5c4df2]"
                   : "text-[#64748b] hover:bg-gray-100 hover:text-slate-700"
@@ -93,33 +116,37 @@ export function Sidebar() {
   `}
                     />
 
-                    <div className="flex items-center gap-3">
+                    <div className={`flex items-center ${isExpanded ? "gap-3" : "gap-0"}`}>
                       <div
                         className={`
+      flex h-5 w-5 items-center justify-center
+      transition-colors duration-300 ease-out
       ${active
                             ? "text-[#5c4df2]"
                             : "text-slate-400 group-hover:text-slate-700"
                           }
     `}
                       >
-                        <Icon size={20} />
+                        <Icon size={18} strokeWidth={2} />
                       </div>
 
-                      <span
-                        className={`
+                      {isExpanded && (
+                        <span
+                          className={`
       text-[13.5px] tracking-tight whitespace-nowrap
       ${active
                             ? "font-semibold text-[#5c4df2]"
                             : "font-medium text-slate-600 group-hover:text-slate-700"
                           }
     `}
-                      >
-                        {item.label}
-                      </span>
+                        >
+                          {item.label}
+                        </span>
+                      )}
                     </div>
 
                     {/* Badge */}
-                    {item.badge && (
+                    {isExpanded && item.badge && (
                       <span
                         className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f26419] text-white"
                       >
@@ -154,9 +181,10 @@ export function Sidebar() {
       active:scale-[0.98]
       active:bg-red-100
     "
+          title="Cerrar sesión"
         >
-          <MdLogout size={16} />
-          Cerrar sesión
+          <LogOut size={16} strokeWidth={2} />
+          {isExpanded && "Cerrar sesión"}
         </button>
       </div>
     </aside>
