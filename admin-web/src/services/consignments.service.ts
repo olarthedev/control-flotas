@@ -2,11 +2,29 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3001';
 
+export type ConsignmentStatus = 'ACTIVE' | 'CLOSED' | 'DISPUTED';
+
 export interface DriverPayment {
     id: number;
     consignmentNumber: string;
     amount: number;
     consignmentDate: string;
+}
+
+export interface ConsignmentItem {
+    id: number;
+    consignmentNumber: string;
+    amount: number;
+    consignmentDate: string;
+    status: ConsignmentStatus;
+    driver: {
+        id: number;
+        fullName: string;
+    } | null;
+    vehicle: {
+        id: number;
+        licensePlate: string;
+    } | null;
 }
 
 interface ResetMonthResponse {
@@ -18,6 +36,22 @@ interface DriverPaymentResponse {
     consignmentNumber: string;
     amount: string | number;
     consignmentDate: string;
+}
+
+interface ConsignmentResponse {
+    id: number;
+    consignmentNumber: string;
+    amount: string | number;
+    consignmentDate: string;
+    status: ConsignmentStatus;
+    driver: {
+        id: number;
+        fullName: string;
+    } | null;
+    vehicle: {
+        id: number;
+        licensePlate: string;
+    } | null;
 }
 
 function buildPaymentNumber(): string {
@@ -52,6 +86,20 @@ export async function fetchDriverPaymentHistory(driverId: number): Promise<Drive
         consignmentNumber: item.consignmentNumber,
         amount: Number(item.amount ?? 0),
         consignmentDate: item.consignmentDate,
+    }));
+}
+
+export async function fetchAllConsignments(): Promise<ConsignmentItem[]> {
+    const { data } = await axios.get<ConsignmentResponse[]>(`${API_BASE_URL}/consignments`);
+
+    return data.map((item) => ({
+        id: item.id,
+        consignmentNumber: item.consignmentNumber,
+        amount: Number(item.amount ?? 0),
+        consignmentDate: item.consignmentDate,
+        status: item.status,
+        driver: item.driver,
+        vehicle: item.vehicle,
     }));
 }
 
