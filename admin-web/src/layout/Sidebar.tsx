@@ -79,7 +79,7 @@ export function Sidebar() {
                 transition-all duration-200
                 ${active
                         ? "bg-[#e9e8fb] text-[#5c4df2]"
-                        : "text-[#64748b] hover:bg-gray-100 hover:text-[#5c4df2]"
+                  : "text-[#64748b] hover:bg-gray-100 hover:text-slate-700"
                       }
               `}
                   >
@@ -98,7 +98,7 @@ export function Sidebar() {
                         className={`
       ${active
                             ? "text-[#5c4df2]"
-                            : "text-slate-400 group-hover:text-[#5c4df2]"
+                            : "text-slate-400 group-hover:text-slate-700"
                           }
     `}
                       >
@@ -110,7 +110,7 @@ export function Sidebar() {
       text-[13.5px] tracking-tight whitespace-nowrap
       ${active
                             ? "font-semibold text-[#5c4df2]"
-                            : "font-medium text-slate-600 group-hover:text-[#5c4df2]"
+                            : "font-medium text-slate-600 group-hover:text-slate-700"
                           }
     `}
                       >
@@ -121,13 +121,7 @@ export function Sidebar() {
                     {/* Badge */}
                     {item.badge && (
                       <span
-                        className={`
-                    text-[10px] font-bold px-1.5 py-0.5 rounded-full
-                    ${active
-                            ? "bg-[#5c4df2]/10 text-[#5c4df2]"
-                            : "bg-[#f26419] text-white"
-                          }
-                  `}
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f26419] text-white"
                       >
                         {item.badge}
                       </span>
