@@ -93,11 +93,11 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }
                     onHoverChange(false);
                 }}
-                className={`absolute left-0 top-0 flex h-full items-center px-4 border-r border-gray-200 bg-[#f6f7fb] transition-[width] duration-300 ease-out ${isSidebarPreviewExpanded ? "z-[70] shadow-lg" : "z-10"}`}
+                className={`absolute left-0 top-0 flex h-full items-center border-r border-gray-200 bg-[#f6f7fb] px-4 justify-start transition-[width] duration-300 ease-out ${isSidebarPreviewExpanded ? "z-[70] shadow-lg" : "z-10"}`}
                 style={{ width: `${effectiveSidebarWidth}px` }}
             >
                 <div className="flex w-full items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl border border-[#5c4df2] flex items-center justify-center">
+                    <div className="w-9 h-9 shrink-0 rounded-xl border border-[#5c4df2] flex items-center justify-center">
                         <MdDirectionsBus size={18} className="text-[#5c4df2]" />
                     </div>
 
@@ -115,21 +115,26 @@ export const TopBar: React.FC<TopBarProps> = ({
                         </div>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={onToggleSidebar}
-                        className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-all duration-200 ease-out hover:bg-slate-100 hover:text-slate-700"
-                        aria-label={isSidebarCollapsed ? "Fijar menu" : "Ocultar menu"}
-                        title={isSidebarCollapsed ? "Fijar menu" : "Ocultar menu"}
+                    <div
+                        className="ml-auto overflow-hidden transition-all duration-200 ease-out"
                         style={{
+                            maxWidth: isSidebarExpanded ? "40px" : "0px",
                             opacity: isSidebarExpanded ? 1 : 0,
                             transform: isSidebarExpanded ? "translateX(0)" : "translateX(-8px)",
-                            pointerEvents: isSidebarExpanded ? "auto" : "none",
                             transitionDelay: isSidebarExpanded ? "140ms" : "0ms",
                         }}
                     >
-                        {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-                    </button>
+                        <button
+                            type="button"
+                            onClick={onToggleSidebar}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-all duration-200 ease-out hover:bg-slate-100 hover:text-slate-700"
+                            aria-label={isSidebarCollapsed ? "Fijar menu" : "Ocultar menu"}
+                            title={isSidebarCollapsed ? "Fijar menu" : "Ocultar menu"}
+                            style={{ pointerEvents: isSidebarExpanded ? "auto" : "none" }}
+                        >
+                            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+                        </button>
+                    </div>
                 </div>
             </div>
 

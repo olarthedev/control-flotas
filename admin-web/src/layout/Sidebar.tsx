@@ -75,7 +75,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
       }}
     >
       {/* MENU */}
-      <nav className={`flex-1 pt-4 space-y-6 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ease-out ${isCollapsed && !isExpanded ? "px-1.5" : "px-3"}`}>
+      <nav className="flex-1 pt-4 space-y-6 overflow-y-auto overflow-x-hidden px-3">
         {menuSections.map(section => (
           <div key={section.title}>
             {isExpanded && (
@@ -96,10 +96,8 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
                     title={item.label}
                     className={`
                 group relative flex items-center
-                ${isExpanded ? "justify-between" : "justify-center"}
-                  ${isExpanded ? "px-3 py-2.5" : "mx-auto h-10 w-10 px-0"}
-                  rounded-xl
-                  transition-all duration-300 ease-out
+                justify-start px-3 py-2.5 rounded-xl
+                transition-colors duration-300 ease-out
                 ${active
                         ? "bg-[#e9e8fb] text-[#5c4df2]"
                   : "text-[#64748b] hover:bg-gray-100 hover:text-slate-700"
@@ -116,7 +114,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
   `}
                     />
 
-                    <div className={`flex items-center ${isExpanded ? "gap-3" : "gap-0"}`}>
+                    <div className="flex items-center gap-3">
                       <div
                         className={`
       flex h-5 w-5 items-center justify-center
