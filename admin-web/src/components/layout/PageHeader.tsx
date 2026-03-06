@@ -15,7 +15,7 @@ export function PageHeader({ breadcrumbs, title, subtitle, actions }: PageHeader
   return (
     <header className="flex flex-wrap items-start justify-between gap-5">
       <div className="min-w-[280px] flex-1">
-        <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 py-0.5 text-[11px] text-slate-400">
+        <nav aria-label="Breadcrumb" className="mb-[18px] flex items-center gap-2 py-0.5 text-[11px] text-slate-400">
           {breadcrumbs.map((crumbItem, index) => {
             const isLast = index === breadcrumbs.length - 1;
             const crumb = typeof crumbItem === 'string' ? { label: crumbItem } : crumbItem;
@@ -25,12 +25,12 @@ export function PageHeader({ breadcrumbs, title, subtitle, actions }: PageHeader
                 {crumb.to && !isLast ? (
                   <Link
                     to={crumb.to}
-                    className="font-medium text-slate-400 transition hover:text-[#5848f4]"
+                    className="font-medium !text-slate-500 visited:!text-slate-500 transition hover:!text-slate-700"
                   >
                     {crumb.label}
                   </Link>
                 ) : (
-                  <span className={isLast ? 'font-medium text-[#5848f4]' : 'font-medium text-slate-400'}>
+                  <span className={isLast ? 'font-medium text-[#5848f4]' : 'font-medium text-slate-500'}>
                     {crumb.label}
                   </span>
                 )}
@@ -40,10 +40,10 @@ export function PageHeader({ breadcrumbs, title, subtitle, actions }: PageHeader
           })}
         </nav>
 
-        <h1 className="text-[17px] leading-tight font-semibold tracking-tight text-[#0f1f47] sm:text-[18px]">
+        <h1 className="text-[19px] leading-tight font-semibold tracking-tight text-[#0f1f47] sm:text-[20px]">
           {title}
         </h1>
-        <p className="mt-2 max-w-[980px] text-[13px] leading-relaxed font-normal text-slate-500 sm:text-[13px]">
+        <p className="mt-3 max-w-[980px] text-[13px] leading-relaxed font-normal text-slate-500 sm:text-[13px]">
           {subtitle}
         </p>
       </div>
