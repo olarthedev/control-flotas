@@ -11,6 +11,7 @@ import { type ExpenseItem, type ExpenseStatus, updateExpenseStatus } from '../se
 import { fetchExpensesByVehicle, fetchExpensesGroupedByVehicle, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
 import { createConsignment, fetchAllConsignments, type ConsignmentItem } from '../services/consignments.service';
 import { Toast, type ToastType } from '../components/Toast';
+import { PageHeader } from '../components/layout/PageHeader';
 
 type ViewTab = 'ACTIVOS' | 'HISTORIAL';
 
@@ -454,10 +455,15 @@ export function VehicleExpensesDetailPage() {
     if (vehicleOptions.length === 0) {
         return (
             <section className="space-y-5">
-                <header className="space-y-2">
-                    <h1 className="text-[24px] font-bold leading-tight text-[#0b1835]">Control de Gastos por Ruta</h1>
-                    <p className="text-xs text-slate-500">Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra, y exporta reportes en CSV</p>
-                </header>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Inicio', to: '/' },
+                        { label: 'Gastos', to: '/expenses' },
+                        { label: 'Control por ruta' },
+                    ]}
+                    title="Control de gastos por ruta"
+                    subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
+                />
 
                 <div className="rounded-3xl border border-slate-200 bg-white p-12">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
@@ -483,10 +489,15 @@ export function VehicleExpensesDetailPage() {
 
     return (
         <section className="space-y-5">
-            <header className="space-y-2">
-                <h1 className="text-[24px] font-bold leading-tight text-[#0b1835]">Control de Gastos por Ruta</h1>
-                <p className="text-xs text-slate-500">Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra, y exporta reportes en CSV</p>
-            </header>
+            <PageHeader
+                breadcrumbs={[
+                    { label: 'Inicio', to: '/' },
+                    { label: 'Gastos', to: '/expenses' },
+                    { label: 'Control por ruta' },
+                ]}
+                title="Control de gastos por ruta"
+                subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
+            />
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">

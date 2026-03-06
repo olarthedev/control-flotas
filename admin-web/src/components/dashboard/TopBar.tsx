@@ -1,20 +1,18 @@
 import { FaDownload } from 'react-icons/fa';
+import { PageHeader } from '../layout/PageHeader';
 
 export function DashboardTopBar() {
   return (
-    <div className="flex items-start justify-between mb-6">
-      <div>
-        <h1 className="text-[16px] font-semibold text-gray-900 mb-1 tracking-tight leading-5">
-          Resumen General
-        </h1>
-        <p className="text-gray-500 text-sm font-normal">
-          Estado actual financiero de la flota
-        </p>
-      </div>
-      <button className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-sm">
-        <FaDownload className="text-gray-600" />
-        <span className="font-medium">Exportar Reporte</span>
-      </button>
-    </div>
+    <PageHeader
+      breadcrumbs={[{ label: 'Inicio', to: '/' }, { label: 'Dashboard' }]}
+      title="Resumen General"
+      subtitle="Monitorea el estado financiero de la flota, detecta riesgos tempranos y toma decisiones operativas con mejor contexto."
+      actions={
+        <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+          <FaDownload className="text-slate-500" />
+          Exportar reporte
+        </button>
+      }
+    />
   );
 }

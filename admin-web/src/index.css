@@ -28,11 +28,6 @@ body {
   background: #f8fafc;
 }
 
-h1 {
-  font-size: 16px !important;
-  line-height: 1.25 !important;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
