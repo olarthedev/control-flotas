@@ -42,16 +42,36 @@ export class Trip {
     })
     status: string;
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     plannedBudget: number; // Presupuesto planificado para el viaje
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     totalExpenses: number; // Total de gastos en el viaje (calculado automáticamente)
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     totalConsigned: number; // Dinero consignado para este viaje
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     difference: number; // Diferencia entre consignado y gastado
 
     // ================== RELACIONES ==================

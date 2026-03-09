@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Bell,
   Bus,
@@ -9,6 +10,7 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
+import { fetchPendingExpensesCount } from "../services/expenses.service";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -20,6 +22,27 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }: SidebarProps) {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
+  const [pendingExpensesCount, setPendingExpensesCount] = useState<number>(0);
+
+  useEffect(() => {
+    const loadPendingCount = async () => {
+      const count = await fetchPendingExpensesCount();
+      setPendingExpensesCount(count);
+    };
+
+    loadPendingCount();
+
+    // Recargar cada 30 segundos
+    const interval = setInterval(loadPendingCount, 30000);
+
+    // Escuchar evento de actualización de gastos para recargar inmediatamente
+    window.addEventListener('expenseUpdated', loadPendingCount);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('expenseUpdated', loadPendingCount);
+    };
+  }, []);
 
   const menuSections = [
     {
@@ -29,7 +52,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
     {
       title: "OPERACIONES",
       items: [
-        { path: "/expenses", label: "Gastos", icon: Wallet, badge: "3" },
+        { path: "/expenses", label: "Gastos", icon: Wallet, badge: pendingExpensesCount > 0 ? pendingExpensesCount.toString() : undefined },
         { path: "/maintenance", label: "Mantenimiento", icon: Wrench }
       ]
     },
@@ -100,7 +123,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
                 transition-colors duration-300 ease-out
                 ${active
                         ? "bg-[#e9e8fb] text-[#5c4df2]"
-                  : "text-[#64748b] hover:bg-gray-100 hover:text-slate-700"
+                        : "text-[#64748b] hover:bg-gray-100 hover:text-slate-700"
                       }
               `}
                   >
@@ -133,9 +156,9 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
                           className={`
       text-[13.5px] tracking-tight whitespace-nowrap
       ${active
-                            ? "font-semibold text-[#5c4df2]"
-                            : "font-medium text-slate-600 group-hover:text-slate-700"
-                          }
+                              ? "font-semibold text-[#5c4df2]"
+                              : "font-medium text-slate-600 group-hover:text-slate-700"
+                            }
     `}
                         >
                           {item.label}
@@ -146,7 +169,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
                     {/* Badge */}
                     {isExpanded && item.badge && (
                       <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f26419] text-white"
+                        className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f26419] text-white"
                       >
                         {item.badge}
                       </span>

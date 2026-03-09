@@ -27,7 +27,12 @@ export class Consignment {
     consignmentNumber: string; // Número único de consignación
 
     // ================== DINERO CONSIGNADO ==================
-    @Column({ type: 'decimal', precision: 12, scale: 2 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     amount: number; // Dinero entregado al conductor
 
     @Column({ type: 'timestamp' })
@@ -37,19 +42,44 @@ export class Consignment {
     consignmentNotes: string | null; // Notas sobre la consignación
 
     // ================== SEGUIMIENTO FINANCIERO ==================
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     totalExpensesReported: number; // Total de gastos reportados
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     totalApprovedExpenses: number; // Total de gastos aprobados
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     balance: number; // Saldo disponible (consignado - aprobados)
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     surplus: number; // Dinero sobrante (si balance es positivo)
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     deficit: number; // Dinero faltante (si balance es negativo)
 
     @Column({

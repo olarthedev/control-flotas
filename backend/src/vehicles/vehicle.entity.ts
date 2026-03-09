@@ -50,7 +50,12 @@ export class Vehicle {
     @Column({ type: 'text', nullable: true })
     documentNotes: string;
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     maintenanceSpent: number;
 
     @OneToMany(() => Expense, (expense) => expense.vehicle, {

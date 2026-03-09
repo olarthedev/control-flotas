@@ -42,7 +42,12 @@ export class Expense {
     })
     type: ExpenseType;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal', precision: 10, scale: 2, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     amount: number; // Monto del gasto
 
     @Column({ type: 'timestamp' })

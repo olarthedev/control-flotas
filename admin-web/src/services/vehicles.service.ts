@@ -41,8 +41,8 @@ function formatDate(dateString: string | null): string {
 }
 
 function calculateTotalExpense(vehicle: Vehicle): number {
-    const maintenanceSpent = vehicle.maintenanceSpent || 0;
-    const expensesTotal = vehicle.expenses?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+    const maintenanceSpent = Number(vehicle.maintenanceSpent) || 0;
+    const expensesTotal = vehicle.expenses?.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0) || 0;
     return maintenanceSpent + expensesTotal;
 }
 
