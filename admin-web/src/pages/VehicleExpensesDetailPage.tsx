@@ -502,14 +502,14 @@ export function VehicleExpensesDetailPage() {
                 <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
                     <button
                         onClick={() => setTab('ACTIVOS')}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition ${tab === 'ACTIVOS' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500'
+                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition-all ${tab === 'ACTIVOS' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                             }`}
                     >
                         ACTIVOS
                     </button>
                     <button
                         onClick={() => setTab('HISTORIAL')}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition ${tab === 'HISTORIAL' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500'
+                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition-all ${tab === 'HISTORIAL' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                             }`}
                     >
                         HISTORIAL
@@ -561,7 +561,7 @@ export function VehicleExpensesDetailPage() {
 
                     <button
                         onClick={() => setShowConsignmentModal(true)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5a4af6] to-[#4a3de6] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition hover:brightness-105"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5a4af6] to-[#4a3de6] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:brightness-110 hover:scale-105"
                     >
                         <MdAttachMoney size={18} />
                         Consignar
@@ -569,52 +569,29 @@ export function VehicleExpensesDetailPage() {
                 </div>
             </div>
 
-            {totalConsigned > 0 && (
-                <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-4">
-                            <div className="rounded-lg bg-white p-2 shadow-sm">
-                                <MdAttachMoney size={20} className="text-indigo-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-indigo-900">Consignado esta semana</p>
-                                <p className="text-lg font-bold text-indigo-600">{formatCurrency(totalConsigned)}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium text-slate-600">Gastado:</span>
-                            <span className="font-bold text-slate-900">{formatCurrency(approvedTotal)}</span>
-                            <span className="mx-1 text-slate-300">•</span>
-                            <span className={`font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {balance >= 0 ? `+${formatCurrency(balance)}` : formatCurrency(balance)}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="grid gap-3 lg:grid-cols-3">
-                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
                     <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total consignado</p>
                     <p className="mt-2 text-2xl font-semibold leading-none text-[#101e42]">{formatCurrency(totalConsigned)}</p>
                     <p className="mt-1 text-[11px] font-medium text-slate-400">Semanal</p>
                 </article>
 
-                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
                     <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Gastos aprobados</p>
                     <p className="mt-2 text-2xl font-semibold leading-none text-[#101e42]">{formatCurrency(approvedTotal)}</p>
                     <p className="mt-1 text-[11px] font-medium text-slate-400">Semanal</p>
                 </article>
 
-                <article className="rounded-xl bg-[#2f9a67] p-4 text-white shadow-md">
-                    <div className="flex flex-col gap-1">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-100">Saldo a favor empresa</p>
-                        <p className="text-[10px] font-medium text-emerald-100">
-                            {balance >= 0 ? `Sobran ${formatCurrency(balance)}` : `Faltan ${formatCurrency(Math.abs(balance))}`}
-                        </p>
-                    </div>
-                    <p className="mt-2 text-2xl font-semibold leading-none">{formatCurrency(Math.max(balance, 0))}</p>
-                    <button className="mt-3 rounded-full bg-white px-5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#1b284c]">
+                <article className="rounded-xl bg-[#2f9a67] p-4 text-white shadow-md transition-all hover:shadow-xl hover:scale-[1.02]">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-100">Saldo a favor empresa</p>
+                    <p className="mt-3 text-2xl font-semibold leading-none">{formatCurrency(Math.max(balance, 0))}</p>
+                    <button
+                        onClick={() => setToast({
+                            message: 'Funcionalidad de finalización en desarrollo',
+                            type: 'info'
+                        })}
+                        className="mt-3 rounded-full bg-white px-5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#1b284c] transition-all hover:bg-emerald-50 hover:scale-105"
+                    >
                         Finalizar
                     </button>
                 </article>
@@ -629,7 +606,7 @@ export function VehicleExpensesDetailPage() {
                         <button
                             onClick={handleExport}
                             title="Exportar CSV"
-                            className="ml-2 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+                            className="ml-2 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-900 hover:scale-110"
                         >
                             <MdDownload size={16} />
                         </button>
@@ -667,7 +644,7 @@ export function VehicleExpensesDetailPage() {
                                                     setSelectedWeek(week);
                                                     setTab('ACTIVOS');
                                                 }}
-                                                className="mt-2 rounded-full bg-indigo-50 px-6 py-2 text-xs font-bold tracking-[0.14em] text-indigo-500"
+                                                className="mt-2 rounded-full bg-indigo-50 px-6 py-2 text-xs font-bold tracking-[0.14em] text-indigo-500 transition-all hover:bg-indigo-100 hover:scale-105"
                                             >
                                                 IR A SEMANA ACTUAL
                                             </button>
