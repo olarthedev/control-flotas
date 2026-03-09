@@ -12,6 +12,7 @@ import { createConsignment, fetchAllConsignments, type ConsignmentItem } from '.
 import { Toast, type ToastType } from '../components/Toast';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ExpenseAuditModal } from '../components/expenses/ExpenseAuditModal';
+import { ExportButton } from '../components/ExportButton';
 
 type ViewTab = 'ACTIVOS' | 'HISTORIAL';
 
@@ -603,13 +604,7 @@ export function VehicleExpensesDetailPage() {
                     <div className="inline-flex items-center gap-5 text-xs font-bold text-slate-500">
                         <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" />APROBADO</span>
                         <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-amber-500" />PENDIENTE</span>
-                        <button
-                            onClick={handleExport}
-                            title="Exportar CSV"
-                            className="ml-2 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-900 hover:scale-110"
-                        >
-                            <MdDownload size={16} />
-                        </button>
+                        <ExportButton onExport={handleExport} title="Exportar CSV" />
                     </div>
                 </div>
 
