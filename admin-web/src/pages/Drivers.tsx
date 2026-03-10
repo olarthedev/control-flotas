@@ -6,6 +6,7 @@ import { DriverModal, type DriverFormData } from '../components/drivers/DriverMo
 import { DeleteDriverModal } from '../components/drivers/DeleteDriverModal';
 import { DriverPaymentModal } from '../components/drivers/DriverPaymentModal';
 import { DriverPaymentHistoryModal } from '../components/drivers/DriverPaymentHistoryModal';
+import { PageHeader } from '../components/layout/PageHeader';
 import { Toast, type ToastType } from '../components/Toast';
 import {
     createDriver,
@@ -292,46 +293,48 @@ export function DriversPage() {
 
     return (
         <section className="space-y-4">
-            <header className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-[15px] font-semibold tracking-tight text-[#0f1f47]">
-                        Gestión de Conductores
-                    </h1>
-                    <p className="mt-1 text-[12px] font-normal italic text-slate-400">⚡ {suggestion}</p>
-                </div>
+            <PageHeader
+                breadcrumbs={[
+                    { label: 'Inicio', to: '/' },
+                    { label: 'Conductores', to: '/drivers' },
+                    { label: 'Gestión de conductores' },
+                ]}
+                title="Gestión de conductores"
+                subtitle={`Visibilidad total del equipo de conducción con seguimiento de salario, abonos, historial y estado operativo. ${suggestion}`}
+                actions={
+                    <>
+                        <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('grid')}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-indigo-50 text-[#5848f4]' : 'text-slate-400 hover:bg-slate-50'
+                                    }`}
+                                aria-label="Grid view"
+                            >
+                                <MdGridView size={16} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('list')}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'list' ? 'bg-indigo-50 text-[#5848f4]' : 'text-slate-400 hover:bg-slate-50'
+                                    }`}
+                                aria-label="List view"
+                            >
+                                <MdViewList size={16} />
+                            </button>
+                        </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">
                         <button
                             type="button"
-                            onClick={() => setViewMode('grid')}
-                            className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-indigo-50 text-[#5848f4]' : 'text-slate-400 hover:bg-slate-50'
-                                }`}
-                            aria-label="Grid view"
+                            onClick={handleCreateDriver}
+                            className="inline-flex items-center gap-2 rounded-xl bg-[#5848f4] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
                         >
-                            <MdGridView size={16} />
+                            <MdAdd size={16} />
+                            Nuevo conductor
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('list')}
-                            className={`rounded-md p-1.5 transition ${viewMode === 'list' ? 'bg-indigo-50 text-[#5848f4]' : 'text-slate-400 hover:bg-slate-50'
-                                }`}
-                            aria-label="List view"
-                        >
-                            <MdViewList size={16} />
-                        </button>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={handleCreateDriver}
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#5848f4] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:opacity-95"
-                    >
-                        <MdAdd size={16} />
-                        Nuevo Conductor
-                    </button>
-                </div>
-            </header>
+                    </>
+                }
+            />
 
             {isLoading && (
                 <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white py-16">

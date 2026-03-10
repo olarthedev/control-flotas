@@ -38,7 +38,12 @@ export class MaintenanceRecord {
     maintenanceDate: Date; // Fecha del mantenimiento
 
     // ================== COSTOS ==================
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({
+        type: 'decimal', precision: 10, scale: 2, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     cost: number; // Costo del mantenimiento
 
     @Column({ type: 'text', nullable: true })
@@ -48,7 +53,12 @@ export class MaintenanceRecord {
     provider: string | null; // Taller o proveedor
 
     // ================== SEGUIMIENTO TÉCNICO ==================
-    @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, nullable: true, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     mileageAtMaintenance: number | null; // Kilometraje al momento
 
     @Column({
@@ -56,6 +66,10 @@ export class MaintenanceRecord {
         precision: 12,
         scale: 2,
         nullable: true,
+        transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
     })
     nextMaintenanceMileage: number | null; // Próximo mantenimiento sugerido a esta distancia
 

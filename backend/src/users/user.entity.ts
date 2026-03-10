@@ -50,7 +50,12 @@ export class User {
     @Column({ type: 'text', nullable: true })
     licenseNumber?: string; // Número de licencia (para conductores)
 
-    @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+    @Column({
+        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value)
+        }
+    })
     monthlySalary: number;
 
     @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })

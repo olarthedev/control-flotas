@@ -4,13 +4,15 @@ import {
     MdClose,
     MdDownload,
     MdKeyboardArrowDown,
-    MdLocalShipping,
     MdPerson,
 } from 'react-icons/md';
 import { type ExpenseItem, type ExpenseStatus, updateExpenseStatus } from '../services/expenses.service';
 import { fetchExpensesByVehicle, fetchExpensesGroupedByVehicle, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
 import { createConsignment, fetchAllConsignments, type ConsignmentItem } from '../services/consignments.service';
 import { Toast, type ToastType } from '../components/Toast';
+import { PageHeader } from '../components/layout/PageHeader';
+import { ExpenseAuditModal } from '../components/expenses/ExpenseAuditModal';
+import { ExportButton } from '../components/ExportButton';
 
 type ViewTab = 'ACTIVOS' | 'HISTORIAL';
 
@@ -39,30 +41,6 @@ const TYPE_TO_COLUMN: Record<string, ExpenseColumn> = {
     MAINTENANCE: 'maintenance',
     TOLLS: 'tolls',
     PARKING: 'parking',
-};
-
-const TYPE_LABELS: Record<string, string> = {
-    FUEL: 'Combustible',
-    TOLLS: 'Peajes',
-    MAINTENANCE: 'Mantenimiento',
-    LOADING_UNLOADING: 'Logistica',
-    MEALS: 'Comida',
-    PARKING: 'Parqueadero',
-    OTHER: 'Hotel / Otro',
-};
-
-const STATUS_LABELS: Record<ExpenseStatus, string> = {
-    APPROVED: 'Aprobado',
-    PENDING: 'Pendiente',
-    OBSERVED: 'Observado',
-    REJECTED: 'Rechazado',
-};
-
-const STATUS_HEADER_TEXT_COLOR: Record<ExpenseStatus, string> = {
-    APPROVED: 'text-emerald-600',
-    PENDING: 'text-amber-500',
-    OBSERVED: 'text-sky-600',
-    REJECTED: 'text-rose-600',
 };
 
 function formatCurrency(value: number): string {
@@ -98,11 +76,6 @@ function getWeekLabel(weekKey: string): string {
     const endVisible = new Date(end);
     endVisible.setDate(endVisible.getDate() - 1);
     return `${start.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} - ${endVisible.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}`;
-}
-
-function getPrimaryEvidence(expense: ExpenseItem): string | null {
-    const image = expense.evidence.find((item) => item.isPrimary) ?? expense.evidence[0];
-    return image?.fileUrl ?? null;
 }
 
 function getColumnFromExpenseType(type: string): ExpenseColumn {
@@ -141,8 +114,24 @@ export function VehicleExpensesDetailPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [showConsignmentModal, setShowConsignmentModal] = useState(false);
+    const [shouldRenderConsignment, setShouldRenderConsignment] = useState(false);
+    const [isVisibleConsignment, setIsVisibleConsignment] = useState(false);
     const [consignmentAmount, setConsignmentAmount] = useState('');
     const [consignmentNotes, setConsignmentNotes] = useState('');
+
+    // Manejar transiciones del modal de consignación
+    useEffect(() => {
+        if (showConsignmentModal) {
+            setShouldRenderConsignment(true);
+            // Dar tiempo al navegador para renderizar el DOM antes de animar
+            const timer = setTimeout(() => setIsVisibleConsignment(true), 10);
+            return () => clearTimeout(timer);
+        }
+
+        setIsVisibleConsignment(false);
+        const timeout = setTimeout(() => setShouldRenderConsignment(false), 200);
+        return () => clearTimeout(timeout);
+    }, [showConsignmentModal]);
 
     // Cargar lista de vehículos al inicio
     useEffect(() => {
@@ -189,6 +178,14 @@ export function VehicleExpensesDetailPage() {
 
                 setExpenses(vehicleExpenses);
                 setConsignments(allConsignments);
+
+                // Establecer automáticamente la semana más antigua disponible
+                if (vehicleExpenses.length > 0) {
+                    const expenseDates = vehicleExpenses.map((e) => new Date(e.expenseDate));
+                    const oldestDate = new Date(Math.min(...expenseDates.map((d) => d.getTime())));
+                    const oldestWeek = toWeekKey(getStartOfWeek(oldestDate));
+                    setSelectedWeek(oldestWeek);
+                }
             } catch {
                 setToast({
                     message: 'No se pudieron cargar los gastos del vehiculo.',
@@ -224,17 +221,13 @@ export function VehicleExpensesDetailPage() {
     }, [expenses, consignments, selectedVehicleId]);
 
     const filteredExpenses = useMemo(() => {
-        const { start, end } = getWeekRange(selectedWeek);
-
-        const byWeek = expenses.filter((expense) => {
-            const expenseDate = new Date(expense.expenseDate);
-            return expenseDate >= start && expenseDate < end;
-        });
-
         if (tab === 'ACTIVOS') {
-            return byWeek;
+            // Mostrar TODOS los gastos activos (sin filtro de semana)
+            return expenses;
         }
 
+        // HISTORIAL: Mostrar gastos por semana específica
+        const { start, end } = getWeekRange(selectedWeek);
         return expenses.filter((expense) => {
             const expenseDate = new Date(expense.expenseDate);
             return !(expenseDate >= start && expenseDate < end);
@@ -348,7 +341,15 @@ export function VehicleExpensesDetailPage() {
             });
 
             setExpenses((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-            setSelectedExpense(updated);
+
+            // Notificar al sidebar para que refresque el contador de gastos pendientes
+            if (status === 'APPROVED' || status === 'REJECTED') {
+                window.dispatchEvent(new Event('expenseUpdated'));
+            }
+
+            // Cerrar el modal inmediatamente
+            setSelectedExpense(null);
+
             setToast({
                 message: status === 'APPROVED' ? 'Gasto aprobado correctamente.' : 'Gasto rechazado correctamente.',
                 type: 'success',
@@ -454,10 +455,15 @@ export function VehicleExpensesDetailPage() {
     if (vehicleOptions.length === 0) {
         return (
             <section className="space-y-5">
-                <header className="space-y-2">
-                    <h1 className="text-[24px] font-bold leading-tight text-[#0b1835]">Control de Gastos por Ruta</h1>
-                    <p className="text-xs text-slate-500">Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra, y exporta reportes en CSV</p>
-                </header>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Inicio', to: '/' },
+                        { label: 'Gastos', to: '/expenses' },
+                        { label: 'Control por ruta' },
+                    ]}
+                    title="Control de gastos por ruta"
+                    subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
+                />
 
                 <div className="rounded-3xl border border-slate-200 bg-white p-12">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
@@ -483,23 +489,28 @@ export function VehicleExpensesDetailPage() {
 
     return (
         <section className="space-y-5">
-            <header className="space-y-2">
-                <h1 className="text-[24px] font-bold leading-tight text-[#0b1835]">Control de Gastos por Ruta</h1>
-                <p className="text-xs text-slate-500">Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra, y exporta reportes en CSV</p>
-            </header>
+            <PageHeader
+                breadcrumbs={[
+                    { label: 'Inicio', to: '/' },
+                    { label: 'Gastos', to: '/expenses' },
+                    { label: 'Control por ruta' },
+                ]}
+                title="Control de gastos por ruta"
+                subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
+            />
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
                     <button
                         onClick={() => setTab('ACTIVOS')}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition ${tab === 'ACTIVOS' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500'
+                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition-all ${tab === 'ACTIVOS' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                             }`}
                     >
                         ACTIVOS
                     </button>
                     <button
                         onClick={() => setTab('HISTORIAL')}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition ${tab === 'HISTORIAL' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500'
+                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition-all ${tab === 'HISTORIAL' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                             }`}
                     >
                         HISTORIAL
@@ -551,7 +562,7 @@ export function VehicleExpensesDetailPage() {
 
                     <button
                         onClick={() => setShowConsignmentModal(true)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5a4af6] to-[#4a3de6] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition hover:brightness-105"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5a4af6] to-[#4a3de6] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:brightness-110 hover:scale-105"
                     >
                         <MdAttachMoney size={18} />
                         Consignar
@@ -559,52 +570,29 @@ export function VehicleExpensesDetailPage() {
                 </div>
             </div>
 
-            {totalConsigned > 0 && (
-                <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-4">
-                            <div className="rounded-lg bg-white p-2 shadow-sm">
-                                <MdAttachMoney size={20} className="text-indigo-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-indigo-900">Consignado esta semana</p>
-                                <p className="text-lg font-bold text-indigo-600">{formatCurrency(totalConsigned)}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium text-slate-600">Gastado:</span>
-                            <span className="font-bold text-slate-900">{formatCurrency(approvedTotal)}</span>
-                            <span className="mx-1 text-slate-300">•</span>
-                            <span className={`font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {balance >= 0 ? `+${formatCurrency(balance)}` : formatCurrency(balance)}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="grid gap-3 lg:grid-cols-3">
-                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
                     <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total consignado</p>
                     <p className="mt-2 text-2xl font-semibold leading-none text-[#101e42]">{formatCurrency(totalConsigned)}</p>
                     <p className="mt-1 text-[11px] font-medium text-slate-400">Semanal</p>
                 </article>
 
-                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
                     <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Gastos aprobados</p>
                     <p className="mt-2 text-2xl font-semibold leading-none text-[#101e42]">{formatCurrency(approvedTotal)}</p>
                     <p className="mt-1 text-[11px] font-medium text-slate-400">Semanal</p>
                 </article>
 
-                <article className="rounded-xl bg-[#2f9a67] p-4 text-white shadow-md">
-                    <div className="flex flex-col gap-1">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-100">Saldo a favor empresa</p>
-                        <p className="text-[10px] font-medium text-emerald-100">
-                            {balance >= 0 ? `Sobran ${formatCurrency(balance)}` : `Faltan ${formatCurrency(Math.abs(balance))}`}
-                        </p>
-                    </div>
-                    <p className="mt-2 text-2xl font-semibold leading-none">{formatCurrency(Math.max(balance, 0))}</p>
-                    <button className="mt-3 rounded-full bg-white px-5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#1b284c]">
+                <article className="rounded-xl bg-[#2f9a67] p-4 text-white shadow-md transition-all hover:shadow-xl hover:scale-[1.02]">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-100">Saldo a favor empresa</p>
+                    <p className="mt-3 text-2xl font-semibold leading-none">{formatCurrency(Math.max(balance, 0))}</p>
+                    <button
+                        onClick={() => setToast({
+                            message: 'Funcionalidad de finalización en desarrollo',
+                            type: 'info'
+                        })}
+                        className="mt-3 rounded-full bg-white px-5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#1b284c] transition-all hover:bg-emerald-50 hover:scale-105"
+                    >
                         Finalizar
                     </button>
                 </article>
@@ -616,13 +604,7 @@ export function VehicleExpensesDetailPage() {
                     <div className="inline-flex items-center gap-5 text-xs font-bold text-slate-500">
                         <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" />APROBADO</span>
                         <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-amber-500" />PENDIENTE</span>
-                        <button
-                            onClick={handleExport}
-                            title="Exportar CSV"
-                            className="ml-2 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
-                        >
-                            <MdDownload size={16} />
-                        </button>
+                        <ExportButton onExport={handleExport} title="Exportar CSV" />
                     </div>
                 </div>
 
@@ -657,7 +639,7 @@ export function VehicleExpensesDetailPage() {
                                                     setSelectedWeek(week);
                                                     setTab('ACTIVOS');
                                                 }}
-                                                className="mt-2 rounded-full bg-indigo-50 px-6 py-2 text-xs font-bold tracking-[0.14em] text-indigo-500"
+                                                className="mt-2 rounded-full bg-indigo-50 px-6 py-2 text-xs font-bold tracking-[0.14em] text-indigo-500 transition-all hover:bg-indigo-100 hover:scale-105"
                                             >
                                                 IR A SEMANA ACTUAL
                                             </button>
@@ -679,7 +661,7 @@ export function VehicleExpensesDetailPage() {
                                                 <button
                                                     onClick={() => openFromColumn(row, column)}
                                                     disabled={!canOpen}
-                                                    className={`min-h-7 min-w-[90px] rounded-lg px-2 py-1 transition ${canOpen ? 'hover:bg-slate-100' : 'cursor-default'
+                                                    className={`min-h-7 min-w-[90px] rounded-lg px-2 py-1 transition ${canOpen ? 'hover:bg-slate-100 cursor-pointer' : 'cursor-default'
                                                         }`}
                                                 >
                                                     <span className={`text-sm font-semibold ${value > 0 ? 'text-[#12264f]' : 'text-slate-300'}`}>
@@ -693,7 +675,7 @@ export function VehicleExpensesDetailPage() {
                                     <td className="px-6 py-3 text-center">
                                         <button
                                             onClick={() => openFromDayTotal(row)}
-                                            className="rounded-lg px-2 py-1 text-sm font-semibold text-[#0f2349] transition hover:bg-slate-100"
+                                            className="rounded-lg px-2 py-1 text-sm font-semibold text-[#0f2349] transition hover:bg-slate-100 cursor-pointer"
                                         >
                                             {formatCurrency(row.totalDay)}
                                         </button>
@@ -742,96 +724,25 @@ export function VehicleExpensesDetailPage() {
                 </div>
             </div>
 
-            {selectedExpense && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08112f]/40 p-4 backdrop-blur-sm">
-                    <div className="relative grid h-[82vh] w-full max-w-6xl overflow-hidden rounded-[36px] border border-white/20 bg-white shadow-[0_40px_100px_-40px_rgba(14,23,38,0.7)] lg:grid-cols-[1.35fr_0.85fr]">
-                        <div className="relative hidden lg:block">
-                            {getPrimaryEvidence(selectedExpense) ? (
-                                <img
-                                    src={getPrimaryEvidence(selectedExpense)!}
-                                    alt="Evidencia del gasto"
-                                    className="h-full w-full object-cover"
-                                />
-                            ) : (
-                                <div className="h-full w-full bg-[#08133b]" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                            <div className="absolute bottom-8 left-8 text-white">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">Evidencia digital</p>
-                                <p className="mt-1 text-sm font-semibold">Capturado el {new Date(selectedExpense.expenseDate).toLocaleDateString('es-CO')}</p>
-                            </div>
-                        </div>
+            <ExpenseAuditModal
+                isOpen={selectedExpense !== null}
+                onClose={() => setSelectedExpense(null)}
+                expense={selectedExpense}
+                onStatusChange={handleStatusChange}
+                isSubmitting={isSubmitting}
+            />
 
-                        <div className="relative overflow-y-auto bg-white p-6 lg:p-7">
-                            <button
-                                onClick={() => setSelectedExpense(null)}
-                                className="absolute right-6 top-6 rounded-2xl bg-slate-100 p-2 text-slate-500 transition hover:text-slate-900"
-                            >
-                                <MdClose size={24} />
-                            </button>
-
-                            <p className={`text-[11px] font-bold uppercase tracking-[0.15em] ${STATUS_HEADER_TEXT_COLOR[selectedExpense.status]}`}>
-                                {STATUS_LABELS[selectedExpense.status]} <span className="mx-2 text-slate-300">•</span> {TYPE_LABELS[selectedExpense.type] ?? selectedExpense.type}
-                            </p>
-                            <h3 className="mt-2 text-4xl leading-[0.95] font-black text-[#0f1f45] lg:text-5xl">Auditoria de Gasto</h3>
-
-                            <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Monto reportado</p>
-                                <p className="mt-2 text-5xl leading-none font-black text-[#4a43d8] lg:text-6xl">{formatCurrency(selectedExpense.amount)}</p>
-                            </div>
-
-                            <div className="mt-6 space-y-3">
-                                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-                                    <div className="rounded-xl bg-indigo-50 p-2 text-indigo-500"><MdPerson size={20} /></div>
-                                    <div>
-                                        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Conductor</p>
-                                        <p className="text-lg leading-tight font-bold text-slate-700 lg:text-xl">{selectedExpense.driver.fullName}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-                                    <div className="rounded-xl bg-slate-100 p-2 text-slate-500"><MdLocalShipping size={20} /></div>
-                                    <div>
-                                        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Vehiculo</p>
-                                        <p className="text-lg leading-tight font-bold text-slate-700 lg:text-xl">
-                                            {selectedExpense.vehicle?.licensePlate ?? 'Sin placa'}
-                                            {selectedExpense.vehicle ? ` - ${selectedExpense.vehicle.brand ?? ''} ${selectedExpense.vehicle.model ?? ''}` : ''}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Observaciones del conductor</p>
-                                <p className="mt-2 text-base font-medium italic text-slate-600 lg:text-lg">
-                                    {selectedExpense.notes || selectedExpense.description || 'Sin observaciones registradas.'}
-                                </p>
-                            </div>
-
-                            <div className="sticky bottom-0 mt-6 grid grid-cols-2 gap-3 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur">
-                                <button
-                                    disabled={isSubmitting}
-                                    onClick={() => handleStatusChange('REJECTED')}
-                                    className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-extrabold tracking-[0.12em] text-rose-600 transition hover:bg-rose-100 disabled:opacity-60"
-                                >
-                                    RECHAZAR
-                                </button>
-                                <button
-                                    disabled={isSubmitting}
-                                    onClick={() => handleStatusChange('APPROVED')}
-                                    className="rounded-2xl bg-gradient-to-r from-[#5a4af6] to-[#4a3de6] px-4 py-3 text-sm font-extrabold tracking-[0.12em] text-white shadow-[0_14px_30px_-12px_rgba(74,61,230,0.85)] transition hover:brightness-105 disabled:opacity-60"
-                                >
-                                    APROBAR GASTO
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showConsignmentModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5">
+            {shouldRenderConsignment && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${isVisibleConsignment ? 'opacity-100' : 'opacity-0'
+                            }`}
+                        onClick={() => setShowConsignmentModal(false)}
+                    />
+                    <div
+                        className={`relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5 transition-all duration-200 ${isVisibleConsignment ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'
+                            }`}
+                    >
 
                         {/* Encabezado */}
                         <div className="bg-white px-6 py-5 border-b border-slate-200">

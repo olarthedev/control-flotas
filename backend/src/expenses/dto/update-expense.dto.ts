@@ -15,7 +15,7 @@ export class UpdateExpenseDto extends PartialType(CreateExpenseDto) {
 
     @IsOptional()
     @IsDateString({}, { message: 'validatedAt debe ser una fecha válida' })
-    validatedAt?: Date;
+    validatedAt?: string;
 
     @IsOptional()
     @IsString({ message: 'validatedBy debe ser texto' })

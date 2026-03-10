@@ -6,6 +6,7 @@ import { fetchVehicles, createVehicle, updateVehicle, getVehicleById, deleteVehi
 import { VehicleCard } from '../components/vehicles/VehicleCard';
 import { VehicleModal, type VehicleFormData } from '../components/vehicles/VehicleModal';
 import { DeleteVehicleModal } from '../components/vehicles/DeleteVehicleModal';
+import { PageHeader } from '../components/layout/PageHeader';
 
 export function VehiclesPage() {
     const [searchParams] = useSearchParams();
@@ -143,44 +144,44 @@ export function VehiclesPage() {
 
     return (
         <section className="space-y-4">
-            <header className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-[16px] font-semibold tracking-tight text-[#0f1f47]">
-                        Flota Vehicular
-                    </h1>
-                    <p className="mt-1 text-sm font-normal italic text-slate-400">
-                        ⚡ "Alerta IA: El vehículo ABC-123 requiere cambio de aceite en los próximos 500km."
-                    </p>
-                </div>
+            <PageHeader
+                breadcrumbs={[
+                    { label: 'Inicio', to: '/' },
+                    { label: 'Vehículos', to: '/vehicles' },
+                    { label: 'Flota vehicular' },
+                ]}
+                title="Flota vehicular"
+                subtitle="Consulta el estado documental y operativo de cada vehículo para anticipar mantenimientos y controlar costos de forma inteligente."
+                actions={
+                    <>
+                        <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">
+                            <button
+                                type="button"
+                                className="rounded-md bg-indigo-50 p-1.5 text-[#5848f4]"
+                                aria-label="Vista de cuadrícula"
+                            >
+                                <MdGridView size={16} />
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded-md p-1.5 text-slate-400 hover:bg-slate-50"
+                                aria-label="Vista de lista"
+                            >
+                                <MdViewList size={16} />
+                            </button>
+                        </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1">
                         <button
                             type="button"
-                            className="rounded-md bg-indigo-50 p-1.5 text-[#5848f4]"
-                            aria-label="Vista de cuadrícula"
+                            onClick={handleCreateVehicle}
+                            className="inline-flex items-center gap-2 rounded-xl bg-[#5848f4] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
                         >
-                            <MdGridView size={16} />
+                            <MdAdd size={16} />
+                            Nuevo vehículo
                         </button>
-                        <button
-                            type="button"
-                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-50"
-                            aria-label="Vista de lista"
-                        >
-                            <MdViewList size={16} />
-                        </button>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={handleCreateVehicle}
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#5848f4] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
-                    >
-                        <MdAdd size={16} />
-                        Nuevo Vehículo
-                    </button>
-                </div>
-            </header>
+                    </>
+                }
+            />
 
             {isLoading && (
                 <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white py-16">

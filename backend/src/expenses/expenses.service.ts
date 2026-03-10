@@ -122,7 +122,14 @@ export class ExpensesService {
         if (!existing) {
             throw new (require('@nestjs/common').NotFoundException)('Expense not found');
         }
-        await this.expensesRepository.update(id, updateExpenseDto);
+
+        // Prepare update data with proper type conversions
+        const updateData: any = { ...updateExpenseDto };
+        if (updateExpenseDto.validatedAt) {
+            updateData.validatedAt = new Date(updateExpenseDto.validatedAt);
+        }
+
+        await this.expensesRepository.update(id, updateData);
         return this.findById(id) as Promise<Expense>;
     }
 
