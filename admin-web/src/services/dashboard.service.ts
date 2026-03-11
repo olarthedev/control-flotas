@@ -12,6 +12,18 @@ export interface DashboardSummary {
     };
 }
 
+export interface WeeklyTrendPoint {
+    day: string;
+    consignado: number;
+    gastos: number;
+}
+
+export interface ExpenseDistributionPoint {
+    name: string;
+    amount: number;
+    percentage: number;
+}
+
 /**
  * IMPORTANTE: Este endpoint debe ser implementado en el backend.
  * El frontend NO debe hacer cálculos complejos de negocio.
@@ -24,25 +36,22 @@ export interface DashboardSummary {
  * - Las tendencias comparadas con el mes anterior
  */
 export async function fetchDashboardSummary(): Promise<DashboardSummary> {
-    try {
-        const { data } = await axios.get<DashboardSummary>(
-            `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.DASHBOARD_SUMMARY}`
-        );
-        return data;
-    } catch (error) {
-        // TODO: Implementar endpoint en backend
-        console.warn('Dashboard summary endpoint not yet implemented. Returning mock data.');
+    const { data } = await axios.get<DashboardSummary>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.DASHBOARD_SUMMARY}`
+    );
+    return data;
+}
 
-        // Retornar valores por defecto mientras el backend implementa el endpoint
-        return {
-            totalConsigned: 0,
-            totalApproved: 0,
-            balance: 0,
-            pendingCount: 0,
-            trends: {
-                consigned: 0,
-                approved: 0,
-            },
-        };
-    }
+export async function fetchWeeklyTrend(): Promise<WeeklyTrendPoint[]> {
+    const { data } = await axios.get<WeeklyTrendPoint[]>(
+        `${apiConfig.BASE_URL}/dashboard/weekly-trend`
+    );
+    return data;
+}
+
+export async function fetchExpenseDistribution(): Promise<ExpenseDistributionPoint[]> {
+    const { data } = await axios.get<ExpenseDistributionPoint[]>(
+        `${apiConfig.BASE_URL}/dashboard/expense-distribution`
+    );
+    return data;
 }

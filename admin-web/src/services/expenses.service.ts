@@ -80,11 +80,21 @@ export async function fetchExpenses(): Promise<ExpenseItem[]> {
 
 export async function fetchPendingExpensesCount(): Promise<number> {
     try {
-        const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}/pending`);
-        return data.length;
+        const pendingExpenses = await fetchPendingExpenses();
+        return pendingExpenses.length;
     } catch (error) {
         console.error('Error fetching pending expenses count:', error);
         return 0;
+    }
+}
+
+export async function fetchPendingExpenses(): Promise<ExpenseItem[]> {
+    try {
+        const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}/pending`);
+        return data.map(normalizeExpense);
+    } catch (error) {
+        console.error('Error fetching pending expenses:', error);
+        return [];
     }
 }
 

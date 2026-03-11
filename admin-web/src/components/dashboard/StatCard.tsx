@@ -35,10 +35,10 @@ export function StatCard({
     <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5">
             {title}
           </p>
-          <p className="text-xl font-bold text-gray-900">
+          <p className="text-xl font-normal text-gray-900">
             {value}
           </p>
         </div>
@@ -51,12 +51,12 @@ export function StatCard({
 
       <div className="flex items-center space-x-2">
         {trend && (
-          <span className={`text-xs font-semibold ${trendTextColor[trendColor]}`}>
+          <span className={`text-xs font-medium ${trendTextColor[trendColor]}`}>
             {trend}
           </span>
         )}
         {badge && (
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeBgColor[badgeColor]}`}>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${badgeBgColor[badgeColor]}`}>
             {badge}
           </span>
         )}

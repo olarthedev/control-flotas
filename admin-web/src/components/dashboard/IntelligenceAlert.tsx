@@ -1,7 +1,12 @@
 import { FaLightbulb, FaTimes } from 'react-icons/fa';
 import { useState } from 'react';
 
-export function IntelligenceAlert() {
+interface IntelligenceAlertProps {
+  title: string;
+  message: string;
+}
+
+export function IntelligenceAlert({ title, message }: IntelligenceAlertProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) return null;
@@ -15,10 +20,10 @@ export function IntelligenceAlert() {
       </div>
       <div className="flex-1">
         <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">
-          SUGERENCIA DE INTELIGENCIA LOGÍSTICA
+          {title}
         </h3>
         <p className="text-gray-700 text-sm leading-relaxed">
-          "Optimiza las rutas de la zona norte para reducir el gasto de combustible en un 12% este mes."
+          {message}
         </p>
       </div>
       <button

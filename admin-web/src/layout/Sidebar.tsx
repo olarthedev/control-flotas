@@ -10,7 +10,7 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
-import { fetchPendingExpensesCount } from "../services/expenses.service";
+import { fetchPendingExpenses } from "../services/expenses.service";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -23,24 +23,35 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
   const [pendingExpensesCount, setPendingExpensesCount] = useState<number>(0);
+  const [pendingVehiclePlates, setPendingVehiclePlates] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadPendingCount = async () => {
-      const count = await fetchPendingExpensesCount();
-      setPendingExpensesCount(count);
+    const loadPendingExpenses = async () => {
+      const pendingExpenses = await fetchPendingExpenses();
+      setPendingExpensesCount(pendingExpenses.length);
+
+      const uniquePlates = Array.from(
+        new Set(
+          pendingExpenses
+            .map((expense) => expense.vehicle?.licensePlate?.trim())
+            .filter((plate): plate is string => Boolean(plate))
+        )
+      ).sort((a, b) => a.localeCompare(b));
+
+      setPendingVehiclePlates(uniquePlates);
     };
 
-    loadPendingCount();
+    loadPendingExpenses();
 
     // Recargar cada 30 segundos
-    const interval = setInterval(loadPendingCount, 30000);
+    const interval = setInterval(loadPendingExpenses, 30000);
 
     // Escuchar evento de actualización de gastos para recargar inmediatamente
-    window.addEventListener('expenseUpdated', loadPendingCount);
+    window.addEventListener('expenseUpdated', loadPendingExpenses);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('expenseUpdated', loadPendingCount);
+      window.removeEventListener('expenseUpdated', loadPendingExpenses);
     };
   }, []);
 
@@ -168,11 +179,28 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
 
                     {/* Badge */}
                     {isExpanded && item.badge && (
-                      <span
-                        className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f26419] text-white"
-                      >
-                        {item.badge}
-                      </span>
+                      <div className="relative ml-auto">
+                        <span
+                          className="peer inline-flex min-w-[20px] justify-center rounded-full bg-[#f26419] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                        >
+                          {item.badge}
+                        </span>
+
+                        {item.path === "/expenses" && pendingVehiclePlates.length > 0 && (
+                          <div
+                            className="pointer-events-none absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-3 text-left opacity-0 shadow-lg transition-all duration-200 peer-hover:translate-y-0 peer-hover:opacity-100"
+                          >
+                            <p className="mb-2 text-[11px] font-medium text-slate-500">Vehículos con gastos pendientes</p>
+                            <div className="space-y-1">
+                              {pendingVehiclePlates.map((plate) => (
+                                <p key={plate} className="rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
+                                  {plate.toUpperCase()}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </Link>
                 );

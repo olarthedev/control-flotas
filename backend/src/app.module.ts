@@ -31,7 +31,7 @@ import { MaintenanceRecord } from './maintenance/maintenance-record.entity';
       synchronize: true,
     }),
     // expose repositories so that AppController can query them directly
-    TypeOrmModule.forFeature([User, Vehicle, Trip]),
+    TypeOrmModule.forFeature([User, Vehicle, Trip, Expense, Consignment]),
     UsersModule,
     VehiclesModule,
     ExpensesModule,

@@ -6,11 +6,20 @@ import { IntelligenceAlert } from '../components/dashboard/IntelligenceAlert';
 import { StatCard } from '../components/dashboard/StatCard';
 import { WeeklyTrendChart } from '../components/dashboard/WeeklyTrendChart';
 import { ExpenseDistributionChart } from '../components/dashboard/ExpenseDistributionChart';
-import { fetchDashboardSummary, type DashboardSummary } from '../services/dashboard.service';
+import {
+  fetchDashboardSummary,
+  fetchExpenseDistribution,
+  fetchWeeklyTrend,
+  type DashboardSummary,
+  type ExpenseDistributionPoint,
+  type WeeklyTrendPoint,
+} from '../services/dashboard.service';
 
 export const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [weeklyTrend, setWeeklyTrend] = useState<WeeklyTrendPoint[]>([]);
+  const [distribution, setDistribution] = useState<ExpenseDistributionPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const searchTerm = (searchParams.get('q') ?? '').trim().toLowerCase();
 
@@ -18,8 +27,32 @@ export const Dashboard = () => {
     const loadSummary = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchDashboardSummary();
-        setSummary(data);
+        const [summaryResult, weeklyTrendResult, distributionResult] = await Promise.allSettled([
+          fetchDashboardSummary(),
+          fetchWeeklyTrend(),
+          fetchExpenseDistribution(),
+        ]);
+
+        if (summaryResult.status === 'fulfilled') {
+          setSummary(summaryResult.value);
+        } else {
+          console.error('Error loading dashboard summary:', summaryResult.reason);
+          setSummary(null);
+        }
+
+        if (weeklyTrendResult.status === 'fulfilled') {
+          setWeeklyTrend(weeklyTrendResult.value);
+        } else {
+          console.error('Error loading weekly trend:', weeklyTrendResult.reason);
+          setWeeklyTrend([]);
+        }
+
+        if (distributionResult.status === 'fulfilled') {
+          setDistribution(distributionResult.value);
+        } else {
+          console.error('Error loading expense distribution:', distributionResult.reason);
+          setDistribution([]);
+        }
       } catch (error) {
         console.error('Error loading dashboard summary:', error);
       } finally {
@@ -75,6 +108,18 @@ export const Dashboard = () => {
   const showDistributionChart = !searchTerm || 'distribucion gastos'.includes(searchTerm);
   const hasAnyResult = filteredStatCards.length > 0 || showAlert || showWeeklyChart || showDistributionChart;
 
+  const topDistribution = distribution[0];
+  const alertTitle = 'Sugerencia de inteligencia logistica';
+  const alertMessage = summary
+    ? summary.pendingCount > 0
+      ? `Hay ${summary.pendingCount} gasto(s) pendiente(s) por revisar. Prioriza la validacion para mantener el flujo financiero al dia.`
+      : summary.balance < 0
+        ? `La flota tiene un balance negativo de ${formatCurrency(Math.abs(summary.balance))}. Revisa consignaciones o gastos atipicos del mes.`
+        : topDistribution
+          ? `${topDistribution.name} representa ${topDistribution.percentage}% del gasto aprobado. Revisa oportunidades de optimizacion en este rubro.`
+          : 'No hay alertas criticas. El comportamiento financiero de la flota se mantiene estable.'
+    : 'No hay alertas disponibles por el momento.';
+
   return (
     <div className="space-y-5">
       {/* Top Bar */}
@@ -91,7 +136,7 @@ export const Dashboard = () => {
       )}
 
       {/* Intelligence Alert */}
-      {!isLoading && showAlert && <IntelligenceAlert />}
+      {!isLoading && showAlert && <IntelligenceAlert title={alertTitle} message={alertMessage} />}
 
 
       {/* Stats Grid */}
@@ -115,8 +160,8 @@ export const Dashboard = () => {
       {/* Charts Grid */}
       {(showWeeklyChart || showDistributionChart) && (
         <div className="grid grid-cols-2 gap-4">
-          {showWeeklyChart && <WeeklyTrendChart />}
-          {showDistributionChart && <ExpenseDistributionChart />}
+          {showWeeklyChart && <WeeklyTrendChart data={weeklyTrend} />}
+          {showDistributionChart && <ExpenseDistributionChart data={distribution} />}
         </div>
       )}
 

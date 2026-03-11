@@ -34,6 +34,7 @@ interface TableRow {
 }
 
 const COLUMN_ORDER: ExpenseColumn[] = ['fuel', 'meals', 'maintenance', 'hotel', 'tolls', 'parking'];
+const SELECTED_VEHICLE_STORAGE_KEY = 'expenses:selectedVehicleId';
 
 const TYPE_TO_COLUMN: Record<string, ExpenseColumn> = {
     FUEL: 'fuel',
@@ -142,9 +143,14 @@ export function VehicleExpensesDetailPage() {
                 console.log('Vehicles loaded:', vehicleList.length);
                 setVehicleOptions(vehicleList);
 
-                // Seleccionar el primer vehículo automáticamente
+                const storedVehicleIdRaw = localStorage.getItem(SELECTED_VEHICLE_STORAGE_KEY);
+                const storedVehicleId = storedVehicleIdRaw ? Number(storedVehicleIdRaw) : NaN;
+                const hasStoredVehicle = !Number.isNaN(storedVehicleId)
+                    && vehicleList.some((item) => item.vehicleId === storedVehicleId);
+
+                // Restaurar vehículo seleccionado o usar el primero
                 if (vehicleList.length > 0) {
-                    setSelectedVehicleId(vehicleList[0].vehicleId);
+                    setSelectedVehicleId(hasStoredVehicle ? storedVehicleId : vehicleList[0].vehicleId);
                 } else {
                     console.log('No vehicles with expenses found');
                 }
@@ -197,6 +203,12 @@ export function VehicleExpensesDetailPage() {
         };
 
         loadData();
+    }, [selectedVehicleId]);
+
+    useEffect(() => {
+        if (selectedVehicleId) {
+            localStorage.setItem(SELECTED_VEHICLE_STORAGE_KEY, String(selectedVehicleId));
+        }
     }, [selectedVehicleId]);
 
     const weekOptions = useMemo(() => {
