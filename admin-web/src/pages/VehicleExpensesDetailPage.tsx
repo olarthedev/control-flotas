@@ -465,15 +465,15 @@ export function VehicleExpensesDetailPage() {
                     subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
                 />
 
-                <div className="rounded-3xl border border-slate-200 bg-white p-12">
+                <div className="rounded-2xl border border-slate-200 bg-white p-10">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
                         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-slate-400">
                             <MdAttachMoney size={40} />
                         </div>
-                        <h3 className="text-2xl font-bold text-[#0f1e45]">Sin gastos registrados</h3>
+                        <h3 className="text-xl font-normal text-[#0f1e45]">Sin gastos registrados</h3>
                         <p className="max-w-md text-sm text-slate-500">No hay vehículos con gastos en el sistema. Los gastos aparecerán aquí una vez que se registren en la aplicación móvil o se carguen manualmente.</p>
-                        <div className="rounded-lg bg-blue-50 p-4 text-left text-xs text-blue-700 w-full max-w-md">
-                            <p className="font-semibold mb-1">¿Cómo crear gastos?</p>
+                        <div className="w-full max-w-md rounded-lg bg-blue-50 p-4 text-left text-xs text-blue-700">
+                            <p className="mb-1 font-normal">¿Cómo crear gastos?</p>
                             <ul className="space-y-1 text-blue-600">
                                 <li>√ Registra gastos desde la app móvil</li>
                                 <li>√ Los gastos aparecerán automáticamente aquí</li>
@@ -488,7 +488,7 @@ export function VehicleExpensesDetailPage() {
     }
 
     return (
-        <section className="space-y-5">
+        <section className="space-y-6">
             <PageHeader
                 breadcrumbs={[
                     { label: 'Inicio', to: '/' },
@@ -499,18 +499,18 @@ export function VehicleExpensesDetailPage() {
                 subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
             />
 
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
                     <button
                         onClick={() => setTab('ACTIVOS')}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition-all ${tab === 'ACTIVOS' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                        className={`rounded-lg px-4 py-2 text-sm font-normal transition-colors ${tab === 'ACTIVOS' ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                             }`}
                     >
                         ACTIVOS
                     </button>
                     <button
                         onClick={() => setTab('HISTORIAL')}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold tracking-wide transition-all ${tab === 'HISTORIAL' ? 'bg-[#4d3df0] text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                        className={`rounded-lg px-4 py-2 text-sm font-normal transition-colors ${tab === 'HISTORIAL' ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                             }`}
                     >
                         HISTORIAL
@@ -519,7 +519,7 @@ export function VehicleExpensesDetailPage() {
 
                 <div className="grid gap-3 sm:grid-cols-3">
                     <label className="relative min-w-[180px]">
-                        <span className="pointer-events-none absolute left-4 top-2 text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                        <span className="pointer-events-none absolute left-4 top-2 text-[11px] font-normal text-slate-400">
                             Vehiculo
                         </span>
                         <select
@@ -531,7 +531,7 @@ export function VehicleExpensesDetailPage() {
                                 }
                                 setSelectedVehicleId(nextVehicleId);
                             }}
-                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-9 text-sm font-medium text-slate-700"
+                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-9 text-sm font-normal text-slate-700"
                         >
                             {vehicleOptions.map((item) => (
                                 <option key={item.vehicleId} value={item.vehicleId}>
@@ -543,13 +543,13 @@ export function VehicleExpensesDetailPage() {
                     </label>
 
                     <label className="relative min-w-[220px]">
-                        <span className="pointer-events-none absolute left-4 top-2 text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                        <span className="pointer-events-none absolute left-4 top-2 text-[11px] font-normal text-slate-400">
                             Semana
                         </span>
                         <select
                             value={selectedWeek}
                             onChange={(event) => setSelectedWeek(event.target.value)}
-                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-9 text-sm font-medium text-slate-700"
+                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-9 text-sm font-normal text-slate-700"
                         >
                             {weekOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
@@ -562,7 +562,7 @@ export function VehicleExpensesDetailPage() {
 
                     <button
                         onClick={() => setShowConsignmentModal(true)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5a4af6] to-[#4a3de6] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:brightness-110 hover:scale-105"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#5848f4] px-4 py-3 text-sm font-normal text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-md"
                     >
                         <MdAttachMoney size={18} />
                         Consignar
@@ -570,38 +570,38 @@ export function VehicleExpensesDetailPage() {
                 </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-3">
-                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total consignado</p>
-                    <p className="mt-2 text-2xl font-semibold leading-none text-[#101e42]">{formatCurrency(totalConsigned)}</p>
-                    <p className="mt-1 text-[11px] font-medium text-slate-400">Semanal</p>
+            <div className="grid gap-4 lg:grid-cols-3">
+                <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                    <p className="text-xs font-normal text-slate-500">Total consignado</p>
+                    <p className="mt-2 text-2xl font-normal leading-none text-[#101e42]">{formatCurrency(totalConsigned)}</p>
+                    <p className="mt-1 text-xs font-normal text-slate-400">Semanal</p>
                 </article>
 
-                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Gastos aprobados</p>
-                    <p className="mt-2 text-2xl font-semibold leading-none text-[#101e42]">{formatCurrency(approvedTotal)}</p>
-                    <p className="mt-1 text-[11px] font-medium text-slate-400">Semanal</p>
+                <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                    <p className="text-xs font-normal text-slate-500">Gastos aprobados</p>
+                    <p className="mt-2 text-2xl font-normal leading-none text-[#101e42]">{formatCurrency(approvedTotal)}</p>
+                    <p className="mt-1 text-xs font-normal text-slate-400">Semanal</p>
                 </article>
 
-                <article className="rounded-xl bg-[#2f9a67] p-4 text-white shadow-md transition-all hover:shadow-xl hover:scale-[1.02]">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-100">Saldo a favor empresa</p>
-                    <p className="mt-3 text-2xl font-semibold leading-none">{formatCurrency(Math.max(balance, 0))}</p>
+                <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                    <p className="text-xs font-normal text-emerald-700">Saldo a favor empresa</p>
+                    <p className="mt-3 text-2xl font-normal leading-none">{formatCurrency(Math.max(balance, 0))}</p>
                     <button
                         onClick={() => setToast({
                             message: 'Funcionalidad de finalización en desarrollo',
                             type: 'info'
                         })}
-                        className="mt-3 rounded-full bg-white px-5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#1b284c] transition-all hover:bg-emerald-50 hover:scale-105"
+                        className="mt-3 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-xs font-normal text-emerald-800 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-100"
                     >
                         Finalizar
                     </button>
                 </article>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-                    <h2 className="text-xl font-bold tracking-[0.06em] text-[#13254d] uppercase">Detalle de operacion por ruta</h2>
-                    <div className="inline-flex items-center gap-5 text-xs font-bold text-slate-500">
+                    <h2 className="text-lg font-normal text-[#13254d]">Detalle de operacion por ruta</h2>
+                    <div className="inline-flex items-center gap-5 text-xs font-normal text-slate-500">
                         <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" />APROBADO</span>
                         <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-full bg-amber-500" />PENDIENTE</span>
                         <ExportButton onExport={handleExport} title="Exportar CSV" />
@@ -610,7 +610,7 @@ export function VehicleExpensesDetailPage() {
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full">
-                        <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                        <thead className="bg-slate-50 text-xs font-normal text-slate-500">
                             <tr>
                                 <th className="whitespace-nowrap px-6 py-4 text-left">Fecha</th>
                                 <th className="whitespace-nowrap px-6 py-4 text-left">Ruta / Destino</th>
@@ -631,7 +631,7 @@ export function VehicleExpensesDetailPage() {
                                             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 text-slate-400">
                                                 <MdDownload size={26} />
                                             </div>
-                                            <h3 className="text-3xl font-semibold text-[#0f1e45]">Sin registros esta semana</h3>
+                                            <h3 className="text-xl font-normal text-[#0f1e45]">Sin registros esta semana</h3>
                                             <p className="text-sm text-slate-500">La tabla se encuentra limpia para el nuevo ciclo operativo.</p>
                                             <button
                                                 onClick={() => {
@@ -639,7 +639,7 @@ export function VehicleExpensesDetailPage() {
                                                     setSelectedWeek(week);
                                                     setTab('ACTIVOS');
                                                 }}
-                                                className="mt-2 rounded-full bg-indigo-50 px-6 py-2 text-xs font-bold tracking-[0.14em] text-indigo-500 transition-all hover:bg-indigo-100 hover:scale-105"
+                                                className="mt-2 rounded-lg bg-indigo-50 px-5 py-2 text-xs font-normal text-indigo-600 transition-colors hover:bg-indigo-100"
                                             >
                                                 IR A SEMANA ACTUAL
                                             </button>
@@ -649,9 +649,9 @@ export function VehicleExpensesDetailPage() {
                             )}
 
                             {tableRows.map((row) => (
-                                <tr key={row.dayKey} className="border-t border-slate-100 text-sm text-slate-700">
-                                    <td className="whitespace-nowrap px-6 py-3 font-bold text-[#16294d]">{row.label}</td>
-                                    <td className="px-6 py-3 font-medium text-slate-500 uppercase text-xs">{row.route}</td>
+                                <tr key={row.dayKey} className="border-t border-slate-100 text-sm text-slate-700 transition-colors hover:bg-slate-50/70">
+                                    <td className="whitespace-nowrap px-6 py-3 font-normal text-[#16294d]">{row.label}</td>
+                                    <td className="px-6 py-3 text-xs font-normal text-slate-500">{row.route}</td>
                                     {COLUMN_ORDER.map((column) => {
                                         const value = row[column];
                                         const columnExpenses = row.byColumn[column];
@@ -661,10 +661,10 @@ export function VehicleExpensesDetailPage() {
                                                 <button
                                                     onClick={() => openFromColumn(row, column)}
                                                     disabled={!canOpen}
-                                                    className={`min-h-7 min-w-[90px] rounded-lg px-2 py-1 transition ${canOpen ? 'hover:bg-slate-100 cursor-pointer' : 'cursor-default'
+                                                    className={`min-h-7 min-w-[90px] rounded-lg px-2 py-1 transition-all duration-200 ${canOpen ? 'cursor-pointer hover:-translate-y-0.5 hover:bg-slate-100' : 'cursor-default'
                                                         }`}
                                                 >
-                                                    <span className={`text-sm font-semibold ${value > 0 ? 'text-[#12264f]' : 'text-slate-300'}`}>
+                                                    <span className={`text-sm font-normal ${value > 0 ? 'text-[#12264f]' : 'text-slate-300'}`}>
                                                         {value > 0 ? formatCurrency(value) : '-'}
                                                     </span>
                                                     {value > 0 && <span className={`mx-auto mt-0.5 block h-1.5 w-1.5 rounded-full ${getStatusDot(columnExpenses)}`} />}
@@ -675,7 +675,7 @@ export function VehicleExpensesDetailPage() {
                                     <td className="px-6 py-3 text-center">
                                         <button
                                             onClick={() => openFromDayTotal(row)}
-                                            className="rounded-lg px-2 py-1 text-sm font-semibold text-[#0f2349] transition hover:bg-slate-100 cursor-pointer"
+                                            className="cursor-pointer rounded-lg px-2 py-1 text-sm font-normal text-[#0f2349] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100"
                                         >
                                             {formatCurrency(row.totalDay)}
                                         </button>
@@ -686,36 +686,36 @@ export function VehicleExpensesDetailPage() {
                         {tableRows.length > 0 && (
                             <tfoot>
                                 <tr className="border-t border-slate-200 bg-slate-100 text-white">
-                                    <td className="px-6 py-5 text-center text-xs font-extrabold uppercase tracking-[0.2em] text-[#11254c]" colSpan={2}>
+                                    <td className="px-6 py-5 text-center text-xs font-normal text-[#11254c]" colSpan={2}>
                                         Resumen semanal
                                     </td>
                                     <td className="px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Combustible</p>
-                                        <p className="mt-1 text-xl font-semibold text-[#12264f]">{formatCurrency(categoryTotals.fuel)}</p>
+                                        <p className="text-[11px] font-normal text-slate-500">Combustible</p>
+                                        <p className="mt-1 text-lg font-normal text-[#12264f]">{formatCurrency(categoryTotals.fuel)}</p>
                                     </td>
                                     <td className="px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Comida</p>
-                                        <p className="mt-1 text-xl font-semibold text-[#12264f]">{formatCurrency(categoryTotals.meals)}</p>
+                                        <p className="text-[11px] font-normal text-slate-500">Comida</p>
+                                        <p className="mt-1 text-lg font-normal text-[#12264f]">{formatCurrency(categoryTotals.meals)}</p>
                                     </td>
                                     <td className="px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Mantenim.</p>
-                                        <p className="mt-1 text-xl font-semibold text-[#12264f]">{formatCurrency(categoryTotals.maintenance)}</p>
+                                        <p className="text-[11px] font-normal text-slate-500">Mantenim.</p>
+                                        <p className="mt-1 text-lg font-normal text-[#12264f]">{formatCurrency(categoryTotals.maintenance)}</p>
                                     </td>
                                     <td className="px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Hotel</p>
-                                        <p className="mt-1 text-xl font-semibold text-[#12264f]">{formatCurrency(categoryTotals.hotel)}</p>
+                                        <p className="text-[11px] font-normal text-slate-500">Hotel</p>
+                                        <p className="mt-1 text-lg font-normal text-[#12264f]">{formatCurrency(categoryTotals.hotel)}</p>
                                     </td>
                                     <td className="px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Peajes</p>
-                                        <p className="mt-1 text-xl font-semibold text-[#12264f]">{formatCurrency(categoryTotals.tolls)}</p>
+                                        <p className="text-[11px] font-normal text-slate-500">Peajes</p>
+                                        <p className="mt-1 text-lg font-normal text-[#12264f]">{formatCurrency(categoryTotals.tolls)}</p>
                                     </td>
                                     <td className="px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Parqueo</p>
-                                        <p className="mt-1 text-xl font-semibold text-[#12264f]">{formatCurrency(categoryTotals.parking)}</p>
+                                        <p className="text-[11px] font-normal text-slate-500">Parqueo</p>
+                                        <p className="mt-1 text-lg font-normal text-[#12264f]">{formatCurrency(categoryTotals.parking)}</p>
                                     </td>
-                                    <td className="bg-gradient-to-r from-[#5342f5] to-[#4639d8] px-4 py-5 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-indigo-100">Total general</p>
-                                        <p className="mt-1 text-3xl font-semibold">{formatCurrency(tableRows.reduce((sum, row) => sum + row.totalDay, 0))}</p>
+                                    <td className="bg-slate-800 px-4 py-5 text-center">
+                                        <p className="text-[11px] font-normal text-slate-200">Total general</p>
+                                        <p className="mt-1 text-2xl font-normal">{formatCurrency(tableRows.reduce((sum, row) => sum + row.totalDay, 0))}</p>
                                     </td>
                                 </tr>
                             </tfoot>
@@ -752,7 +752,7 @@ export function VehicleExpensesDetailPage() {
                                         <MdAttachMoney size={20} className="text-indigo-600" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-800">
+                                        <h3 className="text-lg font-normal text-slate-800">
                                             Nueva Consignación
                                         </h3>
                                     </div>
@@ -771,13 +771,13 @@ export function VehicleExpensesDetailPage() {
 
                             {/* Vehículo */}
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                                <label className="mb-2 block text-xs font-normal text-slate-500">
                                     Vehículo
                                 </label>
                                 <select
-                                    value={consignmentAmount ?? ''}
-                                    onChange={(e) => setConsignmentAmount(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                                    value={selectedVehicleId ?? ''}
+                                    onChange={(e) => setSelectedVehicleId(Number(e.target.value))}
+                                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-normal text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                                 >
                                     {vehicleOptions.map((v) => (
                                         <option key={v.vehicleId} value={v.vehicleId}>
@@ -791,12 +791,12 @@ export function VehicleExpensesDetailPage() {
                             <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                 <div className="flex items-center gap-2 text-slate-600">
                                     <MdPerson size={16} />
-                                    <p className="text-sm font-medium">
+                                    <p className="text-sm font-normal">
                                         {vehicleOptions.find((v) => v.vehicleId === selectedVehicleId)?.driverName ?? 'Sin conductor'}
                                     </p>
                                 </div>
 
-                                <span className="text-xs font-bold text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200">
+                                <span className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-normal text-slate-500">
                                     {getWeekLabel(selectedWeek)}
                                 </span>
                             </div>
@@ -805,13 +805,13 @@ export function VehicleExpensesDetailPage() {
                             <div>
                                 <label
                                     htmlFor="consignment-amount"
-                                    className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2"
+                                    className="mb-2 block text-xs font-normal text-slate-500"
                                 >
                                     Monto a Consignar
                                 </label>
 
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-normal text-slate-400">
                                         $
                                     </span>
 
@@ -821,7 +821,7 @@ export function VehicleExpensesDetailPage() {
                                         value={consignmentAmount}
                                         onChange={(e) => setConsignmentAmount(e.target.value)}
                                         placeholder="0.00"
-                                        className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-lg font-semibold text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                                        className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-lg font-normal text-slate-900 placeholder:text-slate-300 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                                     />
                                 </div>
                             </div>
@@ -830,7 +830,7 @@ export function VehicleExpensesDetailPage() {
                             <div>
                                 <label
                                     htmlFor="consignment-notes"
-                                    className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2"
+                                    className="mb-2 block text-xs font-normal text-slate-500"
                                 >
                                     Notas (Opcional)
                                 </label>
@@ -841,7 +841,7 @@ export function VehicleExpensesDetailPage() {
                                     onChange={(e) => setConsignmentNotes(e.target.value)}
                                     placeholder="Ej: Consignación semanal..."
                                     rows={2}
-                                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-normal text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                                 />
                             </div>
                         </div>
@@ -853,7 +853,7 @@ export function VehicleExpensesDetailPage() {
                                 <button
                                     onClick={() => setShowConsignmentModal(false)}
                                     disabled={isSubmitting}
-                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-normal text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
                                 >
                                     Cancelar
                                 </button>
@@ -861,7 +861,7 @@ export function VehicleExpensesDetailPage() {
                                 <button
                                     onClick={handleConsignmentSubmit}
                                     disabled={isSubmitting}
-                                    className="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 shadow-md transition disabled:opacity-50"
+                                    className="flex-1 rounded-xl bg-slate-800 px-4 py-3 text-sm font-normal text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50"
                                 >
                                     {isSubmitting ? 'Procesando...' : 'Confirmar'}
                                 </button>
