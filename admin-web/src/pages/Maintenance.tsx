@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { MdBuild, MdCheckCircle, MdEdit, MdKeyboardArrowDown, MdOutlineDirectionsCar, MdSchedule, MdWarning } from 'react-icons/md';
+import {
+    MdBuild,
+    MdCheckCircle,
+    MdChevronLeft,
+    MdChevronRight,
+    MdDeleteOutline,
+    MdEdit,
+    MdFilterAltOff,
+    MdKeyboardArrowUp,
+    MdKeyboardArrowDown,
+    MdOutlineDirectionsCar,
+    MdSchedule,
+    MdVisibility,
+    MdWarning,
+} from 'react-icons/md';
 import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Toast, type ToastType } from '../components/Toast';
@@ -56,6 +70,19 @@ const STATUS_STYLES: Record<MaintenanceStatus, string> = {
     SCHEDULED: 'bg-sky-50 text-sky-700 border-sky-200',
 };
 
+const STATUS_DESCRIPTION: Record<MaintenanceStatus, string> = {
+    PENDING: 'Trabajo abierto que requiere gestion o cierre tecnico.',
+    SCHEDULED: 'Trabajo planificado para una fecha futura.',
+    COMPLETED: 'Trabajo finalizado y cerrado correctamente.',
+};
+
+const STATUS_SHORT_HINT: Record<MaintenanceStatus, string> = {
+    PENDING: 'Aun sin cerrar',
+    SCHEDULED: 'Planificado',
+    COMPLETED: 'Cerrado',
+};
+
+
 const EMPTY_FORM: MaintenanceFormState = {
     type: 'PREVENTIVE',
     title: '',
@@ -73,6 +100,27 @@ const EMPTY_FORM: MaintenanceFormState = {
     requiresFollowUp: false,
     followUpNotes: '',
 };
+
+const PAGE_SIZE_OPTIONS = [5, 10, 15, 20];
+
+type PriorityLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+
+interface PriorityMeta {
+    level: PriorityLevel;
+    label: string;
+    dotClass: string;
+    textClass: string;
+}
+
+function getPriorityDescription(level: PriorityLevel): string {
+    if (level === 'HIGH') {
+        return 'Atender hoy';
+    }
+    if (level === 'MEDIUM') {
+        return 'Revisar esta semana';
+    }
+    return 'Control normal';
+}
 
 function formatCurrency(value: number): string {
     return `$${Math.round(value).toLocaleString('es-CO')}`;
@@ -102,6 +150,48 @@ function parseOptionalNumber(value: string): number | undefined {
         return undefined;
     }
     return numeric;
+}
+
+function getPriorityMeta(record: MaintenanceRecord): PriorityMeta {
+    if (record.status === 'PENDING') {
+        return {
+            level: 'HIGH',
+            label: 'Alta',
+            dotClass: 'bg-rose-500',
+            textClass: 'text-rose-700',
+        };
+    }
+
+    if (record.nextMaintenanceDate) {
+        const now = new Date();
+        const next = new Date(record.nextMaintenanceDate);
+        const diffDays = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 7) {
+            return {
+                level: 'HIGH',
+                label: 'Alta',
+                dotClass: 'bg-rose-500',
+                textClass: 'text-rose-700',
+            };
+        }
+
+        if (diffDays <= 30) {
+            return {
+                level: 'MEDIUM',
+                label: 'Media',
+                dotClass: 'bg-amber-500',
+                textClass: 'text-amber-700',
+            };
+        }
+    }
+
+    return {
+        level: 'LOW',
+        label: 'Baja',
+        dotClass: 'bg-emerald-500',
+        textClass: 'text-emerald-700',
+    };
 }
 
 function toFormState(record: MaintenanceRecord): MaintenanceFormState {
@@ -383,11 +473,15 @@ export function MaintenancePage() {
     const [selectedType, setSelectedType] = useState<TypeFilter>('ALL');
     const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('ALL');
     const [selectedVehicleId, setSelectedVehicleId] = useState<number | 'ALL'>('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
     const [editingRecordId, setEditingRecordId] = useState<number | null>(null);
     const [form, setForm] = useState<MaintenanceFormState>(EMPTY_FORM);
+    const [selectedDetail, setSelectedDetail] = useState<MaintenanceRecord | null>(null);
 
     const searchTerm = (searchParams.get('q') ?? '').trim().toLowerCase();
 
@@ -440,6 +534,28 @@ export function MaintenancePage() {
         });
     }, [records, selectedType, selectedStatus, selectedVehicleId, searchTerm]);
 
+    const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+
+    const paginatedRecords = useMemo(() => {
+        const startIndex = (currentPage - 1) * pageSize;
+        return filteredRecords.slice(startIndex, startIndex + pageSize);
+    }, [filteredRecords, currentPage, pageSize]);
+
+    const pageNumbers = useMemo(() => {
+        const maxVisible = 5;
+        const start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        const end = Math.min(totalPages, start + maxVisible - 1);
+        const adjustedStart = Math.max(1, end - maxVisible + 1);
+        const pages: number[] = [];
+        for (let page = adjustedStart; page <= end; page += 1) {
+            pages.push(page);
+        }
+        return pages;
+    }, [currentPage, totalPages]);
+
+    const pageStart = filteredRecords.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const pageEnd = Math.min(currentPage * pageSize, filteredRecords.length);
+
     const summary = useMemo(() => {
         const totalCost = filteredRecords.reduce((acc, item) => acc + item.cost, 0);
         const pendingCount = filteredRecords.filter((item) => item.status === 'PENDING').length;
@@ -464,6 +580,16 @@ export function MaintenancePage() {
             dueSoon,
         };
     }, [filteredRecords]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedType, selectedStatus, selectedVehicleId, searchTerm, pageSize]);
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     const openCreateModal = () => {
         setModalMode('create');
@@ -608,6 +734,17 @@ export function MaintenancePage() {
         }
     };
 
+    const clearFilters = () => {
+        setSelectedType('ALL');
+        setSelectedStatus('ALL');
+        setSelectedVehicleId('ALL');
+        setCurrentPage(1);
+    };
+
+    const openDetail = (record: MaintenanceRecord) => {
+        setSelectedDetail(record);
+    };
+
     return (
         <section className="space-y-5">
             <PageHeader
@@ -656,68 +793,111 @@ export function MaintenancePage() {
                 </article>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-4">
-                <label className="relative">
-                    <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Tipo</span>
-                    <select
-                        value={selectedType}
-                        onChange={(event) => setSelectedType(event.target.value as TypeFilter)}
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
-                    >
-                        <option value="ALL">Todos</option>
-                        {Object.entries(TYPE_LABEL).map(([value, label]) => (
-                            <option key={value} value={value}>
-                                {label}
-                            </option>
-                        ))}
-                    </select>
-                    <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                </label>
-
-                <label className="relative">
-                    <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Estado</span>
-                    <select
-                        value={selectedStatus}
-                        onChange={(event) => setSelectedStatus(event.target.value as StatusFilter)}
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
-                    >
-                        <option value="ALL">Todos</option>
-                        {Object.entries(STATUS_LABEL).map(([value, label]) => (
-                            <option key={value} value={value}>
-                                {label}
-                            </option>
-                        ))}
-                    </select>
-                    <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                </label>
-
-                <label className="relative">
-                    <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Vehiculo</span>
-                    <select
-                        value={selectedVehicleId}
-                        onChange={(event) => {
-                            if (event.target.value === 'ALL') {
-                                setSelectedVehicleId('ALL');
-                                return;
-                            }
-                            setSelectedVehicleId(Number(event.target.value));
-                        }}
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
-                    >
-                        <option value="ALL">Todos</option>
-                        {vehicles.map((vehicle) => (
-                            <option key={vehicle.id} value={vehicle.id}>
-                                {vehicle.plate} - {vehicle.name}
-                            </option>
-                        ))}
-                    </select>
-                    <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                </label>
-
-                <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-xs text-indigo-700">
-                    <p className="font-semibold">Guia rapida</p>
-                    <p className="mt-1">Registra cada servicio y usa estado Programado para pendientes futuros.</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Panel de filtros</p>
+                        <p className="text-xs text-slate-400">Refina resultados sin salir de la vista actual.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        >
+                            {showAdvancedFilters ? <MdKeyboardArrowUp size={15} /> : <MdKeyboardArrowDown size={15} />}
+                            Filtros avanzados
+                        </button>
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        >
+                            <MdFilterAltOff size={14} />
+                            Limpiar
+                        </button>
+                    </div>
                 </div>
+
+                <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <label className="relative">
+                        <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Estado</span>
+                        <select
+                            value={selectedStatus}
+                            onChange={(event) => setSelectedStatus(event.target.value as StatusFilter)}
+                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
+                        >
+                            <option value="ALL">Todos</option>
+                            {Object.entries(STATUS_LABEL).map(([value, label]) => (
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                        <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    </label>
+
+                    <label className="relative">
+                        <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Vehiculo</span>
+                        <select
+                            value={selectedVehicleId}
+                            onChange={(event) => {
+                                if (event.target.value === 'ALL') {
+                                    setSelectedVehicleId('ALL');
+                                    return;
+                                }
+                                setSelectedVehicleId(Number(event.target.value));
+                            }}
+                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
+                        >
+                            <option value="ALL">Todos</option>
+                            {vehicles.map((vehicle) => (
+                                <option key={vehicle.id} value={vehicle.id}>
+                                    {vehicle.plate} - {vehicle.name}
+                                </option>
+                            ))}
+                        </select>
+                        <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    </label>
+
+                    <label className="relative">
+                        <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Filas por pagina</span>
+                        <select
+                            value={pageSize}
+                            onChange={(event) => setPageSize(Number(event.target.value))}
+                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
+                        >
+                            {PAGE_SIZE_OPTIONS.map((size) => (
+                                <option key={size} value={size}>
+                                    {size}
+                                </option>
+                            ))}
+                        </select>
+                        <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    </label>
+
+                </div>
+
+                {showAdvancedFilters && (
+                    <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <label className="relative">
+                            <span className="pointer-events-none absolute left-3 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Tipo</span>
+                            <select
+                                value={selectedType}
+                                onChange={(event) => setSelectedType(event.target.value as TypeFilter)}
+                                className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-8 text-sm font-medium text-slate-700"
+                            >
+                                <option value="ALL">Todos</option>
+                                {Object.entries(TYPE_LABEL).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
+                            </select>
+                            <MdKeyboardArrowDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        </label>
+                    </div>
+                )}
             </div>
 
             {isLoading && (
@@ -752,6 +932,14 @@ export function MaintenancePage() {
 
             {!isLoading && !error && filteredRecords.length > 0 && (
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                        <p className="text-xs font-medium text-slate-500">
+                            Mostrando <span className="font-semibold text-slate-700">{pageStart}-{pageEnd}</span> de{' '}
+                            <span className="font-semibold text-slate-700">{filteredRecords.length}</span> mantenimientos
+                        </p>
+                        <p className="text-xs text-slate-400">Vista compacta y enfocada en lectura rapida</p>
+                    </div>
+
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500">
@@ -759,16 +947,15 @@ export function MaintenancePage() {
                                     <th className="px-4 py-3 text-left">Fecha</th>
                                     <th className="px-4 py-3 text-left">Vehiculo</th>
                                     <th className="px-4 py-3 text-left">Servicio</th>
-                                    <th className="px-4 py-3 text-left">Tipo</th>
                                     <th className="px-4 py-3 text-left">Estado</th>
                                     <th className="px-4 py-3 text-left">Costo</th>
                                     <th className="px-4 py-3 text-left">Proximo</th>
-                                    <th className="px-4 py-3 text-right">Acciones</th>
+                                    <th className="px-4 py-3 text-right">Gestion</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredRecords.map((record) => (
-                                    <tr key={record.id} className="border-t border-slate-100 text-sm text-slate-700">
+                                {paginatedRecords.map((record) => (
+                                    <tr key={record.id} className="border-t border-slate-100 text-sm text-slate-700 odd:bg-white even:bg-slate-50/50">
                                         <td className="px-4 py-3 font-semibold text-[#12264f]">{formatDate(record.maintenanceDate)}</td>
                                         <td className="px-4 py-3">
                                             <p className="font-semibold text-slate-700">{record.vehicle?.licensePlate ?? '-'}</p>
@@ -776,10 +963,18 @@ export function MaintenancePage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <p className="font-semibold text-slate-700">{record.title}</p>
-                                            <p className="line-clamp-2 max-w-xs text-xs text-slate-500">{record.description}</p>
-                                        </td>
-                                        <td className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                            {TYPE_LABEL[record.type]}
+                                            {(() => {
+                                                const priority = getPriorityMeta(record);
+                                                return (
+                                                    <div className="mt-1 space-y-0.5">
+                                                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${priority.textClass}`}>
+                                                            <i className={`h-2.5 w-2.5 rounded-full ${priority.dotClass}`} />
+                                                            Prioridad {priority.label}
+                                                        </span>
+                                                        <p className="text-[10px] text-slate-400">{getPriorityDescription(priority.level)}</p>
+                                                    </div>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[record.status]}`}>
@@ -788,6 +983,8 @@ export function MaintenancePage() {
                                                 {record.status === 'SCHEDULED' && <MdSchedule className="mr-1" size={14} />}
                                                 {STATUS_LABEL[record.status]}
                                             </span>
+                                            <p className="mt-1 text-[10px] text-slate-400">{STATUS_SHORT_HINT[record.status]}</p>
+                                            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{TYPE_LABEL[record.type]}</p>
                                         </td>
                                         <td className="px-4 py-3 font-semibold text-[#12264f]">{formatCurrency(record.cost)}</td>
                                         <td className="px-4 py-3 text-xs text-slate-600">
@@ -797,31 +994,14 @@ export function MaintenancePage() {
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end">
                                                 <button
                                                     type="button"
-                                                    onClick={() => openEditModal(record)}
-                                                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                                                    onClick={() => openDetail(record)}
+                                                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
                                                 >
-                                                    <MdEdit size={14} />
-                                                    Editar
-                                                </button>
-                                                {record.status !== 'COMPLETED' && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleComplete(record.id)}
-                                                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
-                                                    >
-                                                        <MdCheckCircle size={14} />
-                                                        Completar
-                                                    </button>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDelete(record)}
-                                                    className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-                                                >
-                                                    Eliminar
+                                                    <MdVisibility size={14} />
+                                                    Abrir
                                                 </button>
                                             </div>
                                         </td>
@@ -829,6 +1009,48 @@ export function MaintenancePage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-4 py-3">
+                        <p className="text-xs font-medium text-slate-500">
+                            Pagina <span className="font-semibold text-slate-700">{currentPage}</span> de{' '}
+                            <span className="font-semibold text-slate-700">{totalPages}</span>
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                disabled={currentPage === 1}
+                                className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1.5 text-slate-600 disabled:opacity-40"
+                                aria-label="Pagina anterior"
+                            >
+                                <MdChevronLeft size={16} />
+                            </button>
+
+                            {pageNumbers.map((page) => (
+                                <button
+                                    key={page}
+                                    type="button"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`min-w-8 rounded-md border px-2 py-1.5 text-xs font-semibold transition ${page === currentPage
+                                        ? 'border-[#5848f4] bg-[#5848f4] text-white'
+                                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                                disabled={currentPage === totalPages}
+                                className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1.5 text-slate-600 disabled:opacity-40"
+                                aria-label="Pagina siguiente"
+                            >
+                                <MdChevronRight size={16} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -843,6 +1065,94 @@ export function MaintenancePage() {
                 onClose={closeModal}
                 onSubmit={submitForm}
             />
+
+            {selectedDetail && (
+                <div className="fixed inset-0 z-[75] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/45" onClick={() => setSelectedDetail(null)} />
+                    <div className="relative w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                        <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4">
+                            <div>
+                                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detalle de mantenimiento</p>
+                                <h3 className="mt-1 text-lg font-semibold text-[#12264f]">{selectedDetail.title}</h3>
+                                <p className="mt-1 text-sm text-slate-500">{selectedDetail.vehicle?.licensePlate} - {selectedDetail.vehicle?.brand} {selectedDetail.vehicle?.model}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedDetail(null)}
+                                className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+
+                        <div className="grid gap-3 px-5 py-4 md:grid-cols-2">
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Fecha</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-700">{formatDate(selectedDetail.maintenanceDate)}</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Costo</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-700">{formatCurrency(selectedDetail.cost)}</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Tipo / Estado</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-700">{TYPE_LABEL[selectedDetail.type]} - {STATUS_LABEL[selectedDetail.status]}</p>
+                                <p className="mt-1 text-xs text-slate-500">{STATUS_DESCRIPTION[selectedDetail.status]}</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Proveedor / Factura</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-700">{selectedDetail.provider ?? '-'} / {selectedDetail.invoiceNumber ?? '-'}</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 md:col-span-2">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Descripcion</p>
+                                <p className="mt-1 text-sm text-slate-700">{selectedDetail.description}</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 md:col-span-2">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Notas tecnicas</p>
+                                <p className="mt-1 text-sm text-slate-700">{selectedDetail.technicalNotes || 'Sin notas tecnicas.'}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleDelete(selectedDetail);
+                                    setSelectedDetail(null);
+                                }}
+                                className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                            >
+                                <MdDeleteOutline size={14} />
+                                Eliminar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    openEditModal(selectedDetail);
+                                    setSelectedDetail(null);
+                                }}
+                                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                            >
+                                <MdEdit size={14} />
+                                Editar
+                            </button>
+                            {selectedDetail.status !== 'COMPLETED' && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleComplete(selectedDetail.id);
+                                        setSelectedDetail(null);
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                                >
+                                    <MdCheckCircle size={14} />
+                                    Completar
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </section>
