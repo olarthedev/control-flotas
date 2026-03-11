@@ -981,7 +981,7 @@ export function MaintenancePage() {
                                                 {record.status === 'COMPLETED' && <MdCheckCircle className="mr-1" size={14} />}
                                                 {record.status === 'PENDING' && <MdWarning className="mr-1" size={14} />}
                                                 {record.status === 'SCHEDULED' && <MdSchedule className="mr-1" size={14} />}
-                                                {STATUS_LABEL[record.status]}
+                                                <span title={STATUS_DESCRIPTION[record.status]}>{STATUS_LABEL[record.status]}</span>
                                             </span>
                                             <p className="mt-1 text-[10px] text-slate-400">{STATUS_SHORT_HINT[record.status]}</p>
                                             <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{TYPE_LABEL[record.type]}</p>
