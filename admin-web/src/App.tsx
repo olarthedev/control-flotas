@@ -4,6 +4,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { VehiclesPage } from "./pages/Vehicles";
 import { DriversPage } from "./pages/Drivers";
 import { VehicleExpensesDetailPage } from "./pages/VehicleExpensesDetailPage";
+import { MaintenancePage } from "./pages/Maintenance";
 import { PageHeader } from "./components/layout/PageHeader";
 
 // Placeholder components for other pages
@@ -20,14 +21,6 @@ const Consignments = () => (
     breadcrumbs={[{ label: "Inicio", to: "/" }, { label: "Consignaciones" }]}
     title="Consignaciones"
     subtitle="Controla transferencias, cruces y estados de consignación para mantener trazabilidad financiera completa."
-  />
-);
-
-const Maintenance = () => (
-  <PageHeader
-    breadcrumbs={[{ label: "Inicio", to: "/" }, { label: "Mantenimiento" }]}
-    title="Mantenimiento"
-    subtitle="Planifica mantenimientos preventivos y registra intervenciones para reducir tiempos muertos y costos inesperados."
   />
 );
 
@@ -56,7 +49,7 @@ function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/expenses" element={<VehicleExpensesDetailPage />} />
           <Route path="/consignments" element={<Consignments />} />
-          <Route path="/maintenance" element={<Maintenance />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/drivers" element={<DriversPage />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
           <Route path="/notifications" element={<Notifications />} />
