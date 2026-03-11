@@ -5,6 +5,9 @@ import { VehiclesPage } from "./pages/Vehicles";
 import { DriversPage } from "./pages/Drivers";
 import { VehicleExpensesDetailPage } from "./pages/VehicleExpensesDetailPage";
 import { MaintenancePage } from "./pages/Maintenance";
+import { SettingsPage } from "./pages/Settings";
+import { AdvancedSettingsPage } from "./pages/AdvancedSettings";
+import { NotificationsPage } from "./pages/Notifications";
 import { PageHeader } from "./components/layout/PageHeader";
 
 // Placeholder components for other pages
@@ -24,22 +27,6 @@ const Consignments = () => (
   />
 );
 
-const Notifications = () => (
-  <PageHeader
-    breadcrumbs={[{ label: "Inicio", to: "/" }, { label: "Notificaciones" }]}
-    title="Notificaciones"
-    subtitle="Consulta alertas relevantes del sistema para actuar rápido frente a eventos críticos de operación."
-  />
-);
-
-const Settings = () => (
-  <PageHeader
-    breadcrumbs={[{ label: "Inicio", to: "/" }, { label: "Configuración" }]}
-    title="Configuración"
-    subtitle="Administra parámetros clave de plataforma, usuarios y reglas para adaptar el sistema a tu operación."
-  />
-);
-
 function App() {
   return (
     <BrowserRouter>
@@ -52,8 +39,9 @@ function App() {
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/drivers" element={<DriversPage />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/advanced" element={<AdvancedSettingsPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
