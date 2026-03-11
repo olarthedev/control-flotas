@@ -21,7 +21,7 @@ export class CreateMaintenanceDto {
 
     @IsDateString({}, { message: 'maintenanceDate debe ser una fecha válida' })
     @IsNotEmpty({ message: 'maintenanceDate es requerido' })
-    maintenanceDate: Date;
+    maintenanceDate: string;
 
     @IsNumber({ maxDecimalPlaces: 2 }, { message: 'cost debe ser un número válido' })
     @IsPositive({ message: 'cost debe ser mayor que cero' })
@@ -58,7 +58,7 @@ export class CreateMaintenanceDto {
 
     @IsOptional()
     @IsDateString({}, { message: 'nextMaintenanceDate debe ser una fecha válida' })
-    nextMaintenanceDate?: Date;
+    nextMaintenanceDate?: string;
 
     @IsOptional()
     @IsString({ message: 'technicalNotes debe ser texto' })
