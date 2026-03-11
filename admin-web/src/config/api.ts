@@ -32,6 +32,13 @@ export const apiConfig = {
 
         // Dashboard
         DASHBOARD_SUMMARY: '/dashboard/summary',
+
+        // Maintenance
+        MAINTENANCE: '/maintenance',
+        MAINTENANCE_BY_ID: (id: number) => `/maintenance/${id}`,
+        MAINTENANCE_PENDING: '/maintenance/pending',
+        MAINTENANCE_BY_VEHICLE: (vehicleId: number) => `/maintenance/vehicle/${vehicleId}`,
+        MAINTENANCE_COMPLETE: (id: number) => `/maintenance/${id}/complete`,
     },
 };
 
