@@ -1,15 +1,20 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Delete, UseInterceptors, HttpCode, HttpStatus } from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangeUserPasswordUseCase } from './application/change-user-password.use-case';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('users')
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+    constructor(
+        private readonly usersService: UsersService,
+        private readonly changeUserPasswordUseCase: ChangeUserPasswordUseCase,
+    ) { }
 
     /**
      * POST /users
@@ -72,6 +77,23 @@ export class UsersController {
         @Body() updateUserDto: UpdateUserDto,
     ) {
         return this.usersService.update(+id, updateUserDto);
+    }
+
+    /**
+     * PATCH /users/:id/change-password
+     * Change the password for a user. Requires current password for verification.
+     */
+    @Patch(':id/change-password')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiOperation({ summary: 'Change user password' })
+    @ApiResponse({ status: 204, description: 'Password changed successfully' })
+    @ApiResponse({ status: 401, description: 'Current password is incorrect' })
+    @ApiResponse({ status: 404, description: 'User not found' })
+    changePassword(
+        @Param('id') id: string,
+        @Body() changePasswordDto: ChangePasswordDto,
+    ) {
+        return this.changeUserPasswordUseCase.execute(+id, changePasswordDto);
     }
 
     /** DELETE /users/:id */
