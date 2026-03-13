@@ -13,6 +13,7 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
 
 @Controller('expenses')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -25,16 +26,22 @@ export class ExpensesController {
         return this.expensesService.create(createExpenseDto);
     }
 
-    /** GET /expenses */
+    /** GET /expenses — supports ?page, ?limit, ?status, ?dateFrom, ?dateTo, ?vehicleId, ?driverId */
     @Get()
-    findAll() {
-        return this.expensesService.findAll();
+    findAll(@Query() query: FindExpensesQueryDto) {
+        return this.expensesService.findAll(query);
     }
 
     /** GET /expenses/pending */
     @Get('pending')
     findPending() {
         return this.expensesService.findPendingExpenses();
+    }
+
+    /** GET /expenses/summary/by-vehicle */
+    @Get('summary/by-vehicle')
+    summaryByVehicle() {
+        return this.expensesService.summaryByVehicle();
     }
 
     /** GET /expenses/without-evidence */

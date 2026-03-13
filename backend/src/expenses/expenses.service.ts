@@ -8,6 +8,31 @@ import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { Trip } from '../trips/trip.entity';
 import { ExpenseStatus } from './expense.entity';
+import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
+
+export interface PaginatedExpensesResponse {
+    data: Expense[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
+
+export interface VehicleExpenseSummaryResponse {
+    vehicleId: number;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    driverId: number;
+    driverName: string;
+    totalExpenses: number;
+    monthlyTotal: number;
+    pendingCount: number;
+    approvedCount: number;
+    observedCount: number;
+    rejectedCount: number;
+    lastExpenseDate: string | null;
+}
 
 @Injectable()
 export class ExpensesService {
@@ -71,12 +96,42 @@ export class ExpensesService {
     }
 
     /**
-     * Retrieve all expenses with full relations.
+     * Retrieve expenses with optional filters and pagination.
      */
-    async findAll(): Promise<Expense[]> {
-        return await this.expensesRepository.find({
-            relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
-        });
+    async findAll(query: FindExpensesQueryDto = {}): Promise<PaginatedExpensesResponse> {
+        const { page = 1, limit = 20, status, dateFrom, dateTo, vehicleId, driverId } = query;
+
+        const qb = this.expensesRepository
+            .createQueryBuilder('expense')
+            .leftJoinAndSelect('expense.driver', 'driver')
+            .leftJoinAndSelect('expense.vehicle', 'vehicle')
+            .leftJoinAndSelect('expense.trip', 'trip')
+            .leftJoinAndSelect('expense.evidence', 'evidence')
+            .leftJoinAndSelect('expense.consignment', 'consignment')
+            .orderBy('expense.expenseDate', 'DESC');
+
+        if (status) {
+            qb.andWhere('expense.status = :status', { status });
+        }
+        if (dateFrom) {
+            qb.andWhere('expense.expenseDate >= :dateFrom', { dateFrom: new Date(dateFrom) });
+        }
+        if (dateTo) {
+            qb.andWhere('expense.expenseDate <= :dateTo', { dateTo: new Date(dateTo) });
+        }
+        if (vehicleId) {
+            qb.andWhere('vehicle.id = :vehicleId', { vehicleId });
+        }
+        if (driverId) {
+            qb.andWhere('driver.id = :driverId', { driverId });
+        }
+
+        const [data, total] = await qb
+            .skip((page - 1) * limit)
+            .take(limit)
+            .getManyAndCount();
+
+        return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
 
     /** Find expense by id. */
@@ -148,6 +203,64 @@ export class ExpensesService {
             where: { status: ExpenseStatus.PENDING },
             relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
             order: { expenseDate: 'ASC' },
+        });
+    }
+
+    async summaryByVehicle(): Promise<VehicleExpenseSummaryResponse[]> {
+        const vehicles = await this.vehiclesRepository.find({
+            relations: ['expenses', 'expenses.driver', 'assignedDrivers'],
+        });
+
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const summaries = vehicles.map((vehicle) => {
+            const expenses = vehicle.expenses ?? [];
+
+            const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+            const monthlyTotal = expenses
+                .filter((expense) => new Date(expense.expenseDate) >= firstDayOfMonth)
+                .reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+
+            const pendingCount = expenses.filter((expense) => expense.status === ExpenseStatus.PENDING).length;
+            const approvedCount = expenses.filter((expense) => expense.status === ExpenseStatus.APPROVED).length;
+            const observedCount = expenses.filter((expense) => expense.status === ExpenseStatus.OBSERVED).length;
+            const rejectedCount = expenses.filter((expense) => expense.status === ExpenseStatus.REJECTED).length;
+
+            const lastExpense = expenses
+                .slice()
+                .sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())[0];
+
+            const assignedDriver = vehicle.assignedDrivers?.[0] ?? null;
+            const fallbackDriver = lastExpense?.driver ?? null;
+            const effectiveDriver = assignedDriver ?? fallbackDriver;
+
+            return {
+                vehicleId: vehicle.id,
+                licensePlate: vehicle.licensePlate,
+                brand: vehicle.brand,
+                model: vehicle.model,
+                driverId: effectiveDriver?.id ?? -1,
+                driverName: effectiveDriver?.fullName ?? 'Sin asignar',
+                totalExpenses,
+                monthlyTotal,
+                pendingCount,
+                approvedCount,
+                observedCount,
+                rejectedCount,
+                lastExpenseDate: lastExpense?.expenseDate ? new Date(lastExpense.expenseDate).toISOString() : null,
+            };
+        });
+
+        return summaries.sort((first, second) => {
+            const firstDate = first.lastExpenseDate ? new Date(first.lastExpenseDate).getTime() : 0;
+            const secondDate = second.lastExpenseDate ? new Date(second.lastExpenseDate).getTime() : 0;
+
+            if (secondDate !== firstDate) {
+                return secondDate - firstDate;
+            }
+
+            return first.licensePlate.localeCompare(second.licensePlate);
         });
     }
 
