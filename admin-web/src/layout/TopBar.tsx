@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { MdDirectionsBus } from "react-icons/md";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 interface TopBarProps {
     isSidebarCollapsed: boolean;
@@ -23,6 +23,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     const isSidebarPreviewExpanded = isSidebarCollapsed && isSidebarExpanded;
     const [dateTime, setDateTime] = useState("");
     const location = useLocation();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
 
@@ -35,6 +36,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         "/reports": "Buscar reporte...",
         "/notifications": "Buscar notificación...",
         "/settings": "Buscar configuración...",
+        "/settings/advanced": "Buscar ajuste avanzado...",
     };
 
     const searchPlaceholder = placeholdersByPath[location.pathname] ?? "Buscar en esta pantalla...";
@@ -173,7 +175,19 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </span>
 
                 {/* Notificaciones */}
-                <Bell className="w-5 h-5 text-gray-500 cursor-pointer hover:text-[#5c4df2] transition-colors" />
+                <button
+                    type="button"
+                    onClick={() => navigate("/notifications")}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
+                        location.pathname === "/notifications"
+                            ? "border-[#d4cffc] bg-[#efedff] text-[#5c4df2]"
+                            : "border-transparent text-gray-500 hover:border-slate-200 hover:bg-white hover:text-[#5c4df2]"
+                    }`}
+                    title="Abrir notificaciones"
+                    aria-label="Abrir notificaciones"
+                >
+                    <Bell className="w-5 h-5" />
+                </button>
 
                 {/* Usuario */}
                 <div className="flex items-center gap-3 cursor-pointer group">
