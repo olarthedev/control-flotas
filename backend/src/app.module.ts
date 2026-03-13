@@ -1,5 +1,6 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -10,6 +11,7 @@ import { EvidenceModule } from './evidence/evidence.module';
 import { ConsignmentsModule } from './consignments/consignments.module';
 import { TripsModule } from './trips/trips.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { User } from './users/user.entity';
 import { Vehicle } from './vehicles/vehicle.entity';
 import { Expense } from './expenses/expense.entity';
@@ -20,18 +22,21 @@ import { MaintenanceRecord } from './maintenance/maintenance-record.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '123456',
-      database: 'control_flotas',
-      entities: [User, Vehicle, Expense, Evidence, Consignment, Trip, MaintenanceRecord],
-      synchronize: true,
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST', 'localhost'),
+        port: config.get<number>('DB_PORT', 5432),
+        username: config.get<string>('DB_USERNAME', 'postgres'),
+        password: config.get<string>('DB_PASSWORD', ''),
+        database: config.get<string>('DB_DATABASE', 'control_flotas'),
+        entities: [User, Vehicle, Expense, Evidence, Consignment, Trip, MaintenanceRecord],
+        synchronize: true,
+      }),
     }),
-    // expose repositories so that AppController can query them directly
-    TypeOrmModule.forFeature([User, Vehicle, Trip, Expense, Consignment]),
     UsersModule,
     VehiclesModule,
     ExpensesModule,
@@ -39,6 +44,7 @@ import { MaintenanceRecord } from './maintenance/maintenance-record.entity';
     ConsignmentsModule,
     TripsModule,
     MaintenanceModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
