@@ -44,14 +44,14 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
 
 export async function fetchWeeklyTrend(): Promise<WeeklyTrendPoint[]> {
     const { data } = await axios.get<WeeklyTrendPoint[]>(
-        `${apiConfig.BASE_URL}/dashboard/weekly-trend`
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.DASHBOARD_WEEKLY_TREND}`
     );
     return data;
 }
 
 export async function fetchExpenseDistribution(): Promise<ExpenseDistributionPoint[]> {
     const { data } = await axios.get<ExpenseDistributionPoint[]>(
-        `${apiConfig.BASE_URL}/dashboard/expense-distribution`
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.DASHBOARD_EXPENSE_DISTRIBUTION}`
     );
     return data;
 }

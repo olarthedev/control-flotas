@@ -32,6 +32,8 @@ export const apiConfig = {
 
         // Dashboard
         DASHBOARD_SUMMARY: '/dashboard/summary',
+        DASHBOARD_WEEKLY_TREND: '/dashboard/weekly-trend',
+        DASHBOARD_EXPENSE_DISTRIBUTION: '/dashboard/expense-distribution',
 
         // Maintenance
         MAINTENANCE: '/maintenance',
