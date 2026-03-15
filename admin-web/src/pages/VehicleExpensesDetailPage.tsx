@@ -5,6 +5,7 @@ import {
     MdDownload,
     MdKeyboardArrowDown,
     MdPerson,
+    MdReceiptLong,
 } from 'react-icons/md';
 import { type ExpenseItem, type ExpenseStatus, updateExpenseStatus } from '../services/expenses.service';
 import { fetchExpensesByVehicle, fetchExpensesGroupedByVehicle, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
@@ -33,6 +34,13 @@ interface TableRow {
     dayExpenses: ExpenseItem[];
 }
 
+interface ExpenseSelectionState {
+    title: string;
+    subtitle: string;
+    expenses: ExpenseItem[];
+    total: number;
+}
+
 const COLUMN_ORDER: ExpenseColumn[] = ['fuel', 'meals', 'maintenance', 'hotel', 'tolls', 'parking'];
 const SELECTED_VEHICLE_STORAGE_KEY = 'expenses:selectedVehicleId';
 
@@ -49,7 +57,27 @@ function formatCurrency(value: number): string {
 }
 
 function formatDayLabel(value: string): string {
+    const [year, month, day] = value.split('-').map(Number);
+    if (year && month && day) {
+        return new Date(year, month - 1, day).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+    }
     return new Date(value).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+}
+
+function toDayKey(value: string): string {
+    if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return value.slice(0, 10);
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function getStartOfWeek(date = new Date()): Date {
@@ -99,6 +127,42 @@ function getStatusDot(expenses: ExpenseItem[]): string {
     return 'bg-rose-500';
 }
 
+function getExpenseTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+        FUEL: 'Combustible',
+        TOLLS: 'Peajes',
+        MAINTENANCE: 'Mantenimiento',
+        LOADING_UNLOADING: 'Logistica',
+        MEALS: 'Comida',
+        PARKING: 'Parqueadero',
+        OTHER: 'Hotel / Otro',
+    };
+
+    return labels[type] ?? type;
+}
+
+function getStatusLabel(status: ExpenseStatus): string {
+    const labels: Record<ExpenseStatus, string> = {
+        PENDING: 'Pendiente',
+        APPROVED: 'Aprobado',
+        OBSERVED: 'Observado',
+        REJECTED: 'Rechazado',
+    };
+
+    return labels[status];
+}
+
+function getStatusClasses(status: ExpenseStatus): string {
+    const styles: Record<ExpenseStatus, string> = {
+        PENDING: 'border-amber-200 bg-amber-50 text-amber-700',
+        APPROVED: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        OBSERVED: 'border-sky-200 bg-sky-50 text-sky-700',
+        REJECTED: 'border-rose-200 bg-rose-50 text-rose-700',
+    };
+
+    return styles[status];
+}
+
 export function VehicleExpensesDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
@@ -112,6 +176,7 @@ export function VehicleExpensesDetailPage() {
     const [selectedWeek, setSelectedWeek] = useState<string>(toWeekKey(getStartOfWeek()));
 
     const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
+    const [selectedExpenseGroup, setSelectedExpenseGroup] = useState<ExpenseSelectionState | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [showConsignmentModal, setShowConsignmentModal] = useState(false);
@@ -250,7 +315,7 @@ export function VehicleExpensesDetailPage() {
         const byDay = new Map<string, ExpenseItem[]>();
 
         filteredExpenses.forEach((expense) => {
-            const dayKey = new Date(expense.expenseDate).toISOString().split('T')[0];
+            const dayKey = toDayKey(expense.expenseDate);
             if (!byDay.has(dayKey)) {
                 byDay.set(dayKey, []);
             }
@@ -327,16 +392,53 @@ export function VehicleExpensesDetailPage() {
 
     const vehicle = vehicleOptions.find((item) => item.vehicleId === selectedVehicleId);
 
-    const openFromColumn = (row: TableRow, column: ExpenseColumn) => {
-        const candidate = row.byColumn[column][0];
-        if (candidate) {
-            setSelectedExpense(candidate);
+    const openExpenseGroup = (title: string, subtitle: string, groupedExpenses: ExpenseItem[], total: number) => {
+        if (groupedExpenses.length === 1) {
+            setSelectedExpense(groupedExpenses[0]);
+            return;
         }
+
+        setSelectedExpenseGroup({
+            title,
+            subtitle,
+            expenses: groupedExpenses
+                .slice()
+                .sort((a, b) => new Date(a.expenseDate).getTime() - new Date(b.expenseDate).getTime()),
+            total,
+        });
+    };
+
+    const openFromColumn = (row: TableRow, column: ExpenseColumn) => {
+        const columnExpenses = row.byColumn[column];
+        if (columnExpenses.length === 0) {
+            return;
+        }
+
+        const columnLabelMap: Record<ExpenseColumn, string> = {
+            fuel: 'Combustible',
+            meals: 'Comida',
+            maintenance: 'Mantenimiento',
+            hotel: 'Hotel / Otro',
+            tolls: 'Peajes',
+            parking: 'Parqueadero',
+        };
+
+        openExpenseGroup(
+            columnLabelMap[column],
+            `${row.label} • ${row.route}`,
+            columnExpenses,
+            row[column],
+        );
     };
 
     const openFromDayTotal = (row: TableRow) => {
         if (row.dayExpenses.length > 0) {
-            setSelectedExpense(row.dayExpenses[0]);
+            openExpenseGroup(
+                'Total del dia',
+                `${row.label} • ${row.route}`,
+                row.dayExpenses,
+                row.totalDay,
+            );
         }
     };
 
@@ -743,6 +845,88 @@ export function VehicleExpensesDetailPage() {
                 onStatusChange={handleStatusChange}
                 isSubmitting={isSubmitting}
             />
+
+            {selectedExpenseGroup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
+                        onClick={() => setSelectedExpenseGroup(null)}
+                    />
+                    <div className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_40px_120px_-30px_rgba(15,23,42,0.45)]">
+                        <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_100%)] px-6 py-5">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                                        <MdReceiptLong size={14} />
+                                        Revision de gastos
+                                    </div>
+                                    <h3 className="mt-3 text-2xl font-semibold text-[#0f1f45]">{selectedExpenseGroup.title}</h3>
+                                    <p className="mt-1 text-sm text-slate-500">{selectedExpenseGroup.subtitle}</p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedExpenseGroup(null)}
+                                    className="rounded-xl p-2 text-slate-400 transition hover:bg-white hover:text-slate-700"
+                                >
+                                    <MdClose size={22} />
+                                </button>
+                            </div>
+
+                            <div className="mt-4 flex items-end justify-between gap-4 rounded-2xl border border-white/70 bg-white/90 px-4 py-3">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Total mostrado en tabla</p>
+                                    <p className="mt-1 text-3xl font-semibold text-slate-900">{formatCurrency(selectedExpenseGroup.total)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Registros incluidos</p>
+                                    <p className="mt-1 text-lg font-semibold text-slate-700">{selectedExpenseGroup.expenses.length}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+                            <div className="space-y-3">
+                                {selectedExpenseGroup.expenses.map((expense) => (
+                                    <button
+                                        key={expense.id}
+                                        onClick={() => {
+                                            setSelectedExpenseGroup(null);
+                                            setSelectedExpense(expense);
+                                        }}
+                                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-slate-50 hover:shadow-sm"
+                                    >
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="text-sm font-semibold text-[#12264f]">{getExpenseTypeLabel(expense.type)}</span>
+                                                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getStatusClasses(expense.status)}`}>
+                                                        {getStatusLabel(expense.status)}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-sm text-slate-500">
+                                                    {new Date(expense.expenseDate).toLocaleString('es-CO', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </p>
+                                                <p className="mt-2 line-clamp-2 text-sm font-medium text-slate-700">
+                                                    {expense.notes || expense.description || 'Sin observaciones registradas.'}
+                                                </p>
+                                            </div>
+                                            <div className="shrink-0 text-left sm:text-right">
+                                                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Monto</p>
+                                                <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(expense.amount)}</p>
+                                                <p className="mt-2 text-xs font-medium text-indigo-600">Abrir auditoria</p>
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {shouldRenderConsignment && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

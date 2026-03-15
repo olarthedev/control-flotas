@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ExpenseItem } from './expenses.service';
+import { normalizeExpense, type ExpenseItem } from './expenses.service';
 import { apiConfig } from '../config/api';
 
 export interface VehicleExpenseSummary {
@@ -61,7 +61,7 @@ export async function fetchAllVehiclesWithExpensesSummary(): Promise<VehicleExpe
             const driversUrl = `${apiConfig.BASE_URL}/users/drivers/summary`;
             const { data: allDrivers } = await axios.get<any[]>(driversUrl);
             console.log('Drivers fetched:', allDrivers?.length || 0);
-            
+
             // Create map: licensePlate -> driverId, driverName
             allDrivers.forEach((driver: any) => {
                 if (driver.assignedVehiclePlate) {
@@ -184,22 +184,10 @@ export async function fetchExpensesGroupedByVehicle(): Promise<VehicleExpenseSum
 
 export async function fetchExpensesByVehicle(vehicleId: number): Promise<ExpenseItem[]> {
     try {
-        const { data: allExpenses } = await axios.get<any[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}`);
-        return allExpenses
-            .filter((expense) => expense.vehicle?.id === vehicleId)
-            .map((expense) => ({
-                id: expense.id,
-                type: expense.type,
-                amount: Number(expense.amount || 0),
-                expenseDate: expense.expenseDate,
-                description: expense.description,
-                notes: expense.notes,
-                status: expense.status,
-                rejectionReason: expense.rejectionReason,
-                driver: expense.driver,
-                vehicle: expense.vehicle,
-                evidence: expense.evidence ?? [],
-            }));
+        const { data } = await axios.get<any[]>(
+            `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES_BY_VEHICLE(vehicleId)}`,
+        );
+        return data.map(normalizeExpense);
     } catch (error) {
         console.error('Error fetching expenses by vehicle:', error);
         throw error;

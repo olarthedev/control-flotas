@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Bell,
   Bus,
@@ -10,7 +11,7 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
-import { fetchPendingExpenses } from "../services/expenses.service";
+import { fetchPendingExpenseVehiclePlates, fetchPendingExpensesCount } from "../services/expenses.service";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -23,35 +24,103 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
   const [pendingExpensesCount, setPendingExpensesCount] = useState<number>(0);
-  const [pendingVehiclePlates, setPendingVehiclePlates] = useState<string[]>([]);
+  const [pendingExpenseVehicles, setPendingExpenseVehicles] = useState<string[]>([]);
+  const [isExpensesTooltipOpen, setIsExpensesTooltipOpen] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const expensesBadgeRef = useRef<HTMLSpanElement | null>(null);
+  const closeTooltipTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const loadPendingExpenses = async () => {
-      const pendingExpenses = await fetchPendingExpenses();
-      setPendingExpensesCount(pendingExpenses.length);
-
-      const uniquePlates = Array.from(
-        new Set(
-          pendingExpenses
-            .map((expense) => expense.vehicle?.licensePlate?.trim())
-            .filter((plate): plate is string => Boolean(plate))
-        )
-      ).sort((a, b) => a.localeCompare(b));
-
-      setPendingVehiclePlates(uniquePlates);
+    const loadPendingCount = async () => {
+      const [count, vehicles] = await Promise.all([
+        fetchPendingExpensesCount(),
+        fetchPendingExpenseVehiclePlates(),
+      ]);
+      setPendingExpensesCount(count);
+      setPendingExpenseVehicles(vehicles);
     };
 
-    loadPendingExpenses();
+    loadPendingCount();
 
     // Recargar cada 30 segundos
-    const interval = setInterval(loadPendingExpenses, 30000);
+    const interval = setInterval(loadPendingCount, 30000);
 
     // Escuchar evento de actualización de gastos para recargar inmediatamente
-    window.addEventListener('expenseUpdated', loadPendingExpenses);
+    window.addEventListener('expenseUpdated', loadPendingCount);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('expenseUpdated', loadPendingExpenses);
+      window.removeEventListener('expenseUpdated', loadPendingCount);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isExpensesTooltipOpen) {
+      return;
+    }
+
+    const updateTooltipPosition = () => {
+      if (!expensesBadgeRef.current) {
+        return;
+      }
+
+      const rect = expensesBadgeRef.current.getBoundingClientRect();
+      const tooltipWidth = 320;
+      const gap = 18;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let left = rect.right + gap;
+      if (left + tooltipWidth > viewportWidth - 24) {
+        left = Math.max(24, rect.left - tooltipWidth - gap);
+      }
+
+      const top = Math.min(
+        Math.max(88, rect.top + rect.height / 2 - 110),
+        viewportHeight - 260,
+      );
+
+      setTooltipPosition({ top, left });
+    };
+
+    updateTooltipPosition();
+    window.addEventListener('resize', updateTooltipPosition);
+    window.addEventListener('scroll', updateTooltipPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateTooltipPosition);
+      window.removeEventListener('scroll', updateTooltipPosition, true);
+    };
+  }, [isExpensesTooltipOpen, sidebarWidth, isExpanded]);
+
+  useEffect(() => {
+    if (pendingExpensesCount <= 0) {
+      setIsExpensesTooltipOpen(false);
+    }
+  }, [pendingExpensesCount]);
+
+  const clearTooltipCloseTimeout = () => {
+    if (closeTooltipTimeoutRef.current !== null) {
+      window.clearTimeout(closeTooltipTimeoutRef.current);
+      closeTooltipTimeoutRef.current = null;
+    }
+  };
+
+  const openExpensesTooltip = () => {
+    clearTooltipCloseTimeout();
+    setIsExpensesTooltipOpen(true);
+  };
+
+  const scheduleExpensesTooltipClose = () => {
+    clearTooltipCloseTimeout();
+    closeTooltipTimeoutRef.current = window.setTimeout(() => {
+      setIsExpensesTooltipOpen(false);
+    }, 120);
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTooltipCloseTimeout();
     };
   }, []);
 
@@ -109,16 +178,16 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
       }}
     >
       {/* MENU */}
-      <nav className="flex-1 pt-4 space-y-6 overflow-y-auto overflow-x-hidden px-3">
+      <nav className="flex-1 overflow-y-auto px-3 pt-4">
         {menuSections.map(section => (
-          <div key={section.title}>
+          <div key={section.title} className="mb-6 overflow-visible last:mb-0">
             {isExpanded && (
               <h3 className="px-3 mb-2 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
                 {section.title}
               </h3>
             )}
 
-            <div className="space-y-1">
+            <div className="space-y-1 overflow-visible">
               {section.items.map(item => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -179,27 +248,15 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
 
                     {/* Badge */}
                     {isExpanded && item.badge && (
-                      <div className="relative ml-auto">
+                      <div className="relative ml-auto overflow-visible">
                         <span
-                          className="peer inline-flex min-w-[20px] justify-center rounded-full bg-[#f26419] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                          ref={item.path === "/expenses" ? expensesBadgeRef : null}
+                          onMouseEnter={item.path === "/expenses" ? openExpensesTooltip : undefined}
+                          onMouseLeave={item.path === "/expenses" ? scheduleExpensesTooltipClose : undefined}
+                          className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#f26419] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm"
                         >
                           {item.badge}
                         </span>
-
-                        {item.path === "/expenses" && pendingVehiclePlates.length > 0 && (
-                          <div
-                            className="pointer-events-none absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-3 text-left opacity-0 shadow-lg transition-all duration-200 peer-hover:translate-y-0 peer-hover:opacity-100"
-                          >
-                            <p className="mb-2 text-[11px] font-medium text-slate-500">Vehículos con gastos pendientes</p>
-                            <div className="space-y-1">
-                              {pendingVehiclePlates.map((plate) => (
-                                <p key={plate} className="rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
-                                  {plate.toUpperCase()}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </Link>
@@ -236,6 +293,67 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
           {isExpanded && "Cerrar sesión"}
         </button>
       </div>
+
+      {isExpensesTooltipOpen && pendingExpensesCount > 0 && createPortal(
+        <div
+          data-sidebar-hover-zone="true"
+          onMouseEnter={openExpensesTooltip}
+          onMouseLeave={scheduleExpensesTooltipClose}
+          className="fixed z-[120] w-80"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+          }}
+        >
+          <div className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/96 shadow-[0_35px_90px_-24px_rgba(15,23,42,0.42)] backdrop-blur-xl">
+            <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,_rgba(88,72,244,0.16),_transparent_58%),radial-gradient(circle_at_top_right,_rgba(242,100,25,0.12),_transparent_52%)]" />
+
+            <div className="relative px-5 pb-5 pt-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                    Revision pendiente
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold tracking-tight text-[#12264f]">
+                    Gastos por auditar
+                  </h3>
+                </div>
+                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                  {pendingExpensesCount} pendiente{pendingExpensesCount === 1 ? '' : 's'}
+                </span>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-sm font-medium text-slate-600">
+                  Vehiculos con registros pendientes de validacion
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {pendingExpenseVehicles.length > 0 ? (
+                    pendingExpenseVehicles.map((plate) => (
+                      <span
+                        key={plate}
+                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-slate-700 shadow-sm"
+                      >
+                        {plate}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-500">No hay placas disponibles para mostrar.</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3">
+                <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-indigo-500" />
+                <p className="text-[12px] leading-5 text-slate-600">
+                  Entra a la seccion de Gastos para revisar soportes, validar montos y aprobar o rechazar cada registro pendiente.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </aside>
   );
 }

@@ -57,7 +57,7 @@ interface ExpenseResponse {
     }>;
 }
 
-function normalizeExpense(item: ExpenseResponse): ExpenseItem {
+export function normalizeExpense(item: ExpenseResponse): ExpenseItem {
     return {
         id: item.id,
         type: item.type,
@@ -94,6 +94,25 @@ export async function fetchPendingExpenses(): Promise<ExpenseItem[]> {
         return data.map(normalizeExpense);
     } catch (error) {
         console.error('Error fetching pending expenses:', error);
+        return [];
+    }
+}
+
+export async function fetchPendingExpenseVehiclePlates(): Promise<string[]> {
+    try {
+        const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES_PENDING}`);
+
+        const uniquePlates = new Set<string>();
+        data.forEach((expense) => {
+            const plate = expense.vehicle?.licensePlate?.trim();
+            if (plate) {
+                uniquePlates.add(plate.toUpperCase());
+            }
+        });
+
+        return Array.from(uniquePlates).sort((a, b) => a.localeCompare(b));
+    } catch (error) {
+        console.error('Error fetching pending expense vehicles:', error);
         return [];
     }
 }
