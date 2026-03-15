@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     MdAttachMoney,
     MdClose,
@@ -66,6 +66,15 @@ const TYPE_TO_COLUMN: Record<string, ExpenseColumn> = {
     TOLLS: 'tolls',
     PARKING: 'parking',
 };
+
+const EXPENSES_PAGE_BREADCRUMBS = [
+    { label: 'Inicio', to: '/' },
+    { label: 'Gastos', to: '/expenses' },
+    { label: 'Control por ruta' },
+] as const;
+
+const EXPENSES_PAGE_TITLE = 'Control de gastos por ruta';
+const EXPENSES_PAGE_SUBTITLE = 'Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV.';
 
 function formatCurrency(value: number): string {
     return `$${Math.round(value).toLocaleString('es-CO')}`;
@@ -173,6 +182,7 @@ export function VehicleExpensesDetailPage() {
     const [isVisibleConsignment, setIsVisibleConsignment] = useState(false);
     const [consignmentAmount, setConsignmentAmount] = useState('');
     const [consignmentNotes, setConsignmentNotes] = useState('');
+    const hasCompletedInitialLoad = useRef(false);
 
     // Manejar transiciones del modal de consignación
     useEffect(() => {
@@ -202,7 +212,16 @@ export function VehicleExpensesDetailPage() {
 
                 // Restaurar vehículo seleccionado o usar el primero
                 if (vehicleList.length > 0) {
-                    setSelectedVehicleId(hasStoredVehicle ? storedVehicleId : vehicleList[0].vehicleId);
+                    const initialVehicleId = hasStoredVehicle ? storedVehicleId : vehicleList[0].vehicleId;
+                    setSelectedVehicleId(initialVehicleId);
+
+                    const [vehicleExpenses, allConsignments] = await Promise.all([
+                        fetchExpensesByVehicle(initialVehicleId),
+                        fetchAllConsignments(),
+                    ]);
+
+                    setAllExpenses(vehicleExpenses);
+                    setConsignments(allConsignments);
                 }
             } catch (error) {
                 setToast({
@@ -210,6 +229,7 @@ export function VehicleExpensesDetailPage() {
                     type: 'error',
                 });
             } finally {
+                hasCompletedInitialLoad.current = true;
                 setIsLoading(false);
             }
         };
@@ -219,7 +239,7 @@ export function VehicleExpensesDetailPage() {
 
     // Cargar gastos y consignaciones cuando cambia el vehículo seleccionado
     useEffect(() => {
-        if (!selectedVehicleId) {
+        if (!selectedVehicleId || !hasCompletedInitialLoad.current) {
             return;
         }
 
@@ -567,8 +587,41 @@ export function VehicleExpensesDetailPage() {
 
     if (isLoading) {
         return (
-            <section className="space-y-4">
-                <div className="h-80 animate-pulse rounded-3xl border border-slate-200 bg-white" />
+            <section className="space-y-6">
+                <PageHeader
+                    breadcrumbs={[...EXPENSES_PAGE_BREADCRUMBS]}
+                    title={EXPENSES_PAGE_TITLE}
+                    subtitle={EXPENSES_PAGE_SUBTITLE}
+                />
+
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="h-12 w-[240px] animate-pulse rounded-xl border border-slate-200 bg-white" />
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="h-14 min-w-[180px] animate-pulse rounded-xl border border-slate-200 bg-white" />
+                        <div className="h-14 min-w-[220px] animate-pulse rounded-xl border border-slate-200 bg-white" />
+                        <div className="h-14 min-w-[160px] animate-pulse rounded-xl bg-[#5848f4]/15" />
+                    </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="h-[132px] animate-pulse rounded-xl border border-slate-200 bg-white" />
+                    <div className="h-[132px] animate-pulse rounded-xl border border-slate-200 bg-white" />
+                    <div className="h-[132px] animate-pulse rounded-xl border border-emerald-200 bg-emerald-50/60" />
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                        <div className="h-6 w-56 animate-pulse rounded bg-slate-100" />
+                        <div className="h-5 w-48 animate-pulse rounded bg-slate-100" />
+                    </div>
+                    <div className="space-y-3 px-6 py-5">
+                        <div className="h-12 animate-pulse rounded-xl bg-slate-50" />
+                        <div className="h-12 animate-pulse rounded-xl bg-slate-50" />
+                        <div className="h-12 animate-pulse rounded-xl bg-slate-50" />
+                        <div className="h-12 animate-pulse rounded-xl bg-slate-50" />
+                        <div className="h-12 animate-pulse rounded-xl bg-slate-50" />
+                    </div>
+                </div>
             </section>
         );
     }
@@ -577,13 +630,9 @@ export function VehicleExpensesDetailPage() {
         return (
             <section className="space-y-5">
                 <PageHeader
-                    breadcrumbs={[
-                        { label: 'Inicio', to: '/' },
-                        { label: 'Gastos', to: '/expenses' },
-                        { label: 'Control por ruta' },
-                    ]}
-                    title="Control de gastos por ruta"
-                    subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
+                    breadcrumbs={[...EXPENSES_PAGE_BREADCRUMBS]}
+                    title={EXPENSES_PAGE_TITLE}
+                    subtitle={EXPENSES_PAGE_SUBTITLE}
                 />
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-10">
@@ -611,13 +660,9 @@ export function VehicleExpensesDetailPage() {
     return (
         <section className="space-y-6">
             <PageHeader
-                breadcrumbs={[
-                    { label: 'Inicio', to: '/' },
-                    { label: 'Gastos', to: '/expenses' },
-                    { label: 'Control por ruta' },
-                ]}
-                title="Control de gastos por ruta"
-                subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV."
+                breadcrumbs={[...EXPENSES_PAGE_BREADCRUMBS]}
+                title={EXPENSES_PAGE_TITLE}
+                subtitle={EXPENSES_PAGE_SUBTITLE}
             />
 
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">

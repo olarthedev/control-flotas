@@ -30,58 +30,101 @@ const Consignments = () => (
 );
 
 const MIN_BOOT_LOADING_MS = 1500;
-
-function isPageReload(): boolean {
-  const navigationEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-
-  if (navigationEntry) {
-    return navigationEntry.type === "reload";
-  }
-
-  const legacyNavigation = (performance as Performance & { navigation?: { type?: number } }).navigation;
-  return legacyNavigation?.type === 1;
-}
+const LOADER_FADE_OUT_MS = 320;
 
 function App() {
-  const [isBootLoading, setIsBootLoading] = useState(isPageReload());
+  const [isBootLoading, setIsBootLoading] = useState(true);
+  const [canCloseLoader, setCanCloseLoader] = useState(false);
+  const [hasCompletedLoop, setHasCompletedLoop] = useState(false);
+  const [isClosingLoader, setIsClosingLoader] = useState(false);
 
   useEffect(() => {
-    if (!isBootLoading) {
+    if (!isBootLoading || canCloseLoader) {
       return;
     }
 
     const loadingStart = Date.now();
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let minTimerId: ReturnType<typeof setTimeout> | null = null;
+    let fallbackTimerId: ReturnType<typeof setTimeout> | null = null;
+    let minElapsed = false;
+    let pageLoaded = false;
+
+    const tryEnableClose = () => {
+      if (minElapsed && pageLoaded) {
+        setCanCloseLoader(true);
+      }
+    };
 
     const finishBootLoading = () => {
       const elapsed = Date.now() - loadingStart;
       const remaining = Math.max(0, MIN_BOOT_LOADING_MS - elapsed);
-      timeoutId = setTimeout(() => {
-        setIsBootLoading(false);
+      minTimerId = setTimeout(() => {
+        minElapsed = true;
+        tryEnableClose();
       }, remaining);
+
+      fallbackTimerId = setTimeout(() => {
+        setCanCloseLoader(true);
+      }, remaining + 3500);
+    };
+
+    const onWindowLoaded = () => {
+      pageLoaded = true;
+      tryEnableClose();
     };
 
     if (document.readyState === "complete") {
+      pageLoaded = true;
       finishBootLoading();
+      tryEnableClose();
     } else {
       window.addEventListener("load", finishBootLoading, { once: true });
+      window.addEventListener("load", onWindowLoaded, { once: true });
     }
 
     return () => {
       window.removeEventListener("load", finishBootLoading);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      window.removeEventListener("load", onWindowLoaded);
+      if (minTimerId) {
+        clearTimeout(minTimerId);
+      }
+      if (fallbackTimerId) {
+        clearTimeout(fallbackTimerId);
       }
     };
-  }, [isBootLoading]);
+  }, [canCloseLoader, isBootLoading]);
+
+  useEffect(() => {
+    if (!isBootLoading || !canCloseLoader || !hasCompletedLoop || isClosingLoader) {
+      return;
+    }
+
+    setIsClosingLoader(true);
+  }, [canCloseLoader, hasCompletedLoop, isBootLoading, isClosingLoader]);
+
+  useEffect(() => {
+    if (!isBootLoading || !isClosingLoader) {
+      return;
+    }
+
+    const closeTimerId = setTimeout(() => {
+      setIsBootLoading(false);
+    }, LOADER_FADE_OUT_MS);
+
+    return () => {
+      clearTimeout(closeTimerId);
+    };
+  }, [isBootLoading, isClosingLoader]);
 
   if (isBootLoading) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-white">
+      <div className={`fixed inset-0 z-[9999] bg-white transition-opacity duration-300 ${isClosingLoader ? "opacity-0" : "opacity-100"}`}>
         <LoadingAnimation
           message="Cargando panel..."
           className="h-full border-0 bg-white"
           animationClassName="mx-auto h-36 w-72"
+          speed={1.35}
+          onLoopComplete={() => setHasCompletedLoop(true)}
         />
       </div>
     );

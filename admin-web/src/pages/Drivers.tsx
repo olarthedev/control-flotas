@@ -98,14 +98,6 @@ export function DriversPage() {
         });
     }, [drivers, searchTerm]);
 
-    const suggestion = useMemo(() => {
-        if (!drivers.length) {
-            return 'Sugerencia: agrega conductores para comenzar a monitorear su desempeño.';
-        }
-
-        return 'Sugerencia: Carlos Rodriguez tiene el mejor índice de ahorro de combustible este mes.';
-    }, [drivers]);
-
     const handleCreateDriver = () => {
         setModalMode('create');
         setSelectedDriver(undefined);
@@ -311,7 +303,7 @@ export function DriversPage() {
                     { label: 'Gestión de conductores' },
                 ]}
                 title="Gestión de conductores"
-                subtitle={`Visibilidad total del equipo de conducción con seguimiento de salario, abonos, historial y estado operativo. ${suggestion}`}
+                subtitle="Visibilidad total del equipo de conducción con seguimiento de salario, abonos, historial y estado operativo para mantener control financiero y disponibilidad de la flota."
                 actions={
                     <>
                         <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">
