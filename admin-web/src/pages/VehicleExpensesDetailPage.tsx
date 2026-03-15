@@ -14,6 +14,18 @@ import { Toast, type ToastType } from '../components/Toast';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ExpenseAuditModal } from '../components/expenses/ExpenseAuditModal';
 import { ExportButton } from '../components/ExportButton';
+import { getApiErrorMessage } from '../utils/api-error';
+import {
+    buildHistoryWeekSummaries,
+    buildOpenWeekSummaries,
+    filterExpensesByWeekAndStatuses,
+    getCurrentWeekKey,
+    getIsoWeekInfo,
+    getWeekLabel,
+    getWeekRange,
+    type HistoryWeekSummary,
+    type OpenWeekSummary,
+} from './expenses-week.utils';
 
 type ViewTab = 'ACTIVOS' | 'HISTORIAL';
 
@@ -43,6 +55,9 @@ interface ExpenseSelectionState {
 
 const COLUMN_ORDER: ExpenseColumn[] = ['fuel', 'meals', 'maintenance', 'hotel', 'tolls', 'parking'];
 const SELECTED_VEHICLE_STORAGE_KEY = 'expenses:selectedVehicleId';
+const SELECTED_HISTORY_WEEK_STORAGE_KEY = 'expenses:selectedHistoryWeek';
+const ACTIVE_STATUSES: ExpenseStatus[] = ['PENDING', 'OBSERVED'];
+const HISTORY_STATUSES: ExpenseStatus[] = ['APPROVED', 'REJECTED'];
 
 const TYPE_TO_COLUMN: Record<string, ExpenseColumn> = {
     FUEL: 'fuel',
@@ -78,33 +93,6 @@ function toDayKey(value: string): string {
     const month = String(parsed.getMonth() + 1).padStart(2, '0');
     const day = String(parsed.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-}
-
-function getStartOfWeek(date = new Date()): Date {
-    const copy = new Date(date);
-    const day = copy.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    copy.setDate(copy.getDate() + diff);
-    copy.setHours(0, 0, 0, 0);
-    return copy;
-}
-
-function toWeekKey(date: Date): string {
-    return date.toISOString().split('T')[0];
-}
-
-function getWeekRange(weekKey: string): { start: Date; end: Date } {
-    const start = new Date(`${weekKey}T00:00:00`);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 7);
-    return { start, end };
-}
-
-function getWeekLabel(weekKey: string): string {
-    const { start, end } = getWeekRange(weekKey);
-    const endVisible = new Date(end);
-    endVisible.setDate(endVisible.getDate() - 1);
-    return `${start.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} - ${endVisible.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}`;
 }
 
 function getColumnFromExpenseType(type: string): ExpenseColumn {
@@ -168,16 +156,17 @@ export function VehicleExpensesDetailPage() {
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
     const [vehicleOptions, setVehicleOptions] = useState<VehicleExpenseSummary[]>([]);
-    const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+    const [allExpenses, setAllExpenses] = useState<ExpenseItem[]>([]);
     const [consignments, setConsignments] = useState<ConsignmentItem[]>([]);
 
     const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
     const [tab, setTab] = useState<ViewTab>('ACTIVOS');
-    const [selectedWeek, setSelectedWeek] = useState<string>(toWeekKey(getStartOfWeek()));
+    const [selectedWeek, setSelectedWeek] = useState<string>(getCurrentWeekKey());
 
     const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
     const [selectedExpenseGroup, setSelectedExpenseGroup] = useState<ExpenseSelectionState | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const currentWeekKey = useMemo(() => getCurrentWeekKey(), []);
 
     const [showConsignmentModal, setShowConsignmentModal] = useState(false);
     const [shouldRenderConsignment, setShouldRenderConsignment] = useState(false);
@@ -203,9 +192,7 @@ export function VehicleExpensesDetailPage() {
     useEffect(() => {
         const loadVehicles = async () => {
             try {
-                console.log('Loading vehicle expenses...');
                 const vehicleList = await fetchExpensesGroupedByVehicle();
-                console.log('Vehicles loaded:', vehicleList.length);
                 setVehicleOptions(vehicleList);
 
                 const storedVehicleIdRaw = localStorage.getItem(SELECTED_VEHICLE_STORAGE_KEY);
@@ -216,13 +203,10 @@ export function VehicleExpensesDetailPage() {
                 // Restaurar vehículo seleccionado o usar el primero
                 if (vehicleList.length > 0) {
                     setSelectedVehicleId(hasStoredVehicle ? storedVehicleId : vehicleList[0].vehicleId);
-                } else {
-                    console.log('No vehicles with expenses found');
                 }
             } catch (error) {
-                console.error('Error loading vehicles:', error);
                 setToast({
-                    message: 'No se pudieron cargar los vehículos. Verifica tu conexión.',
+                    message: getApiErrorMessage(error, 'No se pudieron cargar los vehículos. Verifica tu conexión.'),
                     type: 'error',
                 });
             } finally {
@@ -247,19 +231,11 @@ export function VehicleExpensesDetailPage() {
                     fetchAllConsignments(),
                 ]);
 
-                setExpenses(vehicleExpenses);
+                setAllExpenses(vehicleExpenses);
                 setConsignments(allConsignments);
-
-                // Establecer automáticamente la semana más antigua disponible
-                if (vehicleExpenses.length > 0) {
-                    const expenseDates = vehicleExpenses.map((e) => new Date(e.expenseDate));
-                    const oldestDate = new Date(Math.min(...expenseDates.map((d) => d.getTime())));
-                    const oldestWeek = toWeekKey(getStartOfWeek(oldestDate));
-                    setSelectedWeek(oldestWeek);
-                }
-            } catch {
+            } catch (error) {
                 setToast({
-                    message: 'No se pudieron cargar los gastos del vehiculo.',
+                    message: getApiErrorMessage(error, 'No se pudieron cargar los gastos del vehículo.'),
                     type: 'error',
                 });
             } finally {
@@ -276,40 +252,67 @@ export function VehicleExpensesDetailPage() {
         }
     }, [selectedVehicleId]);
 
-    const weekOptions = useMemo(() => {
-        const sourceDates = [
-            ...expenses.map((expense) => new Date(expense.expenseDate)),
-            ...consignments
-                .filter((consignment) => consignment.vehicle?.id === selectedVehicleId)
-                .map((consignment) => new Date(consignment.consignmentDate)),
-            new Date(),
-        ];
+    const historyWeekSummaries = useMemo<HistoryWeekSummary[]>(
+        () => buildHistoryWeekSummaries(allExpenses, ACTIVE_STATUSES),
+        [allExpenses],
+    );
 
-        const unique = new Set<string>();
-        sourceDates.forEach((date) => {
-            if (!Number.isNaN(date.getTime())) {
-                unique.add(toWeekKey(getStartOfWeek(date)));
-            }
-        });
+    const openWeekSummaries = useMemo<OpenWeekSummary[]>(
+        () => buildOpenWeekSummaries(allExpenses, ACTIVE_STATUSES),
+        [allExpenses],
+    );
 
-        return Array.from(unique)
-            .sort((a, b) => (a < b ? 1 : -1))
-            .map((week) => ({ value: week, label: getWeekLabel(week) }));
-    }, [expenses, consignments, selectedVehicleId]);
+    const lockedActiveWeekKey = openWeekSummaries[0]?.weekKey ?? currentWeekKey;
+    const { isoWeek: lockedIsoWeek, isoYear: lockedIsoYear } = useMemo(
+        () => getIsoWeekInfo(new Date(`${lockedActiveWeekKey}T00:00:00`)),
+        [lockedActiveWeekKey],
+    );
+    const hasBacklogLock = openWeekSummaries.length > 0 && lockedActiveWeekKey !== currentWeekKey;
 
-    const filteredExpenses = useMemo(() => {
+    useEffect(() => {
         if (tab === 'ACTIVOS') {
-            // Mostrar TODOS los gastos activos (sin filtro de semana)
-            return expenses;
+            if (selectedWeek !== lockedActiveWeekKey) {
+                setSelectedWeek(lockedActiveWeekKey);
+            }
+            return;
         }
 
-        // HISTORIAL: Mostrar gastos por semana específica
-        const { start, end } = getWeekRange(selectedWeek);
-        return expenses.filter((expense) => {
-            const expenseDate = new Date(expense.expenseDate);
-            return !(expenseDate >= start && expenseDate < end);
-        });
-    }, [expenses, selectedWeek, tab]);
+        if (historyWeekSummaries.length === 0) {
+            if (selectedWeek !== '') {
+                setSelectedWeek('');
+            }
+            return;
+        }
+
+        const currentIsValid = historyWeekSummaries.some((summary) => summary.weekKey === selectedWeek);
+        if (currentIsValid) {
+            return;
+        }
+
+        const storedHistoryWeek = localStorage.getItem(SELECTED_HISTORY_WEEK_STORAGE_KEY);
+        const storedIsValid = storedHistoryWeek
+            ? historyWeekSummaries.some((summary) => summary.weekKey === storedHistoryWeek)
+            : false;
+
+        setSelectedWeek(storedIsValid ? (storedHistoryWeek as string) : historyWeekSummaries[0].weekKey);
+    }, [tab, lockedActiveWeekKey, historyWeekSummaries, selectedWeek]);
+
+    useEffect(() => {
+        if (tab === 'HISTORIAL' && selectedWeek) {
+            localStorage.setItem(SELECTED_HISTORY_WEEK_STORAGE_KEY, selectedWeek);
+        }
+    }, [tab, selectedWeek]);
+
+    const effectiveWeekKey = tab === 'ACTIVOS' ? lockedActiveWeekKey : selectedWeek;
+
+    const filteredExpenses = useMemo(() => {
+        if (!effectiveWeekKey) {
+            return [];
+        }
+
+        const allowedStatuses = tab === 'ACTIVOS' ? ACTIVE_STATUSES : HISTORY_STATUSES;
+        return filterExpensesByWeekAndStatuses(allExpenses, effectiveWeekKey, allowedStatuses);
+    }, [allExpenses, effectiveWeekKey, tab]);
 
     const tableRows = useMemo<TableRow[]>(() => {
         const byDay = new Map<string, ExpenseItem[]>();
@@ -376,7 +379,11 @@ export function VehicleExpensesDetailPage() {
     }, [filteredExpenses]);
 
     const totalConsigned = useMemo(() => {
-        const { start, end } = getWeekRange(selectedWeek);
+        if (!effectiveWeekKey) {
+            return 0;
+        }
+
+        const { start, end } = getWeekRange(effectiveWeekKey);
         return consignments
             .filter((consignment) => {
                 if (consignment.vehicle?.id !== selectedVehicleId) {
@@ -386,7 +393,7 @@ export function VehicleExpensesDetailPage() {
                 return consignmentDate >= start && consignmentDate < end;
             })
             .reduce((sum, consignment) => sum + consignment.amount, 0);
-    }, [consignments, selectedVehicleId, selectedWeek]);
+    }, [consignments, selectedVehicleId, effectiveWeekKey]);
 
     const balance = totalConsigned - approvedTotal;
 
@@ -454,7 +461,7 @@ export function VehicleExpensesDetailPage() {
                 validatedBy: 'Admin Web',
             });
 
-            setExpenses((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+            setAllExpenses((current) => current.map((item) => (item.id === updated.id ? updated : item)));
 
             // Notificar al sidebar para que refresque el contador de gastos pendientes
             if (status === 'APPROVED' || status === 'REJECTED') {
@@ -468,9 +475,9 @@ export function VehicleExpensesDetailPage() {
                 message: status === 'APPROVED' ? 'Gasto aprobado correctamente.' : 'Gasto rechazado correctamente.',
                 type: 'success',
             });
-        } catch {
+        } catch (error) {
             setToast({
-                message: 'No se pudo actualizar el estado del gasto.',
+                message: getApiErrorMessage(error, 'No se pudo actualizar el estado del gasto.'),
                 type: 'error',
             });
         } finally {
@@ -521,9 +528,9 @@ export function VehicleExpensesDetailPage() {
             setShowConsignmentModal(false);
             setConsignmentAmount('');
             setConsignmentNotes('');
-        } catch {
+        } catch (error) {
             setToast({
-                message: 'No se pudo registrar la consignación.',
+                message: getApiErrorMessage(error, 'No se pudo registrar la consignación.'),
                 type: 'error',
             });
         } finally {
@@ -660,18 +667,33 @@ export function VehicleExpensesDetailPage() {
                         <span className="pointer-events-none absolute left-4 top-2 text-[11px] font-normal text-slate-400">
                             Semana
                         </span>
-                        <select
-                            value={selectedWeek}
-                            onChange={(event) => setSelectedWeek(event.target.value)}
-                            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-9 text-sm font-normal text-slate-700"
-                        >
-                            {weekOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {`Esta semana (${option.label})`}
-                                </option>
-                            ))}
-                        </select>
-                        <MdKeyboardArrowDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        {tab === 'ACTIVOS' ? (
+                            <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 pb-2 pt-6 text-sm font-normal text-slate-700">
+                                {hasBacklogLock
+                                    ? `Semana por cerrar (Año ${lockedIsoYear} • Semana ${String(lockedIsoWeek).padStart(2, '0')})`
+                                    : `Semana actual (${getWeekLabel(lockedActiveWeekKey)})`}
+                            </div>
+                        ) : (
+                            <>
+                                <select
+                                    value={selectedWeek}
+                                    onChange={(event) => setSelectedWeek(event.target.value)}
+                                    disabled={historyWeekSummaries.length === 0}
+                                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pb-2 pt-6 pr-9 text-sm font-normal text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                                >
+                                    {historyWeekSummaries.length === 0 ? (
+                                        <option value="">No hay semanas cerradas</option>
+                                    ) : (
+                                        historyWeekSummaries.map((summary) => (
+                                            <option key={summary.weekKey} value={summary.weekKey}>
+                                                {`Año ${summary.isoYear} • Semana ${String(summary.isoWeek).padStart(2, '0')} • ${getWeekLabel(summary.weekKey)}`}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                                <MdKeyboardArrowDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            </>
+                        )}
                     </label>
 
                     <button
@@ -683,6 +705,12 @@ export function VehicleExpensesDetailPage() {
                     </button>
                 </div>
             </div>
+
+            {tab === 'ACTIVOS' && hasBacklogLock && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    {`Gestion secuencial activada: primero debes cerrar la semana ${String(lockedIsoWeek).padStart(2, '0')} del ${lockedIsoYear} (${getWeekLabel(lockedActiveWeekKey)}) antes de gestionar semanas posteriores.`}
+                </div>
+            )}
 
             <div className="grid gap-4 lg:grid-cols-3">
                 <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
@@ -749,13 +777,12 @@ export function VehicleExpensesDetailPage() {
                                             <p className="text-sm text-slate-500">La tabla se encuentra limpia para el nuevo ciclo operativo.</p>
                                             <button
                                                 onClick={() => {
-                                                    const week = toWeekKey(getStartOfWeek());
-                                                    setSelectedWeek(week);
+                                                    setSelectedWeek(lockedActiveWeekKey);
                                                     setTab('ACTIVOS');
                                                 }}
                                                 className="mt-2 rounded-lg bg-indigo-50 px-5 py-2 text-xs font-normal text-indigo-600 transition-colors hover:bg-indigo-100"
                                             >
-                                                IR A SEMANA ACTUAL
+                                                {hasBacklogLock ? 'IR A SEMANA PENDIENTE' : 'IR A SEMANA ACTUAL'}
                                             </button>
                                         </div>
                                     </td>

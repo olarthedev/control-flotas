@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import {
     MdBuild,
     MdCheckCircle,
@@ -29,6 +28,7 @@ import {
     type MaintenanceStatus,
     type MaintenanceType,
 } from '../services/maintenance.service';
+import { getApiErrorMessage } from '../utils/api-error';
 
 type TypeFilter = 'ALL' | MaintenanceType;
 type StatusFilter = 'ALL' | MaintenanceStatus;
@@ -501,8 +501,7 @@ export function MaintenancePage() {
             setVehicles(vehicleData);
             setError(null);
         } catch (requestError) {
-            console.error('Error loading maintenance page:', requestError);
-            setError('No se pudo cargar la informacion de mantenimiento.');
+            setError(getApiErrorMessage(requestError, 'No se pudo cargar la información de mantenimiento.'));
         } finally {
             setIsLoading(false);
         }
@@ -691,16 +690,7 @@ export function MaintenancePage() {
 
             setIsModalOpen(false);
         } catch (submitError) {
-            console.error('Error saving maintenance record:', submitError);
-            let message = 'No se pudo guardar el registro. Intenta de nuevo.';
-            if (axios.isAxiosError(submitError)) {
-                const responseMessage = submitError.response?.data?.message;
-                if (Array.isArray(responseMessage)) {
-                    message = responseMessage[0] ?? message;
-                } else if (typeof responseMessage === 'string') {
-                    message = responseMessage;
-                }
-            }
+            const message = getApiErrorMessage(submitError, 'No se pudo guardar el registro. Intenta de nuevo.');
             setToast({ type: 'error', message });
         } finally {
             setIsSubmitting(false);
@@ -713,8 +703,10 @@ export function MaintenancePage() {
             setRecords((current) => current.map((item) => (item.id === updated.id ? updated : item)));
             setToast({ type: 'success', message: 'Mantenimiento marcado como completado.' });
         } catch (completeError) {
-            console.error('Error completing maintenance record:', completeError);
-            setToast({ type: 'error', message: 'No se pudo completar el mantenimiento.' });
+            setToast({
+                type: 'error',
+                message: getApiErrorMessage(completeError, 'No se pudo completar el mantenimiento.'),
+            });
         }
     };
 
@@ -729,8 +721,10 @@ export function MaintenancePage() {
             setRecords((current) => current.filter((item) => item.id !== record.id));
             setToast({ type: 'success', message: 'Registro eliminado correctamente.' });
         } catch (deleteError) {
-            console.error('Error deleting maintenance record:', deleteError);
-            setToast({ type: 'error', message: 'No se pudo eliminar el registro.' });
+            setToast({
+                type: 'error',
+                message: getApiErrorMessage(deleteError, 'No se pudo eliminar el registro.'),
+            });
         }
     };
 
