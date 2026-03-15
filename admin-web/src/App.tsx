@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { LoadingAnimation } from "./components/LoadingAnimation";
 import { Layout } from "./layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { VehiclesPage } from "./pages/Vehicles";
@@ -27,7 +29,64 @@ const Consignments = () => (
   />
 );
 
+const MIN_BOOT_LOADING_MS = 1500;
+
+function isPageReload(): boolean {
+  const navigationEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+
+  if (navigationEntry) {
+    return navigationEntry.type === "reload";
+  }
+
+  const legacyNavigation = (performance as Performance & { navigation?: { type?: number } }).navigation;
+  return legacyNavigation?.type === 1;
+}
+
 function App() {
+  const [isBootLoading, setIsBootLoading] = useState(isPageReload());
+
+  useEffect(() => {
+    if (!isBootLoading) {
+      return;
+    }
+
+    const loadingStart = Date.now();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const finishBootLoading = () => {
+      const elapsed = Date.now() - loadingStart;
+      const remaining = Math.max(0, MIN_BOOT_LOADING_MS - elapsed);
+      timeoutId = setTimeout(() => {
+        setIsBootLoading(false);
+      }, remaining);
+    };
+
+    if (document.readyState === "complete") {
+      finishBootLoading();
+    } else {
+      window.addEventListener("load", finishBootLoading, { once: true });
+    }
+
+    return () => {
+      window.removeEventListener("load", finishBootLoading);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [isBootLoading]);
+
+  if (isBootLoading) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-white">
+        <LoadingAnimation
+          message="Cargando panel..."
+          className="h-full border-0 bg-white"
+          animationClassName="mx-auto h-36 w-72"
+        />
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Layout>
