@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeftOpen, MapPin } from "lucide-react";
 import { MdDirectionsBus } from "react-icons/md";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -20,12 +20,17 @@ export const TopBar: React.FC<TopBarProps> = ({
     isSidebarExpanded,
     onHoverChange,
 }) => {
+    const cityOptions = ["Todas", "Tunja", "Mocoa"] as const;
     const isSidebarPreviewExpanded = isSidebarCollapsed && isSidebarExpanded;
     const [dateTime, setDateTime] = useState("");
+    const [selectedCity, setSelectedCity] = useState<(typeof cityOptions)[number]>("Todas");
+    const [isCitySelectorOpen, setIsCitySelectorOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
+    const citySelectorRef = useRef<HTMLDivElement | null>(null);
+    const isGlobalCity = selectedCity === "Todas";
 
     const placeholdersByPath: Record<string, string> = {
         "/": "Buscar en dashboard...",
@@ -82,6 +87,18 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         return () => clearTimeout(timeout);
     }, [searchValue, searchParams, setSearchParams]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (citySelectorRef.current && target && !citySelectorRef.current.contains(target)) {
+                setIsCitySelectorOpen(false);
+            }
+        };
+
+        window.addEventListener("mousedown", handleClickOutside);
+        return () => window.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <header className="relative h-[64px] bg-[#f6f7fb] border-b border-gray-200">
@@ -145,67 +162,113 @@ export const TopBar: React.FC<TopBarProps> = ({
                 style={{ marginLeft: `${sidebarWidth}px` }}
             >
                 {/* IZQUIERDA */}
-                <div className="text-sm font-medium text-gray-600">
-                    Panel Administrativo
+                <div className="flex items-center gap-4">
+                    <div className="text-sm font-medium text-gray-600">
+                        Panel Administrativo
+                    </div>
+
+                    <div ref={citySelectorRef} className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setIsCitySelectorOpen((previous) => !previous)}
+                            className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold shadow-[0_8px_20px_-16px_rgba(15,23,42,0.7)] transition-all duration-200 ${isCitySelectorOpen || !isGlobalCity
+                                    ? "border-[#d9d6fe] bg-[#f6f5ff] text-[#4f46e5] hover:border-[#c7c2fc] hover:bg-[#efedff]"
+                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                                }`}
+                            aria-haspopup="listbox"
+                            aria-expanded={isCitySelectorOpen}
+                            title="Filtro de ciudad"
+                        >
+                            <MapPin className={`h-4 w-4 ${isCitySelectorOpen || !isGlobalCity ? "text-[#6366f1]" : "text-slate-500"}`} />
+                            <span>{selectedCity}</span>
+                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCitySelectorOpen || !isGlobalCity ? "text-[#6366f1]" : "text-slate-500"} ${isCitySelectorOpen ? "rotate-180" : "rotate-0"}`} />
+                        </button>
+
+                        {isCitySelectorOpen && (
+                            <div className="absolute left-0 top-[calc(100%+8px)] z-50 w-[180px] rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_24px_48px_-22px_rgba(15,23,42,0.45)]">
+                                {cityOptions.map((city) => {
+                                    const isActive = city === selectedCity;
+                                    return (
+                                        <button
+                                            key={city}
+                                            type="button"
+                                            role="option"
+                                            aria-selected={isActive}
+                                            onClick={() => {
+                                                setSelectedCity(city);
+                                                setIsCitySelectorOpen(false);
+                                            }}
+                                            className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-sm transition-colors ${isActive
+                                                ? "bg-[#efedff] font-semibold text-[#4f46e5]"
+                                                : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                                                }`}
+                                        >
+                                            {city}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
                 </div>
 
                 {/* DERECHA */}
                 <div className="flex items-center gap-8">
 
-                {/* Search */}
-                <div className="relative w-[260px]">
-                    <div className="flex items-center bg-white border border-gray-200 rounded-full px-4 py-2 transition-all duration-200 focus-within:border-[#5c4df2] focus-within:ring-2 focus-within:ring-[#5c4df2]/20">
+                    {/* Search */}
+                    <div className="relative w-[260px]">
+                        <div className="flex items-center bg-white border border-gray-200 rounded-full px-4 py-2 transition-all duration-200 focus-within:border-[#5c4df2] focus-within:ring-2 focus-within:ring-[#5c4df2]/20">
 
-                        <Search className="w-4 h-4 text-gray-400" />
+                            <Search className="w-4 h-4 text-gray-400" />
 
-                        <input
-                            type="text"
-                            placeholder={searchPlaceholder}
-                            value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
-                            className="ml-2 bg-transparent outline-none text-sm w-full text-gray-800 placeholder:text-gray-400"
-                        />
+                            <input
+                                type="text"
+                                placeholder={searchPlaceholder}
+                                value={searchValue}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                                className="ml-2 bg-transparent outline-none text-sm w-full text-gray-800 placeholder:text-gray-400"
+                            />
 
+                        </div>
                     </div>
-                </div>
 
-                {/* Fecha */}
-                <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
-                    {dateTime}
-                </span>
+                    {/* Fecha */}
+                    <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                        {dateTime}
+                    </span>
 
-                {/* Notificaciones */}
-                <button
-                    type="button"
-                    onClick={() => navigate("/notifications")}
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
-                        location.pathname === "/notifications"
+                    {/* Notificaciones */}
+                    <button
+                        type="button"
+                        onClick={() => navigate("/notifications")}
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${location.pathname === "/notifications"
                             ? "border-[#d4cffc] bg-[#efedff] text-[#5c4df2]"
                             : "border-transparent text-gray-500 hover:border-slate-200 hover:bg-white hover:text-[#5c4df2]"
-                    }`}
-                    title="Abrir notificaciones"
-                    aria-label="Abrir notificaciones"
-                >
-                    <Bell className="w-5 h-5" />
-                </button>
+                            }`}
+                        title="Abrir notificaciones"
+                        aria-label="Abrir notificaciones"
+                    >
+                        <Bell className="w-5 h-5" />
+                    </button>
 
-                {/* Usuario */}
-                <div className="flex items-center gap-3 cursor-pointer group">
-                    <div className="w-9 h-9 rounded-xl bg-[#eef2ff] flex items-center justify-center font-semibold text-[#5c4df2] text-sm">
-                        CO
+                    {/* Usuario */}
+                    <div className="flex items-center gap-3 cursor-pointer group">
+                        <div className="w-9 h-9 rounded-xl bg-[#eef2ff] flex items-center justify-center font-semibold text-[#5c4df2] text-sm">
+                            CO
+                        </div>
+
+                        <div className="leading-tight">
+                            <p className="text-sm font-semibold text-gray-800">
+                                Cristian Olarte
+                            </p>
+                            <p className="text-xs text-gray-400">
+                                Administrador
+                            </p>
+                        </div>
+
+                        <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-[#5c4df2] transition-colors" />
                     </div>
-
-                    <div className="leading-tight">
-                        <p className="text-sm font-semibold text-gray-800">
-                            Cristian Olarte
-                        </p>
-                        <p className="text-xs text-gray-400">
-                            Administrador
-                        </p>
-                    </div>
-
-                    <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-[#5c4df2] transition-colors" />
-                </div>
                 </div>
             </div>
         </header>
