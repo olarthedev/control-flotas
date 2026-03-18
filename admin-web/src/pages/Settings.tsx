@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   Bell,
@@ -52,6 +52,22 @@ interface BasicSettingsState {
 
 const STORAGE_KEY = "logi.settings.basic.v2";
 
+const resolveSystemTheme = (): "light" | "dark" => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return "light";
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
+
+const normalizeThemeMode = (value: unknown): "light" | "dark" | "system" | "custom" => {
+  if (value === "light" || value === "dark" || value === "system" || value === "custom") {
+    return value;
+  }
+
+  return "system";
+};
+
 const DEFAULT_SETTINGS: BasicSettingsState = {
   userFullName: "Diego Martinez",
   userRole: "Administrador de flota",
@@ -91,16 +107,30 @@ const loadSettings = (): BasicSettingsState => {
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return DEFAULT_SETTINGS;
-    }
+    const parsed = raw ? (JSON.parse(raw) as Partial<BasicSettingsState>) : {};
+
+    const directTheme = window.localStorage.getItem("logi.user.theme");
+    const parsedTheme = parsed.theme;
+
+    const resolvedTheme =
+      (directTheme === "light" || directTheme === "dark" || directTheme === "system" || directTheme === "custom")
+        ? directTheme
+        : (parsedTheme === "light" || parsedTheme === "dark" || parsedTheme === "system" || parsedTheme === "custom")
+          ? parsedTheme
+          : DEFAULT_SETTINGS.theme;
 
     return {
       ...DEFAULT_SETTINGS,
-      ...(JSON.parse(raw) as Partial<BasicSettingsState>),
+      ...parsed,
+      theme: normalizeThemeMode(resolvedTheme),
     };
   } catch {
-    return DEFAULT_SETTINGS;
+    const directTheme = window.localStorage.getItem("logi.user.theme");
+
+    return {
+      ...DEFAULT_SETTINGS,
+      theme: normalizeThemeMode(directTheme),
+    };
   }
 };
 
@@ -135,6 +165,35 @@ export const SettingsPage = () => {
       companyCity: current.companyCity,
     };
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const root = document.documentElement;
+    const mode = settings.theme === "custom" ? "dark" : settings.theme;
+
+    const applyThemeClass = (next: "light" | "dark") => {
+      root.classList.toggle("dark", next === "dark");
+    };
+
+    const effectiveMode = mode === "system" ? resolveSystemTheme() : (mode as "light" | "dark");
+    applyThemeClass(effectiveMode);
+
+    if (mode === "system" && typeof window.matchMedia === "function") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = () => applyThemeClass(resolveSystemTheme());
+      mediaQuery.addEventListener("change", handleChange);
+      window.localStorage.setItem("logi.user.theme", mode);
+
+      return () => {
+        mediaQuery.removeEventListener("change", handleChange);
+      };
+    }
+
+    window.localStorage.setItem("logi.user.theme", mode);
+  }, [settings.theme]);
 
   const hasUnsavedChanges = useMemo(
     () => toSnapshot(settings) !== lastSavedSnapshot,

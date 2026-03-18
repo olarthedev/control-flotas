@@ -18,6 +18,14 @@ interface BasicSettingsProfile {
     userEmail?: string;
 }
 
+const resolveSystemTheme = (): "light" | "dark" => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+        return "light";
+    }
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
+
 const BASIC_SETTINGS_STORAGE_KEY = "logi.settings.basic.v2";
 
 const DEFAULT_TOPBAR_USER: Required<BasicSettingsProfile> = {
@@ -125,16 +133,49 @@ export const TopBar: React.FC<TopBarProps> = ({
         const storageTheme = window.localStorage.getItem("logi.user.theme");
         if (storageTheme === "light" || storageTheme === "dark" || storageTheme === "system") {
             setUserTheme(storageTheme);
+            return;
+        }
+
+        try {
+            const rawSettings = window.localStorage.getItem(BASIC_SETTINGS_STORAGE_KEY);
+            if (!rawSettings) {
+                return;
+            }
+
+            const parsed = JSON.parse(rawSettings) as { theme?: string };
+            if (parsed.theme === "light" || parsed.theme === "dark" || parsed.theme === "system") {
+                setUserTheme(parsed.theme);
+                return;
+            }
+
+            if (parsed.theme === "custom") {
+                setUserTheme("dark");
+            }
+        } catch {
+            // Ignore invalid stored settings.
         }
     }, []);
 
     useEffect(() => {
         const root = document.documentElement;
-        if (userTheme === "dark") {
-            root.classList.add("dark");
-        } else {
-            root.classList.remove("dark");
+        const applyThemeClass = (mode: "light" | "dark") => {
+            root.classList.toggle("dark", mode === "dark");
+        };
+
+        const effectiveMode = userTheme === "system" ? resolveSystemTheme() : userTheme;
+        applyThemeClass(effectiveMode);
+
+        if (userTheme === "system" && typeof window !== "undefined" && typeof window.matchMedia === "function") {
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const handleChange = () => applyThemeClass(resolveSystemTheme());
+            mediaQuery.addEventListener("change", handleChange);
+            window.localStorage.setItem("logi.user.theme", userTheme);
+
+            return () => {
+                mediaQuery.removeEventListener("change", handleChange);
+            };
         }
+
         window.localStorage.setItem("logi.user.theme", userTheme);
     }, [userTheme]);
 
@@ -173,6 +214,15 @@ export const TopBar: React.FC<TopBarProps> = ({
         window.addEventListener("mousedown", handleClickOutside);
         return () => window.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const isDarkModeActive = userTheme === "dark" || (userTheme === "system" && resolveSystemTheme() === "dark");
+
+    const toggleQuickTheme = () => {
+        setUserTheme((current) => {
+            const currentIsDark = current === "dark" || (current === "system" && resolveSystemTheme() === "dark");
+            return currentIsDark ? "light" : "dark";
+        });
+    };
 
     return (
         <header className="relative h-[64px] bg-[#f6f7fb] border-b border-gray-200">
@@ -288,7 +338,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
 
                 {/* DERECHA */}
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-5">
 
                     {/* Search */}
                     <div className="relative w-[260px]">
@@ -301,7 +351,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                                 placeholder={searchPlaceholder}
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
-                                className="ml-2 bg-transparent outline-none text-sm w-full text-gray-800 placeholder:text-gray-400"
+                                className="topbar-search-input ml-2 w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
                             />
 
                         </div>
@@ -312,19 +362,35 @@ export const TopBar: React.FC<TopBarProps> = ({
                         {dateTime}
                     </span>
 
-                    {/* Notificaciones */}
-                    <button
-                        type="button"
-                        onClick={() => navigate("/notifications")}
-                        className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${location.pathname === "/notifications"
-                            ? "border-[#d4cffc] bg-[#efedff] text-[#5c4df2]"
-                            : "border-transparent text-gray-500 hover:border-slate-200 hover:bg-white hover:text-[#5c4df2]"
-                            }`}
-                        title="Abrir notificaciones"
-                        aria-label="Abrir notificaciones"
-                    >
-                        <Bell className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {/* Notificaciones */}
+                        <button
+                            type="button"
+                            onClick={() => navigate("/notifications")}
+                            className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${location.pathname === "/notifications"
+                                ? "border-[#d4cffc] bg-[#efedff] text-[#5c4df2]"
+                                : "border-transparent text-gray-500 hover:border-slate-200 hover:bg-white hover:text-[#5c4df2]"
+                                }`}
+                            title="Abrir notificaciones"
+                            aria-label="Abrir notificaciones"
+                        >
+                            <Bell className="h-4 w-4" />
+                        </button>
+
+                        {/* Cambio rapido tema */}
+                        <button
+                            type="button"
+                            onClick={toggleQuickTheme}
+                            className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${isDarkModeActive
+                                ? "border-[#d4cffc] bg-[#efedff] text-[#5c4df2]"
+                                : "border-transparent text-gray-500 hover:border-slate-200 hover:bg-white hover:text-[#5c4df2]"
+                                }`}
+                            title={isDarkModeActive ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+                            aria-label={isDarkModeActive ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+                        >
+                            {isDarkModeActive ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                        </button>
+                    </div>
 
                     {/* Usuario Menu */}
                     <div ref={userMenuRef} className="relative">
@@ -335,25 +401,25 @@ export const TopBar: React.FC<TopBarProps> = ({
                                 setIsUserMenuOpen((prev) => !prev);
                                 setIsThemeSubmenuOpen(false);
                             }}
-                            className="flex items-center gap-3 cursor-pointer group px-2 py-1 rounded-lg transition-all hover:bg-slate-100"
+                            className="group flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-all hover:bg-slate-100"
                             title="Menu de usuario"
                             aria-haspopup="menu"
                             aria-expanded={isUserMenuOpen}
                         >
-                            <div className="w-9 h-9 rounded-xl bg-[#eef2ff] flex items-center justify-center font-semibold text-[#5c4df2] text-sm">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#eef2ff] text-xs font-semibold text-[#5c4df2]">
                                 {userInitials}
                             </div>
 
                             <div className="leading-tight">
-                                <p className="text-sm font-semibold text-gray-800">
+                                <p className="text-[13px] font-semibold text-gray-800">
                                     {userProfile.userFullName}
                                 </p>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-[11px] text-gray-400">
                                     {userProfile.userRole}
                                 </p>
                             </div>
 
-                            <ChevronDown className={`w-4 h-4 text-gray-400 group-hover:text-[#5c4df2] transition-all ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                            <ChevronDown className={`h-4 w-4 text-gray-400 transition-all group-hover:text-[#5c4df2] ${isUserMenuOpen ? "rotate-180" : ""}`} />
                         </button>
 
                         {/* User Menu Dropdown */}
