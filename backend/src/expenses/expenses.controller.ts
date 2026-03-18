@@ -14,6 +14,7 @@ import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
+import { FindExpensesByVehicleQueryDto } from './dto/find-expenses-by-vehicle-query.dto';
 
 @Controller('expenses')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -64,8 +65,11 @@ export class ExpensesController {
 
     /** GET /expenses/vehicle/:vehicleId */
     @Get('vehicle/:vehicleId')
-    findByVehicle(@Param('vehicleId') vehicleId: string) {
-        return this.expensesService.findByVehicle(+vehicleId);
+    findByVehicle(
+        @Param('vehicleId') vehicleId: string,
+        @Query() query: FindExpensesByVehicleQueryDto,
+    ) {
+        return this.expensesService.findByVehicle(+vehicleId, query);
     }
 
     /** GET /expenses/:id */

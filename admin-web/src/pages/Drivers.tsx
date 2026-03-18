@@ -23,6 +23,7 @@ import {
     resetDriverPaymentMonth,
     type DriverPayment,
 } from '../services/consignments.service';
+import { getApiErrorMessage } from '../utils/api-error';
 
 export function DriversPage() {
     const [searchParams] = useSearchParams();
@@ -51,7 +52,7 @@ export function DriversPage() {
             setDrivers(data);
             setError(null);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load drivers');
+            setError(getApiErrorMessage(err, 'No se pudo cargar la lista de conductores.'));
             setDrivers([]);
         } finally {
             setIsLoading(false);
@@ -73,7 +74,10 @@ export function DriversPage() {
                     })),
                 );
             } catch (err) {
-                console.error('Error loading vehicles for drivers modal:', err);
+                setToast({
+                    message: getApiErrorMessage(err, 'No se pudieron cargar los vehículos para asignación.'),
+                    type: 'error',
+                });
             }
         };
 
@@ -93,14 +97,6 @@ export function DriversPage() {
             );
         });
     }, [drivers, searchTerm]);
-
-    const suggestion = useMemo(() => {
-        if (!drivers.length) {
-            return 'Sugerencia: agrega conductores para comenzar a monitorear su desempeño.';
-        }
-
-        return 'Sugerencia: Carlos Rodriguez tiene el mejor índice de ahorro de combustible este mes.';
-    }, [drivers]);
 
     const handleCreateDriver = () => {
         setModalMode('create');
@@ -126,7 +122,10 @@ export function DriversPage() {
             });
             setIsModalOpen(true);
         } catch (err) {
-            console.error('Error loading driver for edit:', err);
+            setToast({
+                message: getApiErrorMessage(err, 'No se pudo cargar la información del conductor.'),
+                type: 'error',
+            });
         }
     };
 
@@ -163,7 +162,10 @@ export function DriversPage() {
 
             setIsModalOpen(false);
         } catch (err) {
-            console.error('Error saving driver:', err);
+            setToast({
+                message: getApiErrorMessage(err, 'No se pudo guardar la información del conductor.'),
+                type: 'error',
+            });
         }
     };
 
@@ -195,7 +197,10 @@ export function DriversPage() {
             const history = await fetchDriverPaymentHistory(driverId);
             setPaymentHistory(history);
         } catch (err) {
-            console.error('Error loading payment history:', err);
+            setToast({
+                message: getApiErrorMessage(err, 'No se pudo cargar el historial de abonos.'),
+                type: 'error',
+            });
             setPaymentHistory([]);
         } finally {
             setIsLoadingHistory(false);
@@ -266,9 +271,8 @@ export function DriversPage() {
                 });
             }
         } catch (resetError) {
-            console.error('Error resetting driver month:', resetError);
             setToast({
-                message: 'No se pudo iniciar el nuevo mes del conductor.',
+                message: getApiErrorMessage(resetError, 'No se pudo iniciar el nuevo mes del conductor.'),
                 type: 'error',
             });
         }
@@ -284,8 +288,7 @@ export function DriversPage() {
             setIsDeleteModalOpen(false);
             setDriverToDelete(null);
         } catch (err) {
-            console.error('Error deleting driver:', err);
-            setError(err instanceof Error ? err.message : 'Error al eliminar el conductor');
+            setError(getApiErrorMessage(err, 'Error al eliminar el conductor.'));
         } finally {
             setIsDeleting(false);
         }
@@ -300,7 +303,7 @@ export function DriversPage() {
                     { label: 'Gestión de conductores' },
                 ]}
                 title="Gestión de conductores"
-                subtitle={`Visibilidad total del equipo de conducción con seguimiento de salario, abonos, historial y estado operativo. ${suggestion}`}
+                subtitle="Visibilidad total del equipo de conducción con seguimiento de salario, abonos, historial y estado operativo para mantener control financiero y disponibilidad de la flota."
                 actions={
                     <>
                         <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">

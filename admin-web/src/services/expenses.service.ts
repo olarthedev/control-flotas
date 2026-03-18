@@ -79,42 +79,27 @@ export async function fetchExpenses(): Promise<ExpenseItem[]> {
 }
 
 export async function fetchPendingExpensesCount(): Promise<number> {
-    try {
-        const pendingExpenses = await fetchPendingExpenses();
-        return pendingExpenses.length;
-    } catch (error) {
-        console.error('Error fetching pending expenses count:', error);
-        return 0;
-    }
+    const pendingExpenses = await fetchPendingExpenses();
+    return pendingExpenses.length;
 }
 
 export async function fetchPendingExpenses(): Promise<ExpenseItem[]> {
-    try {
-        const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}/pending`);
-        return data.map(normalizeExpense);
-    } catch (error) {
-        console.error('Error fetching pending expenses:', error);
-        return [];
-    }
+    const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}/pending`);
+    return data.map(normalizeExpense);
 }
 
 export async function fetchPendingExpenseVehiclePlates(): Promise<string[]> {
-    try {
-        const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES_PENDING}`);
+    const { data } = await axios.get<ExpenseResponse[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES_PENDING}`);
 
-        const uniquePlates = new Set<string>();
-        data.forEach((expense) => {
-            const plate = expense.vehicle?.licensePlate?.trim();
-            if (plate) {
-                uniquePlates.add(plate.toUpperCase());
-            }
-        });
+    const uniquePlates = new Set<string>();
+    data.forEach((expense) => {
+        const plate = expense.vehicle?.licensePlate?.trim();
+        if (plate) {
+            uniquePlates.add(plate.toUpperCase());
+        }
+    });
 
-        return Array.from(uniquePlates).sort((a, b) => a.localeCompare(b));
-    } catch (error) {
-        console.error('Error fetching pending expense vehicles:', error);
-        return [];
-    }
+    return Array.from(uniquePlates).sort((a, b) => a.localeCompare(b));
 }
 
 export async function updateExpenseStatus(

@@ -5,7 +5,6 @@ import {
   Bell,
   Bus,
   LayoutDashboard,
-  LogOut,
   Settings,
   UserRound,
   Wallet,
@@ -266,33 +265,6 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
           </div>
         ))}
       </nav>
-
-      {/* FOOTER */}
-      <div className="mt-auto px-3 pb-4">
-        <button
-          className="
-      w-full flex items-center justify-center gap-2
-      py-2.5
-      text-sm font-medium
-      bg-transparent text-slate-500
-      rounded-xl
-      transition-all duration-300 ease-in-out
-      
-      outline-none ring-0
-      focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0
-      
-      hover:text-red-600
-      hover:bg-red-50
-      
-      active:scale-[0.98]
-      active:bg-red-100
-    "
-          title="Cerrar sesión"
-        >
-          <LogOut size={16} strokeWidth={2} />
-          {isExpanded && "Cerrar sesión"}
-        </button>
-      </div>
 
       {isExpensesTooltipOpen && pendingExpensesCount > 0 && createPortal(
         <div

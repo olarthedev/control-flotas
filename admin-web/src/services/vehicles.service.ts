@@ -70,60 +70,35 @@ export interface CreateVehicleDto {
 export interface UpdateVehicleDto extends Partial<CreateVehicleDto> { }
 
 export async function fetchVehicles(): Promise<VehicleCardData[]> {
-    try {
-        const { data } = await axios.get<Vehicle[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`);
+    const { data } = await axios.get<Vehicle[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`);
 
-        return data.map(vehicle => ({
-            id: vehicle.id,
-            name: `${vehicle.brand} ${vehicle.model}`,
-            plate: vehicle.licensePlate,
-            type: vehicle.type,
-            totalExpense: `$${calculateTotalExpense(vehicle).toLocaleString('es-CO')}`,
-            lastMaintenance: getLastMaintenanceDate(vehicle),
-            soatStatus: isDateExpired(vehicle.soatExpiryDate) ? 'Vencido' : 'Vigente',
-            tecnoStatus: isDateExpired(vehicle.technicalReviewExpiryDate) ? 'Vencido' : 'Vigente',
-        }));
-    } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        throw error;
-    }
+    return data.map(vehicle => ({
+        id: vehicle.id,
+        name: `${vehicle.brand} ${vehicle.model}`,
+        plate: vehicle.licensePlate,
+        type: vehicle.type,
+        totalExpense: `$${calculateTotalExpense(vehicle).toLocaleString('es-CO')}`,
+        lastMaintenance: getLastMaintenanceDate(vehicle),
+        soatStatus: isDateExpired(vehicle.soatExpiryDate) ? 'Vencido' : 'Vigente',
+        tecnoStatus: isDateExpired(vehicle.technicalReviewExpiryDate) ? 'Vencido' : 'Vigente',
+    }));
 }
 
 export async function createVehicle(vehicleData: CreateVehicleDto): Promise<Vehicle> {
-    try {
-        const { data } = await axios.post<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`, vehicleData);
-        return data;
-    } catch (error) {
-        console.error('Error creating vehicle:', error);
-        throw error;
-    }
+    const { data } = await axios.post<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`, vehicleData);
+    return data;
 }
 
 export async function updateVehicle(id: number, vehicleData: UpdateVehicleDto): Promise<Vehicle> {
-    try {
-        const { data } = await axios.patch<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`, vehicleData);
-        return data;
-    } catch (error) {
-        console.error('Error updating vehicle:', error);
-        throw error;
-    }
+    const { data } = await axios.patch<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`, vehicleData);
+    return data;
 }
 
 export async function getVehicleById(id: number): Promise<Vehicle> {
-    try {
-        const { data } = await axios.get<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
-        return data;
-    } catch (error) {
-        console.error('Error fetching vehicle:', error);
-        throw error;
-    }
+    const { data } = await axios.get<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
+    return data;
 }
 
 export async function deleteVehicle(id: number): Promise<void> {
-    try {
-        await axios.delete(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
-    } catch (error) {
-        console.error('Error deleting vehicle:', error);
-        throw error;
-    }
+    await axios.delete(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
 }

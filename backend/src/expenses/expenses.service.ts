@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Expense } from './expense.entity';
@@ -9,6 +9,7 @@ import { Vehicle } from '../vehicles/vehicle.entity';
 import { Trip } from '../trips/trip.entity';
 import { ExpenseStatus } from './expense.entity';
 import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
+import { FindExpensesByVehicleQueryDto } from './dto/find-expenses-by-vehicle-query.dto';
 
 export interface PaginatedExpensesResponse {
     data: Expense[];
@@ -47,6 +48,58 @@ export class ExpensesService {
         private tripsRepository: Repository<Trip>,
     ) { }
 
+    private readonly openStatuses: ExpenseStatus[] = [ExpenseStatus.PENDING, ExpenseStatus.OBSERVED];
+    private readonly closingStatuses: ExpenseStatus[] = [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED];
+
+    private getStartOfWeek(date: Date): Date {
+        const copy = new Date(date);
+        const day = copy.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        copy.setDate(copy.getDate() + diff);
+        copy.setHours(0, 0, 0, 0);
+        return copy;
+    }
+
+    private async enforceSequentialWeekClosure(existing: Expense, requestedStatus?: ExpenseStatus): Promise<void> {
+        if (!requestedStatus || !this.closingStatuses.includes(requestedStatus)) {
+            return;
+        }
+
+        const vehicleId = existing.vehicle?.id;
+        const driverId = existing.driver?.id;
+
+        if (!vehicleId && !driverId) {
+            return;
+        }
+
+        const qb = this.expensesRepository
+            .createQueryBuilder('expense')
+            .select(['expense.id', 'expense.expenseDate'])
+            .where('expense.status IN (:...statuses)', { statuses: this.openStatuses });
+
+        if (vehicleId) {
+            qb.andWhere('expense.vehicleId = :vehicleId', { vehicleId });
+        } else {
+            qb.andWhere('expense.driverId = :driverId', { driverId });
+        }
+
+        const openExpenses = await qb.getMany();
+        if (openExpenses.length === 0) {
+            return;
+        }
+
+        const oldestOpenWeekStart = openExpenses
+            .map((expense) => this.getStartOfWeek(new Date(expense.expenseDate)))
+            .reduce((min, current) => (current.getTime() < min.getTime() ? current : min));
+
+        const targetWeekStart = this.getStartOfWeek(new Date(existing.expenseDate));
+        if (targetWeekStart.getTime() !== oldestOpenWeekStart.getTime()) {
+            throw new BadRequestException(
+                'Debes cerrar primero la semana pendiente más antigua antes de gestionar gastos de semanas posteriores.',
+            );
+        }
+    }
+
     /**
      * Create a new expense record, resolving required relations.
      * Throws NotFoundException if the specified driver does not exist.
@@ -65,7 +118,7 @@ export class ExpensesService {
                 where: { id: createExpenseDto.driverId }
             });
             if (!driver) {
-                throw new (require('@nestjs/common').NotFoundException)(
+                throw new NotFoundException(
                     `Driver con id ${createExpenseDto.driverId} no encontrado`,
                 );
             }
@@ -161,12 +214,30 @@ export class ExpensesService {
     }
 
     /** Expenses charged to a vehicle. */
-    async findByVehicle(vehicleId: number): Promise<Expense[]> {
-        return await this.expensesRepository.find({
-            where: { vehicle: { id: vehicleId } },
-            relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
-            order: { expenseDate: 'DESC' },
-        });
+    async findByVehicle(vehicleId: number, query?: FindExpensesByVehicleQueryDto): Promise<Expense[]> {
+        const qb = this.expensesRepository
+            .createQueryBuilder('expense')
+            .leftJoinAndSelect('expense.driver', 'driver')
+            .leftJoinAndSelect('expense.vehicle', 'vehicle')
+            .leftJoinAndSelect('expense.trip', 'trip')
+            .leftJoinAndSelect('expense.evidence', 'evidence')
+            .leftJoinAndSelect('expense.consignment', 'consignment')
+            .where('vehicle.id = :vehicleId', { vehicleId })
+            .orderBy('expense.expenseDate', 'DESC');
+
+        if (query?.dateFrom) {
+            qb.andWhere('expense.expenseDate >= :dateFrom', { dateFrom: new Date(query.dateFrom) });
+        }
+
+        if (query?.dateTo) {
+            qb.andWhere('expense.expenseDate <= :dateTo', { dateTo: new Date(query.dateTo) });
+        }
+
+        if (query?.statuses?.length) {
+            qb.andWhere('expense.status IN (:...statuses)', { statuses: query.statuses });
+        }
+
+        return await qb.getMany();
     }
 
     /**
@@ -175,8 +246,10 @@ export class ExpensesService {
     async update(id: number, updateExpenseDto: UpdateExpenseDto): Promise<Expense> {
         const existing = await this.findById(id);
         if (!existing) {
-            throw new (require('@nestjs/common').NotFoundException)('Expense not found');
+            throw new NotFoundException('Expense not found');
         }
+
+        await this.enforceSequentialWeekClosure(existing, updateExpenseDto.status);
 
         // Prepare update data with proper type conversions
         const updateData: any = { ...updateExpenseDto };
@@ -192,7 +265,7 @@ export class ExpensesService {
     async remove(id: number) {
         const result = await this.expensesRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('Expense not found');
+            throw new NotFoundException('Expense not found');
         }
         return result;
     }

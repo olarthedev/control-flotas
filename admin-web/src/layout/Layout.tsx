@@ -9,7 +9,6 @@ interface LayoutProps {
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "logi.sidebar.collapsed";
 const SIDEBAR_EXPANDED_WIDTH = 256;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
-const CONTENT_BASE_WIDTH = `calc(100dvw - ${SIDEBAR_EXPANDED_WIDTH}px)`;
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -63,10 +62,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         className="pt-[64px]"
         style={{ paddingLeft: `${sidebarWidth}px` }}
       >
-        <div
-          className="px-10 py-8 min-h-[calc(100vh-64px)] mx-auto w-full"
-          style={{ maxWidth: CONTENT_BASE_WIDTH }}
-        >
+        <div className="mx-auto min-h-[calc(100vh-64px)] w-full px-10 py-8">
           {children}
         </div>
       </main>

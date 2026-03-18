@@ -14,6 +14,7 @@ import {
   type ExpenseDistributionPoint,
   type WeeklyTrendPoint,
 } from '../services/dashboard.service';
+import { getApiErrorMessage } from '../utils/api-error';
 
 export const Dashboard = () => {
   const [searchParams] = useSearchParams();
@@ -21,6 +22,7 @@ export const Dashboard = () => {
   const [weeklyTrend, setWeeklyTrend] = useState<WeeklyTrendPoint[]>([]);
   const [distribution, setDistribution] = useState<ExpenseDistributionPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const searchTerm = (searchParams.get('q') ?? '').trim().toLowerCase();
 
   useEffect(() => {
@@ -32,29 +34,35 @@ export const Dashboard = () => {
           fetchWeeklyTrend(),
           fetchExpenseDistribution(),
         ]);
+        let nextError: string | null = null;
 
         if (summaryResult.status === 'fulfilled') {
           setSummary(summaryResult.value);
         } else {
-          console.error('Error loading dashboard summary:', summaryResult.reason);
+          nextError ??= getApiErrorMessage(summaryResult.reason, 'No se pudo cargar el resumen del dashboard.');
           setSummary(null);
         }
 
         if (weeklyTrendResult.status === 'fulfilled') {
           setWeeklyTrend(weeklyTrendResult.value);
         } else {
-          console.error('Error loading weekly trend:', weeklyTrendResult.reason);
+          nextError ??= getApiErrorMessage(weeklyTrendResult.reason, 'No se pudo cargar la tendencia semanal.');
           setWeeklyTrend([]);
         }
 
         if (distributionResult.status === 'fulfilled') {
           setDistribution(distributionResult.value);
         } else {
-          console.error('Error loading expense distribution:', distributionResult.reason);
+          nextError ??= getApiErrorMessage(distributionResult.reason, 'No se pudo cargar la distribución de gastos.');
           setDistribution([]);
         }
+
+        setLoadError(nextError);
       } catch (error) {
-        console.error('Error loading dashboard summary:', error);
+        setLoadError(getApiErrorMessage(error, 'No se pudo cargar la información del dashboard.'));
+        setSummary(null);
+        setWeeklyTrend([]);
+        setDistribution([]);
       } finally {
         setIsLoading(false);
       }
@@ -137,6 +145,12 @@ export const Dashboard = () => {
 
       {/* Intelligence Alert */}
       {!isLoading && showAlert && <IntelligenceAlert title={alertTitle} message={alertMessage} />}
+
+      {!isLoading && loadError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {loadError}
+        </div>
+      )}
 
 
       {/* Stats Grid */}
