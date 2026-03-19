@@ -45,3 +45,265 @@ body {
     color: inherit;
   }
 }
+
+/* Dark mode only: keep light mode untouched. */
+html.dark {
+  color-scheme: dark;
+  --dark-bg: #0f1626;
+  --dark-surface: #182238;
+  --dark-surface-soft: #1d2943;
+  --dark-surface-strong: #243251;
+  --dark-text: #eef2fb;
+  --dark-muted: #aab5cc;
+  --dark-border: #33486d;
+  --dark-primary: #9f8cff;
+  --dark-primary-soft: color-mix(in srgb, var(--dark-primary) 24%, var(--dark-surface) 76%);
+  --dark-primary-border: color-mix(in srgb, var(--dark-primary) 56%, var(--dark-border) 44%);
+  --dark-success-bg: #163b2f;
+  --dark-success-bg-soft: #1b4638;
+  --dark-success-text: #8de7bc;
+  --dark-success-border: #2e7860;
+}
+
+html.dark body {
+  color: var(--dark-text);
+  background: var(--dark-bg);
+}
+
+/* Catch most light surfaces, including bg-white, bg-white/xx and slate/gray utilities. */
+html.dark [class*="bg-white"],
+html.dark [class*="bg-slate-50"],
+html.dark [class*="bg-gray-50"],
+html.dark [class*="bg-zinc-50"] {
+  background-color: var(--dark-surface-soft) !important;
+}
+
+html.dark [class*="bg-slate-100"],
+html.dark [class*="bg-gray-100"],
+html.dark [class*="bg-zinc-100"],
+html.dark [class*="bg-slate-200"],
+html.dark [class*="bg-gray-200"],
+html.dark [class*="bg-zinc-200"] {
+  background-color: var(--dark-surface-strong) !important;
+}
+
+/* Hardcoded app backgrounds that remained white in dark mode. */
+html.dark .bg-\[\#f8fafc\],
+html.dark .bg-\[\#f6f7fb\] {
+  background-color: var(--dark-bg) !important;
+}
+
+/* Accent-selected backgrounds remain tinted, not white. */
+html.dark .bg-\[\#fafbff\],
+html.dark .bg-\[\#f4f2ff\],
+html.dark .bg-\[\#f3f1ff\],
+html.dark .bg-\[\#efedff\],
+html.dark .bg-\[\#eef2ff\],
+html.dark .bg-\[\#ece9ff\],
+html.dark .bg-\[\#edeafe\],
+html.dark .bg-\[\#e9e8fb\],
+html.dark .bg-\[\#f0eeff\],
+html.dark [class*="bg-indigo-50"],
+html.dark [class*="bg-indigo-100"],
+html.dark [class*="bg-blue-50"],
+html.dark [class*="bg-blue-100"],
+html.dark [class*="bg-purple-50"] {
+  background-color: var(--dark-primary-soft) !important;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-zinc-900,
+html.dark .text-zinc-800,
+html.dark .text-\[\#12264f\],
+html.dark .text-\[\#0f1f47\],
+html.dark .text-\[\#0f1e45\],
+html.dark .text-\[\#101e42\],
+html.dark .text-\[\#13254d\],
+html.dark .text-\[\#16294d\],
+html.dark .text-\[\#11254c\],
+html.dark .text-\[\#0f2349\],
+html.dark .text-\[\#0f1f45\] {
+  color: var(--dark-text) !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .text-zinc-600,
+html.dark .text-zinc-500,
+html.dark .text-zinc-400,
+html.dark .text-\[\#64748b\] {
+  color: var(--dark-muted) !important;
+}
+
+html.dark [class*="text-indigo-"],
+html.dark [class*="text-blue-"],
+html.dark .text-\[\#5848f4\],
+html.dark .text-\[\#5c4df2\],
+html.dark .text-\[\#4f46e5\] {
+  color: var(--dark-primary) !important;
+}
+
+/* Success/positive states: stronger contrast for dark mode badges and labels. */
+html.dark [class*="bg-emerald-50"],
+html.dark [class*="bg-emerald-100"],
+html.dark [class*="bg-green-50"],
+html.dark [class*="bg-green-100"] {
+  background-color: var(--dark-success-bg) !important;
+}
+
+html.dark [class*="text-emerald-600"],
+html.dark [class*="text-emerald-700"],
+html.dark [class*="text-emerald-800"],
+html.dark [class*="text-emerald-900"],
+html.dark [class*="text-green-600"],
+html.dark [class*="text-green-700"],
+html.dark [class*="text-green-800"] {
+  color: var(--dark-success-text) !important;
+}
+
+html.dark [class*="border-emerald-200"],
+html.dark [class*="border-emerald-300"],
+html.dark [class*="border-green-200"],
+html.dark [class*="border-green-300"] {
+  border-color: var(--dark-success-border) !important;
+}
+
+html.dark [class*="bg-emerald-500"],
+html.dark [class*="bg-green-500"] {
+  background-color: #3ecf8f !important;
+}
+
+html.dark [class*="hover:bg-emerald-100"]:hover,
+html.dark [class*="hover:bg-emerald-50"]:hover,
+html.dark [class*="hover:bg-green-100"]:hover,
+html.dark [class*="hover:bg-green-50"]:hover {
+  background-color: var(--dark-success-bg-soft) !important;
+}
+
+html.dark [class*="border-slate-"],
+html.dark [class*="border-gray-"],
+html.dark [class*="border-zinc-"],
+html.dark [class*="ring-slate-"],
+html.dark [class*="ring-gray-"] {
+  border-color: var(--dark-border) !important;
+  --tw-ring-color: var(--dark-border) !important;
+}
+
+html.dark .border-\[\#cfcafe\],
+html.dark .border-\[\#d7cbf8\],
+html.dark .border-\[\#d9d6fe\],
+html.dark .border-\[\#d4cffc\],
+html.dark .border-\[\#cdc8ff\] {
+  border-color: var(--dark-primary-border) !important;
+}
+
+html.dark [class*="hover:bg-slate-50"]:hover,
+html.dark [class*="hover:bg-slate-100"]:hover,
+html.dark [class*="hover:bg-gray-50"]:hover,
+html.dark [class*="hover:bg-gray-100"]:hover,
+html.dark [class*="hover:bg-indigo-50"]:hover,
+html.dark [class*="hover:bg-indigo-100"]:hover {
+  background-color: color-mix(in srgb, white 10%, var(--dark-surface) 90%) !important;
+}
+
+/* Prevent hover utility classes from looking permanently active in dark mode. */
+html.dark [class*="hover:bg-slate-50"],
+html.dark [class*="hover:bg-slate-100"],
+html.dark [class*="hover:bg-gray-50"],
+html.dark [class*="hover:bg-gray-100"],
+html.dark [class*="hover:bg-indigo-50"],
+html.dark [class*="hover:bg-indigo-100"] {
+  background-color: transparent !important;
+}
+
+html.dark input:not([type="color"]),
+html.dark select,
+html.dark textarea {
+  color: var(--dark-text);
+  background-color: var(--dark-surface);
+  border-color: var(--dark-border);
+}
+
+/* Keep topbar search text area transparent (no inner background patch). */
+html.dark .topbar-search-input {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark .topbar-search-input::placeholder {
+  color: var(--dark-muted) !important;
+}
+
+html.dark option {
+  color: var(--dark-text);
+  background-color: var(--dark-surface);
+}
+
+html.dark .recharts-text,
+html.dark .recharts-cartesian-axis-tick-value {
+  fill: var(--dark-muted) !important;
+}
+
+html.dark .recharts-legend-item-text {
+  color: var(--dark-text) !important;
+}
+
+html.dark .shadow-sm,
+html.dark .shadow,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  box-shadow: 0 16px 36px -20px rgba(3, 8, 20, 0.78) !important;
+}
+
+/* Sidebar in dark: only active item has highlighted background. */
+html.dark aside [class*="bg-\[\#e9e8fb\]"] {
+  background-color: var(--dark-primary-soft) !important;
+}
+
+html.dark aside [class*="text-\[\#5c4df2\]"] {
+  color: #d2c8ff !important;
+}
+
+/* Dashboard suggestion bar in dark mode: cleaner, professional gradient and contrast. */
+html.dark .dashboard-intelligence-alert {
+  background: linear-gradient(135deg, #253b67 0%, #2d2b58 52%, #3f315d 100%) !important;
+  border-color: #425a86 !important;
+}
+
+html.dark .dashboard-intelligence-alert-icon {
+  background: linear-gradient(145deg, #8b7dff, #675dd6) !important;
+}
+
+html.dark .dashboard-intelligence-alert-title {
+  color: #f5f7ff !important;
+}
+
+html.dark .dashboard-intelligence-alert-text {
+  color: #d6def6 !important;
+}
+
+html.dark .dashboard-intelligence-alert-close {
+  color: #b8c4e7 !important;
+}
+
+html.dark .dashboard-intelligence-alert-close:hover {
+  color: #eef2ff !important;
+}
