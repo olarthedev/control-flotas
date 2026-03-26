@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -8,6 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { DriverSummaryDto } from './dto/driver-summary.dto';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { ConsignmentStatus } from '../consignments/consignment.entity';
+import { AssignDriverVehicleDto } from './dto/assign-driver-vehicle.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +19,109 @@ export class UsersService {
         private vehiclesRepository: Repository<Vehicle>,
     ) { }
 
+    private ensureHistory(user: User): void {
+        if (!Array.isArray(user.vehicleAssignmentHistory)) {
+            user.vehicleAssignmentHistory = [];
+        }
+    }
+
+    private closeActiveVehicleAssignment(user: User, endDate: Date): void {
+        this.ensureHistory(user);
+
+        for (let index = user.vehicleAssignmentHistory.length - 1; index >= 0; index -= 1) {
+            const item = user.vehicleAssignmentHistory[index];
+            if (!item.endDate) {
+                item.endDate = endDate.toISOString();
+                return;
+            }
+        }
+    }
+
+    private addVehicleAssignment(user: User, vehicle: Vehicle, startDate: Date, reason: string, changedBy: string): void {
+        this.ensureHistory(user);
+
+        user.vehicleAssignmentHistory.push({
+            vehicleId: vehicle.id,
+            vehiclePlate: vehicle.licensePlate,
+            startDate: startDate.toISOString(),
+            endDate: null,
+            reason,
+            changedBy,
+        });
+    }
+
+    private async assertVehicleIsAvailable(vehicleId: number, driverId: number): Promise<void> {
+        const existingDriver = await this.usersRepository.findOne({
+            where: {
+                id: driverId,
+            },
+            relations: ['assignedVehicle'],
+        });
+
+        const conflictDriver = await this.usersRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.assignedVehicle', 'assignedVehicle')
+            .where('user.id != :driverId', { driverId })
+            .andWhere('user.role = :role', { role: UserRole.DRIVER })
+            .andWhere('assignedVehicle.id = :vehicleId', { vehicleId })
+            .getOne();
+
+        if (conflictDriver && conflictDriver.id !== existingDriver?.id) {
+            throw new BadRequestException(
+                `El vehículo ${conflictDriver.assignedVehicle?.licensePlate ?? vehicleId} ya está asignado al conductor ${conflictDriver.fullName}.`,
+            );
+        }
+    }
+
+    private async applyVehicleAssignmentChange(
+        user: User,
+        assignedVehicleId: number | null,
+        reason?: string,
+        effectiveAt?: string,
+        changedBy = 'admin',
+    ): Promise<void> {
+        const normalizedReason = reason?.trim();
+        const referenceDate = effectiveAt ? new Date(effectiveAt) : new Date();
+
+        if (Number.isNaN(referenceDate.getTime())) {
+            throw new BadRequestException('assignmentEffectiveAt no es una fecha válida.');
+        }
+
+        const currentVehicleId = user.assignedVehicle?.id ?? null;
+        if (assignedVehicleId === currentVehicleId) {
+            return;
+        }
+
+        if (!normalizedReason) {
+            throw new BadRequestException('Debes registrar el motivo del cambio de furgón.');
+        }
+
+        if (assignedVehicleId !== null) {
+            await this.assertVehicleIsAvailable(assignedVehicleId, user.id);
+        }
+
+        this.closeActiveVehicleAssignment(user, referenceDate);
+
+        if (assignedVehicleId === null) {
+            user.assignedVehicle = null;
+            return;
+        }
+
+        const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
+        if (!vehicle) {
+            throw new NotFoundException(`Vehicle con id ${assignedVehicleId} no encontrado`);
+        }
+
+        user.assignedVehicle = vehicle;
+        this.addVehicleAssignment(user, vehicle, referenceDate, normalizedReason, changedBy);
+    }
+
+    private sortHistory(items: User['vehicleAssignmentHistory']): User['vehicleAssignmentHistory'] {
+        return [...(items ?? [])].sort((first, second) => {
+            return new Date(second.startDate).getTime() - new Date(first.startDate).getTime();
+        });
+    }
+
     /**
      * Create and save a new user record.
      * @param createUserDto Data transfer object with user properties
@@ -26,13 +130,21 @@ export class UsersService {
     async create(createUserDto: CreateUserDto): Promise<User> {
         const { assignedVehicleId, password, ...userPayload } = createUserDto;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = this.usersRepository.create({ ...userPayload, password: hashedPassword });
+        const user = this.usersRepository.create({
+            ...userPayload,
+            password: hashedPassword,
+            vehicleAssignmentHistory: [],
+        });
 
         if (assignedVehicleId) {
+            await this.assertVehicleIsAvailable(assignedVehicleId, user.id ?? -1);
             const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
-            if (vehicle) {
-                user.assignedVehicle = vehicle;
+            if (!vehicle) {
+                throw new NotFoundException(`Vehicle con id ${assignedVehicleId} no encontrado`);
             }
+
+            user.assignedVehicle = vehicle;
+            this.addVehicleAssignment(user, vehicle, new Date(), 'Asignación inicial de conductor', 'admin');
         }
 
         return await this.usersRepository.save(user);
@@ -141,15 +253,16 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
-        const { assignedVehicleId, password, ...userPayload } = updateUserDto;
+        const { assignedVehicleId, password, assignmentChangeReason, assignmentEffectiveAt, ...userPayload } = updateUserDto;
 
         if (assignedVehicleId !== undefined) {
-            if (assignedVehicleId === null) {
-                existing.assignedVehicle = null;
-            } else {
-                const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
-                existing.assignedVehicle = vehicle ?? null;
-            }
+            await this.applyVehicleAssignmentChange(
+                existing,
+                assignedVehicleId,
+                assignmentChangeReason,
+                assignmentEffectiveAt,
+                'admin-panel',
+            );
         }
 
         if (password) {
@@ -159,6 +272,60 @@ export class UsersService {
         Object.assign(existing, userPayload);
         await this.usersRepository.save(existing);
         return this.findById(id) as Promise<User>;
+    }
+
+    async assignDriverVehicle(driverId: number, payload: AssignDriverVehicleDto): Promise<User> {
+        const driver = await this.findById(driverId);
+        if (!driver) {
+            throw new NotFoundException('User not found');
+        }
+
+        if (driver.role !== UserRole.DRIVER) {
+            throw new BadRequestException('Solo se pueden reasignar usuarios con rol DRIVER.');
+        }
+
+        await this.applyVehicleAssignmentChange(
+            driver,
+            payload.assignedVehicleId,
+            payload.assignmentChangeReason,
+            payload.assignmentEffectiveAt,
+            payload.changedBy ?? 'admin-panel',
+        );
+
+        await this.usersRepository.save(driver);
+        return (await this.findById(driverId)) as User;
+    }
+
+    async getDriverVehicleAssignmentHistory(driverId: number) {
+        const driver = await this.findById(driverId);
+        if (!driver) {
+            throw new NotFoundException('User not found');
+        }
+
+        return {
+            driverId: driver.id,
+            driverName: driver.fullName,
+            currentVehicleId: driver.assignedVehicle?.id ?? null,
+            currentVehiclePlate: driver.assignedVehicle?.licensePlate ?? null,
+            history: this.sortHistory(driver.vehicleAssignmentHistory ?? []),
+        };
+    }
+
+    getAssignedVehicleIdAtDate(driver: User, referenceDate: Date): number | null {
+        this.ensureHistory(driver);
+
+        const referenceTime = referenceDate.getTime();
+        const match = driver.vehicleAssignmentHistory.find((item) => {
+            const start = new Date(item.startDate).getTime();
+            const end = item.endDate ? new Date(item.endDate).getTime() : Number.POSITIVE_INFINITY;
+            return start <= referenceTime && referenceTime < end;
+        });
+
+        if (match?.vehicleId) {
+            return match.vehicleId;
+        }
+
+        return driver.assignedVehicle?.id ?? null;
     }
 
     /** Remove a user by id */

@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MdGridView, MdViewList, MdAdd, MdEdit, MdDeleteOutline } from 'react-icons/md';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { DriverCard } from '../components/drivers/DriverCard';
 import { DriverModal, type DriverFormData } from '../components/drivers/DriverModal';
 import { DeleteDriverModal } from '../components/drivers/DeleteDriverModal';
 import { DriverPaymentModal } from '../components/drivers/DriverPaymentModal';
 import { DriverPaymentHistoryModal } from '../components/drivers/DriverPaymentHistoryModal';
+import { DriverAssignmentHistoryModal } from '../components/drivers/DriverAssignmentHistoryModal';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Toast, type ToastType } from '../components/Toast';
 import {
+    assignDriverVehicle,
     createDriver,
     deleteDriver,
+    fetchDriverVehicleAssignmentHistory,
     fetchDriverSummaries,
     getDriverById,
     type DriverSummary,
+    type VehicleAssignmentHistoryItem,
     updateDriver,
 } from '../services/drivers.service';
 import { fetchVehicles } from '../services/vehicles.service';
@@ -40,9 +44,12 @@ export function DriversPage() {
     const [vehicleOptions, setVehicleOptions] = useState<{ id: number; label: string }[]>([]);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [isAssignmentHistoryModalOpen, setIsAssignmentHistoryModalOpen] = useState(false);
     const [selectedDriverForPayments, setSelectedDriverForPayments] = useState<DriverSummary | null>(null);
     const [paymentHistory, setPaymentHistory] = useState<DriverPayment[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [assignmentHistory, setAssignmentHistory] = useState<VehicleAssignmentHistoryItem[]>([]);
+    const [isLoadingAssignmentHistory, setIsLoadingAssignmentHistory] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
     const loadDrivers = async () => {
@@ -119,6 +126,8 @@ export function DriversPage() {
                 password: '',
                 isActive: driver.isActive,
                 assignedVehicleId: driver.assignedVehicle?.id,
+                originalAssignedVehicleId: driver.assignedVehicle?.id,
+                assignmentChangeReason: '',
             });
             setIsModalOpen(true);
         } catch (err) {
@@ -145,6 +154,9 @@ export function DriversPage() {
             } else {
                 if (!driverData.id) return;
 
+                const vehicleChanged = driverData.assignedVehicleId !== driverData.originalAssignedVehicleId;
+                const assignmentEffectiveAt = new Date().toISOString();
+
                 await updateDriver(driverData.id, {
                     fullName: driverData.fullName,
                     email: driverData.email,
@@ -153,8 +165,16 @@ export function DriversPage() {
                     licenseNumber: driverData.licenseNumber || undefined,
                     monthlySalary: driverData.monthlySalary,
                     isActive: driverData.isActive,
-                    assignedVehicleId: driverData.assignedVehicleId,
                 });
+
+                if (vehicleChanged) {
+                    await assignDriverVehicle(driverData.id, {
+                        assignedVehicleId: driverData.assignedVehicleId ?? null,
+                        assignmentChangeReason: driverData.assignmentChangeReason?.trim() ?? '',
+                        assignmentEffectiveAt,
+                        changedBy: 'admin-panel',
+                    });
+                }
 
                 // Recargar la lista para reflejar el nuevo saldo pendiente calculado en el backend
                 await loadDrivers();
@@ -204,6 +224,28 @@ export function DriversPage() {
             setPaymentHistory([]);
         } finally {
             setIsLoadingHistory(false);
+        }
+    };
+
+    const handleOpenAssignmentHistoryModal = async (driverId: number) => {
+        const selected = drivers.find((driver) => driver.id === driverId);
+        if (!selected) return;
+
+        setSelectedDriverForPayments(selected);
+        setIsAssignmentHistoryModalOpen(true);
+
+        try {
+            setIsLoadingAssignmentHistory(true);
+            const response = await fetchDriverVehicleAssignmentHistory(driverId);
+            setAssignmentHistory(response.history ?? []);
+        } catch (err) {
+            setToast({
+                message: getApiErrorMessage(err, 'No se pudo cargar el historial de furgones.'),
+                type: 'error',
+            });
+            setAssignmentHistory([]);
+        } finally {
+            setIsLoadingAssignmentHistory(false);
         }
     };
 
@@ -335,6 +377,13 @@ export function DriversPage() {
                             <MdAdd size={16} />
                             Nuevo conductor
                         </button>
+
+                        <Link
+                            to="/drivers/liquidation"
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        >
+                            Liquidación semanal
+                        </Link>
                     </>
                 }
             />
@@ -382,7 +431,8 @@ export function DriversPage() {
                             onEdit={handleEditDriver}
                             onDelete={handleDeleteDriver}
                             onPay={handleOpenPayModal}
-                            onViewHistory={handleOpenHistoryModal}
+                            onViewPaymentHistory={handleOpenHistoryModal}
+                            onViewAssignmentHistory={handleOpenAssignmentHistoryModal}
                             onResetMonth={handleResetDriverMonth}
                         />
                     ))}
@@ -457,6 +507,24 @@ export function DriversPage() {
                                             )}
                                             <button
                                                 type="button"
+                                                onClick={() => handleOpenHistoryModal(driver.id)}
+                                                className="rounded-md px-2.5 py-1 text-[11px] font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                                                aria-label="Ver historial de pagos"
+                                            >
+                                                PAGOS
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleOpenAssignmentHistoryModal(driver.id)}
+                                                className="rounded-md px-2.5 py-1 text-[11px] font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                                                aria-label="Ver historial de furgones"
+                                            >
+                                                FURGON
+                                            </button>
+
+                                            <button
+                                                type="button"
                                                 onClick={() => handleEditDriver(driver.id)}
                                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-[#5848f4] hover:opacity-90"
                                                 aria-label="Editar conductor"
@@ -516,6 +584,14 @@ export function DriversPage() {
                 payments={paymentHistory}
                 isLoading={isLoadingHistory}
                 onClose={() => setIsHistoryModalOpen(false)}
+            />
+
+            <DriverAssignmentHistoryModal
+                isOpen={isAssignmentHistoryModalOpen}
+                driverName={selectedDriverForPayments?.fullName ?? ''}
+                history={assignmentHistory}
+                isLoading={isLoadingAssignmentHistory}
+                onClose={() => setIsAssignmentHistoryModalOpen(false)}
             />
 
             {toast && (

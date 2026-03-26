@@ -31,6 +31,22 @@ export interface ExpenseItem {
     evidence: ExpenseEvidence[];
 }
 
+export interface DriverLiquidationByVehicleItem {
+    vehicleId: number;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    totalExpenses: number;
+}
+
+export interface DriverLiquidationResponse {
+    driverId: number;
+    dateFrom: string;
+    dateTo: string;
+    totalExpenses: number;
+    totalByVehicle: DriverLiquidationByVehicleItem[];
+}
+
 interface ExpenseResponse {
     id: number;
     type: string;
@@ -112,4 +128,29 @@ export async function updateExpenseStatus(
     });
 
     return normalizeExpense(data);
+}
+
+export async function fetchDriverLiquidation(
+    driverId: number,
+    dateFrom: string,
+    dateTo: string,
+): Promise<DriverLiquidationResponse> {
+    const { data } = await axios.get<DriverLiquidationResponse>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES_DRIVER_LIQUIDATION(driverId)}`,
+        {
+            params: {
+                dateFrom,
+                dateTo,
+            },
+        },
+    );
+
+    return {
+        ...data,
+        totalExpenses: Number(data.totalExpenses ?? 0),
+        totalByVehicle: (data.totalByVehicle ?? []).map((item) => ({
+            ...item,
+            totalExpenses: Number(item.totalExpenses ?? 0),
+        })),
+    };
 }

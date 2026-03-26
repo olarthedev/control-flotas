@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeUserPasswordUseCase } from './application/change-user-password.use-case';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { AssignDriverVehicleDto } from './dto/assign-driver-vehicle.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -56,6 +57,21 @@ export class UsersController {
     @Get('active')
     findActive() {
         return this.usersService.findActive();
+    }
+
+    /** GET /users/:id/vehicle-assignment-history */
+    @Get(':id/vehicle-assignment-history')
+    getVehicleAssignmentHistory(@Param('id') id: string) {
+        return this.usersService.getDriverVehicleAssignmentHistory(+id);
+    }
+
+    /** PATCH /users/:id/assign-vehicle */
+    @Patch(':id/assign-vehicle')
+    assignVehicle(
+        @Param('id') id: string,
+        @Body() assignDriverVehicleDto: AssignDriverVehicleDto,
+    ) {
+        return this.usersService.assignDriverVehicle(+id, assignDriverVehicleDto);
     }
 
     /**

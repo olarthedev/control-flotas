@@ -19,6 +19,15 @@ export enum UserRole {
     DRIVER = 'DRIVER',
 }
 
+export interface VehicleAssignmentHistoryItem {
+    vehicleId: number;
+    vehiclePlate: string;
+    startDate: string;
+    endDate: string | null;
+    reason?: string;
+    changedBy?: string;
+}
+
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn()
@@ -60,6 +69,9 @@ export class User {
 
     @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })
     assignedVehicle?: Vehicle | null;
+
+    @Column({ type: 'simple-json', nullable: false, default: '[]' })
+    vehicleAssignmentHistory: VehicleAssignmentHistoryItem[];
 
     // ================== RELACIONES ==================
     @OneToMany(() => Expense, (expense) => expense.driver)

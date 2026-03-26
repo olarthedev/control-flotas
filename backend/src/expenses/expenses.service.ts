@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Expense } from './expense.entity';
+import { Expense, ExpenseStatus } from './expense.entity';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { Trip } from '../trips/trip.entity';
-import { ExpenseStatus } from './expense.entity';
 import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
 import { FindExpensesByVehicleQueryDto } from './dto/find-expenses-by-vehicle-query.dto';
+import { UsersService } from '../users/users.service';
 
 export interface PaginatedExpensesResponse {
     data: Expense[];
@@ -35,6 +35,22 @@ export interface VehicleExpenseSummaryResponse {
     lastExpenseDate: string | null;
 }
 
+export interface DriverLiquidationByVehicleItem {
+    vehicleId: number;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    totalExpenses: number;
+}
+
+export interface DriverLiquidationResponse {
+    driverId: number;
+    dateFrom: string;
+    dateTo: string;
+    totalExpenses: number;
+    totalByVehicle: DriverLiquidationByVehicleItem[];
+}
+
 @Injectable()
 export class ExpensesService {
     constructor(
@@ -46,6 +62,7 @@ export class ExpensesService {
         private vehiclesRepository: Repository<Vehicle>,
         @InjectRepository(Trip)
         private tripsRepository: Repository<Trip>,
+        private readonly usersService: UsersService,
     ) { }
 
     private readonly openStatuses: ExpenseStatus[] = [ExpenseStatus.PENDING, ExpenseStatus.OBSERVED];
@@ -102,7 +119,7 @@ export class ExpensesService {
 
     /**
      * Create a new expense record, resolving required relations.
-     * Throws NotFoundException if the specified driver does not exist.
+     * Validates that expense vehicle matches driver's assignment at expenseDate.
      */
     async create(createExpenseDto: CreateExpenseDto): Promise<Expense> {
         const expense = new Expense();
@@ -112,38 +129,60 @@ export class ExpensesService {
         expense.description = createExpenseDto.description ?? null;
         expense.notes = createExpenseDto.notes ?? null;
 
-        // Resolver relaciones de forma segura (conductor es obligatorio)
-        if (createExpenseDto.driverId) {
-            const driver = await this.usersRepository.findOne({
-                where: { id: createExpenseDto.driverId }
-            });
-            if (!driver) {
-                throw new NotFoundException(
-                    `Driver con id ${createExpenseDto.driverId} no encontrado`,
-                );
-            }
-            expense.driver = driver;
+        const driver = await this.usersRepository.findOne({
+            where: { id: createExpenseDto.driverId },
+            relations: ['assignedVehicle'],
+        });
+        if (!driver) {
+            throw new NotFoundException(
+                `Driver con id ${createExpenseDto.driverId} no encontrado`,
+            );
         }
+        expense.driver = driver;
 
-        // Vehículo es opcional
-        if (createExpenseDto.vehicleId) {
-            const vehicle = await this.vehiclesRepository.findOne({
-                where: { id: createExpenseDto.vehicleId }
-            });
-            if (vehicle) {
-                expense.vehicle = vehicle;
-            }
-        }
-
-        // Viaje es opcional
+        let trip: Trip | null = null;
         if (createExpenseDto.tripId) {
-            const trip = await this.tripsRepository.findOne({
-                where: { id: createExpenseDto.tripId }
+            trip = await this.tripsRepository.findOne({
+                where: { id: createExpenseDto.tripId },
+                relations: ['driver', 'vehicle'],
             });
-            if (trip) {
-                expense.trip = trip;
+
+            if (!trip) {
+                throw new NotFoundException(`Trip con id ${createExpenseDto.tripId} no encontrado`);
             }
+
+            if (trip.driver?.id !== driver.id) {
+                throw new BadRequestException('El viaje indicado no pertenece al conductor del gasto.');
+            }
+
+            expense.trip = trip;
         }
+
+        const assignedVehicleIdAtExpenseDate = this.usersService.getAssignedVehicleIdAtDate(driver, expense.expenseDate);
+        const resolvedVehicleId = createExpenseDto.vehicleId ?? trip?.vehicle?.id ?? assignedVehicleIdAtExpenseDate;
+
+        if (!resolvedVehicleId) {
+            throw new BadRequestException(
+                'El gasto debe estar asociado a un furgón. Asigna un vehículo al conductor o envía vehicleId.',
+            );
+        }
+
+        const vehicle = await this.vehiclesRepository.findOne({ where: { id: resolvedVehicleId } });
+        if (!vehicle) {
+            throw new NotFoundException(`Vehicle con id ${resolvedVehicleId} no encontrado`);
+        }
+
+        if (trip?.vehicle?.id && trip.vehicle.id !== vehicle.id) {
+            throw new BadRequestException('El vehicleId del gasto debe coincidir con el vehículo del viaje.');
+        }
+
+        if (assignedVehicleIdAtExpenseDate !== null && assignedVehicleIdAtExpenseDate !== vehicle.id) {
+            throw new BadRequestException(
+                'El conductor no tenía asignado ese furgón en la fecha/hora del gasto.',
+            );
+        }
+
+        expense.vehicle = vehicle;
 
         return await this.expensesRepository.save(expense);
     }
@@ -251,7 +290,6 @@ export class ExpensesService {
 
         await this.enforceSequentialWeekClosure(existing, updateExpenseDto.status);
 
-        // Prepare update data with proper type conversions
         const updateData: any = { ...updateExpenseDto };
         if (updateExpenseDto.validatedAt) {
             updateData.validatedAt = new Date(updateExpenseDto.validatedAt);
@@ -343,5 +381,56 @@ export class ExpensesService {
             where: { hasEvidence: false },
             relations: ['driver', 'vehicle', 'trip', 'consignment'],
         });
+    }
+
+    async getDriverLiquidation(
+        driverId: number,
+        dateFrom: Date,
+        dateTo: Date,
+    ): Promise<DriverLiquidationResponse> {
+        const expenses = await this.expensesRepository
+            .createQueryBuilder('expense')
+            .leftJoinAndSelect('expense.vehicle', 'vehicle')
+            .leftJoin('expense.driver', 'driver')
+            .where('driver.id = :driverId', { driverId })
+            .andWhere('expense.expenseDate >= :dateFrom', { dateFrom })
+            .andWhere('expense.expenseDate <= :dateTo', { dateTo })
+            .orderBy('expense.expenseDate', 'ASC')
+            .getMany();
+
+        const totalsByVehicle = new Map<number, DriverLiquidationByVehicleItem>();
+        let totalExpenses = 0;
+
+        for (const expense of expenses) {
+            const amount = Number(expense.amount ?? 0);
+            totalExpenses += amount;
+
+            const vehicleId = expense.vehicle?.id;
+            if (!vehicleId || !expense.vehicle) {
+                continue;
+            }
+
+            const current = totalsByVehicle.get(vehicleId);
+            if (current) {
+                current.totalExpenses += amount;
+                continue;
+            }
+
+            totalsByVehicle.set(vehicleId, {
+                vehicleId,
+                licensePlate: expense.vehicle.licensePlate,
+                brand: expense.vehicle.brand,
+                model: expense.vehicle.model,
+                totalExpenses: amount,
+            });
+        }
+
+        return {
+            driverId,
+            dateFrom: dateFrom.toISOString(),
+            dateTo: dateTo.toISOString(),
+            totalExpenses,
+            totalByVehicle: [...totalsByVehicle.values()].sort((first, second) => second.totalExpenses - first.totalExpenses),
+        };
     }
 }

@@ -15,6 +15,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
 import { FindExpensesByVehicleQueryDto } from './dto/find-expenses-by-vehicle-query.dto';
+import { DriverLiquidationQueryDto } from './dto/driver-liquidation-query.dto';
 
 @Controller('expenses')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -43,6 +44,19 @@ export class ExpensesController {
     @Get('summary/by-vehicle')
     summaryByVehicle() {
         return this.expensesService.summaryByVehicle();
+    }
+
+    /** GET /expenses/liquidation/driver/:driverId?dateFrom=...&dateTo=... */
+    @Get('liquidation/driver/:driverId')
+    getDriverLiquidation(
+        @Param('driverId') driverId: string,
+        @Query() query: DriverLiquidationQueryDto,
+    ) {
+        return this.expensesService.getDriverLiquidation(
+            +driverId,
+            new Date(query.dateFrom),
+            new Date(query.dateTo),
+        );
     }
 
     /** GET /expenses/without-evidence */

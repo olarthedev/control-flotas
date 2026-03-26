@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Trip } from './trip.entity';
@@ -8,6 +8,7 @@ import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { Expense } from '../expenses/expense.entity';
 import { Consignment } from '../consignments/consignment.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class TripsService {
@@ -22,6 +23,7 @@ export class TripsService {
         private expenseRepository: Repository<Expense>,
         @InjectRepository(Consignment)
         private consignmentRepository: Repository<Consignment>,
+        private readonly usersService: UsersService,
     ) { }
 
     /** Create a new trip and resolve related entities. */
@@ -36,13 +38,29 @@ export class TripsService {
         trip.status = 'IN_PROGRESS';
 
         // resolve relations
-        if (createTripDto.driverId) {
-            const driver = await this.usersRepository.findOne({ where: { id: createTripDto.driverId } });
-            if (driver) trip.driver = driver;
+        const driver = await this.usersRepository.findOne({
+            where: { id: createTripDto.driverId },
+            relations: ['assignedVehicle'],
+        });
+        if (!driver) {
+            throw new NotFoundException(`Driver con id ${createTripDto.driverId} no encontrado`);
         }
-        if (createTripDto.vehicleId) {
-            const vehicle = await this.vehiclesRepository.findOne({ where: { id: createTripDto.vehicleId } });
-            if (vehicle) trip.vehicle = vehicle;
+
+        const vehicle = await this.vehiclesRepository.findOne({ where: { id: createTripDto.vehicleId } });
+        if (!vehicle) {
+            throw new NotFoundException(`Vehicle con id ${createTripDto.vehicleId} no encontrado`);
+        }
+
+        trip.driver = driver;
+        trip.vehicle = vehicle;
+
+        if (driver.assignedVehicle?.id !== vehicle.id) {
+            await this.usersService.assignDriverVehicle(driver.id, {
+                assignedVehicleId: vehicle.id,
+                assignmentChangeReason: `Cambio automático por inicio de ruta ${trip.tripNumber}`,
+                assignmentEffectiveAt: new Date(createTripDto.startDate).toISOString(),
+                changedBy: 'trip-start',
+            });
         }
 
         return await this.tripsRepository.save(trip);
@@ -93,7 +111,7 @@ export class TripsService {
     async update(id: number, updateTripDto: UpdateTripDto): Promise<Trip> {
         const existing = await this.findById(id);
         if (!existing) {
-            throw new (require('@nestjs/common').NotFoundException)('Trip not found');
+            throw new NotFoundException('Trip not found');
         }
         await this.tripsRepository.update(id, updateTripDto);
         return this.findById(id) as Promise<Trip>;
@@ -103,7 +121,7 @@ export class TripsService {
     async remove(id: number) {
         const result = await this.tripsRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('Trip not found');
+            throw new NotFoundException('Trip not found');
         }
         return result;
     }
@@ -112,7 +130,7 @@ export class TripsService {
     async completeTrip(id: number): Promise<Trip> {
         const trip = await this.findById(id);
         if (!trip) {
-            throw new (require('@nestjs/common').NotFoundException)('Trip not found');
+            throw new NotFoundException('Trip not found');
         }
 
         // Calcular total de gastos

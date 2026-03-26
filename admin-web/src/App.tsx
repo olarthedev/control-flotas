@@ -5,6 +5,7 @@ import { Layout } from "./layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { VehiclesPage } from "./pages/Vehicles";
 import { DriversPage } from "./pages/Drivers";
+import { DriverLiquidationPage } from "./pages/DriverLiquidationPage";
 import { VehicleExpensesDetailPage } from "./pages/VehicleExpensesDetailPage";
 import { MaintenancePage } from "./pages/Maintenance";
 import { SettingsPage } from "./pages/Settings";
@@ -140,6 +141,7 @@ function App() {
           <Route path="/consignments" element={<Consignments />} />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/drivers" element={<DriversPage />} />
+          <Route path="/drivers/liquidation" element={<DriverLiquidationPage />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
