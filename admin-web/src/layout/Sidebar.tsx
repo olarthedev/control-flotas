@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import {
   Bell,
   Bus,
+  ClipboardList,
   LayoutDashboard,
   Settings,
   UserRound,
@@ -132,7 +133,8 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
       title: "OPERACIONES",
       items: [
         { path: "/expenses", label: "Gastos", icon: Wallet, badge: pendingExpensesCount > 0 ? pendingExpensesCount.toString() : undefined },
-        { path: "/maintenance", label: "Mantenimiento", icon: Wrench }
+        { path: "/maintenance", label: "Mantenimiento", icon: Wrench },
+        { path: "/drivers/liquidation", label: "Liquidaciones", icon: ClipboardList }
       ]
     },
     {

@@ -16,6 +16,7 @@ export const apiConfig = {
         EXPENSES_BY_VEHICLE: (vehicleId: number) => `/expenses/vehicle/${vehicleId}`,
         EXPENSES_BY_DRIVER: (driverId: number) => `/expenses/driver/${driverId}`,
         EXPENSES_SUMMARY_BY_VEHICLE: '/expenses/summary/by-vehicle',
+        EXPENSES_DRIVER_LIQUIDATION: (driverId: number) => `/expenses/liquidation/driver/${driverId}`,
 
         // Vehicles
         VEHICLES: '/vehicles',

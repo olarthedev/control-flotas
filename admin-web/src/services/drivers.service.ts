@@ -48,7 +48,33 @@ export interface UpdateDriverDto {
     licenseNumber?: string;
     monthlySalary?: number;
     isActive?: boolean;
-    assignedVehicleId?: number;
+    assignedVehicleId?: number | null;
+    assignmentChangeReason?: string;
+    assignmentEffectiveAt?: string;
+}
+
+export interface VehicleAssignmentHistoryItem {
+    vehicleId: number;
+    vehiclePlate: string;
+    startDate: string;
+    endDate: string | null;
+    reason?: string;
+    changedBy?: string;
+}
+
+export interface DriverVehicleAssignmentHistory {
+    driverId: number;
+    driverName: string;
+    currentVehicleId: number | null;
+    currentVehiclePlate: string | null;
+    history: VehicleAssignmentHistoryItem[];
+}
+
+export interface AssignDriverVehicleDto {
+    assignedVehicleId: number | null;
+    assignmentChangeReason: string;
+    assignmentEffectiveAt?: string;
+    changedBy?: string;
 }
 
 type NumericLike = number | string | null | undefined;
@@ -81,6 +107,18 @@ export async function getDriverById(id: number): Promise<DriverDetail> {
 
 export async function updateDriver(id: number, payload: UpdateDriverDto): Promise<void> {
     await axios.patch(`${apiConfig.BASE_URL}/users/${id}`, payload);
+}
+
+export async function fetchDriverVehicleAssignmentHistory(id: number): Promise<DriverVehicleAssignmentHistory> {
+    const { data } = await axios.get<DriverVehicleAssignmentHistory>(
+        `${apiConfig.BASE_URL}/users/${id}/vehicle-assignment-history`,
+    );
+
+    return data;
+}
+
+export async function assignDriverVehicle(id: number, payload: AssignDriverVehicleDto): Promise<void> {
+    await axios.patch(`${apiConfig.BASE_URL}/users/${id}/assign-vehicle`, payload);
 }
 
 export async function deleteDriver(id: number): Promise<void> {

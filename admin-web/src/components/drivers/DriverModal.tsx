@@ -36,6 +36,8 @@ export interface DriverFormData {
     monthlySalary?: number;
     isActive: boolean;
     assignedVehicleId?: number;
+    originalAssignedVehicleId?: number;
+    assignmentChangeReason?: string;
 }
 
 interface DriverModalProps {
@@ -57,6 +59,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
         monthlySalary: undefined,
         isActive: true,
         assignedVehicleId: undefined,
+        originalAssignedVehicleId: undefined,
+        assignmentChangeReason: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -87,6 +91,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
                 monthlySalary: undefined,
                 isActive: true,
                 assignedVehicleId: undefined,
+                originalAssignedVehicleId: undefined,
+                assignmentChangeReason: '',
             });
             setSalaryDisplay('');
             setError(null);
@@ -108,6 +114,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
                 monthlySalary: driver.monthlySalary,
                 isActive: driver.isActive,
                 assignedVehicleId: driver.assignedVehicleId,
+                originalAssignedVehicleId: driver.assignedVehicleId,
+                assignmentChangeReason: '',
             });
             setSalaryDisplay(driver.monthlySalary ? formatAmount(driver.monthlySalary.toString()) : '');
             return;
@@ -122,6 +130,8 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
             monthlySalary: undefined,
             isActive: true,
             assignedVehicleId: undefined,
+            originalAssignedVehicleId: undefined,
+            assignmentChangeReason: '',
         });
         setSalaryDisplay('');
     }, [isOpen, mode, driver]);
@@ -153,7 +163,7 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
         }));
     };
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = event.target;
 
         if (name === 'isActive') {
@@ -340,6 +350,27 @@ export function DriverModal({ isOpen, onClose, onSave, mode, driver, vehicles }:
                             </select>
                         </div>
                     </div>
+
+                    {mode === 'edit' && formData.assignedVehicleId !== formData.originalAssignedVehicleId && (
+                        <div>
+                            <label htmlFor="assignmentChangeReason" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Motivo del cambio de furgón
+                            </label>
+                            <textarea
+                                id="assignmentChangeReason"
+                                name="assignmentChangeReason"
+                                value={formData.assignmentChangeReason ?? ''}
+                                onChange={handleInputChange}
+                                rows={3}
+                                required
+                                placeholder="Ejemplo: incapacidad del titular, relevo por mantenimiento, cambio operativo de ruta..."
+                                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <p className="mt-1 text-xs text-slate-500">
+                                Este motivo se guarda en el historial de asignaciones para auditoría.
+                            </p>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">

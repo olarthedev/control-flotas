@@ -12,7 +12,8 @@ interface DriverCardProps {
     onEdit?: (id: number) => void;
     onDelete?: (id: number) => void;
     onPay?: (id: number) => void;
-    onViewHistory?: (id: number) => void;
+    onViewPaymentHistory?: (id: number) => void;
+    onViewAssignmentHistory?: (id: number) => void;
     onResetMonth?: (id: number) => void;
 }
 
@@ -31,7 +32,8 @@ export function DriverCard({
     onEdit,
     onDelete,
     onPay,
-    onViewHistory,
+    onViewPaymentHistory,
+    onViewAssignmentHistory,
     onResetMonth,
 }: DriverCardProps) {
     const initial = fullName.trim().charAt(0).toUpperCase() || 'D';
@@ -127,10 +129,17 @@ export function DriverCard({
                     )}
                     <button
                         type="button"
-                        onClick={() => onViewHistory?.(id)}
+                        onClick={() => onViewPaymentHistory?.(id)}
                         className="rounded px-2.5 py-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 hover:shadow-sm"
                     >
-                        HISTORIAL
+                        PAGOS
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onViewAssignmentHistory?.(id)}
+                        className="rounded px-2.5 py-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 hover:shadow-sm"
+                    >
+                        FURGON
                     </button>
                 </div>
             </footer>
