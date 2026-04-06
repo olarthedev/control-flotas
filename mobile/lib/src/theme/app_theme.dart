@@ -108,6 +108,7 @@ class AppTheme {
         fontSize: 14,
         height: 1.4,
       ),
+      bodySmall: TextStyle(color: AppColors.textSecondaryLight, fontSize: 12),
       labelLarge: TextStyle(
         color: AppColors.textPrimaryLight,
         fontSize: 12,
@@ -163,6 +164,7 @@ class AppTheme {
         fontWeight: FontWeight.w600,
       ),
       bodyMedium: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
+      bodySmall: TextStyle(color: AppColors.textSecondaryDark, fontSize: 12),
       labelLarge: TextStyle(
         color: AppColors.textPrimaryDark,
         fontSize: 12,

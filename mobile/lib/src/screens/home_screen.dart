@@ -6,6 +6,7 @@ import '../widgets/balance_card.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/recent_expenses_card.dart';
 import '../widgets/section_header.dart';
+import 'expenses_screen.dart';
 
 const _weeklyBalance = r'$5.000.000';
 const _spentAmount = r'$290.000';
@@ -65,52 +66,70 @@ class _HomeScreenState extends State<HomeScreen> {
         bottom: false,
         child: Column(
           children: [
-            Expanded(
-              child: ScrollConfiguration(
-                behavior: const _NoGlowScrollBehavior(),
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(context),
-                      const SizedBox(height: 24),
-                      BalanceSummaryCard(
-                        title: 'Saldo Semanal',
-                        statusLabel: 'Activo',
-                        value: _weeklyBalance,
-                        spent: _spentAmount,
-                        available: _availableAmount,
-                        utilization: _utilizationValue,
-                      ),
-                      const SizedBox(height: 24),
-                      _buildActionButton(context),
-                      const SizedBox(height: 18),
-                      const AdvanceCard(
-                        title: 'ADELANTOS',
-                        description: 'Solicita un préstamo de salario',
-                        actionLabel: 'Solicitar Préstamo',
-                      ),
-                      const SizedBox(height: 28),
-                      const SectionHeader(
-                        title: 'GASTOS RECIENTES',
-                        actionLabel: 'Ver todo',
-                      ),
-                      const SizedBox(height: 16),
-                      const RecentExpensesCard(items: _recentExpenses),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            Expanded(child: _buildCurrentPage(context)),
             BottomNavigation(
               currentIndex: _selectedIndex,
               onTap: _onNavigationItemTapped,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentPage(BuildContext context) {
+    switch (_selectedIndex) {
+      case 1:
+        return const ExpensesScreen();
+      case 2:
+        return _buildPlaceholder(context, 'Notificaciones');
+      case 3:
+        return _buildPlaceholder(context, 'Perfil');
+      default:
+        return _buildHomeContent(context);
+    }
+  }
+
+  Widget _buildPlaceholder(BuildContext context, String title) {
+    return Center(
+      child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
+    );
+  }
+
+  Widget _buildHomeContent(BuildContext context) {
+    return ScrollConfiguration(
+      behavior: const _NoGlowScrollBehavior(),
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(context),
+            const SizedBox(height: 24),
+            BalanceSummaryCard(
+              title: 'Saldo Semanal',
+              statusLabel: 'Activo',
+              value: _weeklyBalance,
+              spent: _spentAmount,
+              available: _availableAmount,
+              utilization: _utilizationValue,
+            ),
+            const SizedBox(height: 24),
+            _buildActionButton(context),
+            const SizedBox(height: 18),
+            const AdvanceCard(
+              title: 'INICIAR RUTA',
+              description: 'Registra tu ruta diaria y cambios de vehículo',
+              icon: Icons.navigation,
+            ),
+            const SizedBox(height: 28),
+            const SectionHeader(
+              title: 'GASTOS RECIENTES',
+              actionLabel: 'Ver todo',
+            ),
+            const SizedBox(height: 16),
+            const RecentExpensesCard(items: _recentExpenses),
           ],
         ),
       ),

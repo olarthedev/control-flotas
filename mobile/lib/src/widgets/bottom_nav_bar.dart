@@ -53,7 +53,8 @@ class BottomNavigation extends StatelessWidget {
               label: 'Inicio',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long),
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              activeIcon: Icon(Icons.account_balance_wallet),
               label: 'Gastos',
             ),
             BottomNavigationBarItem(
