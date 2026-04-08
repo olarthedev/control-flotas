@@ -1,6 +1,6 @@
 {
   "name": "Node.js & JavaScript",
-  "image": "ghcr.io/devcontainers/templates/javascript-node:5.0.0",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
   "customizations" : {
     "vscode" : {
       "extensions" : [
