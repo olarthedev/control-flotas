@@ -69,7 +69,7 @@ class AppTheme {
       titleTextStyle: TextStyle(
         color: AppColors.textPrimaryLight,
         fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
       ),
     ),
     cardColor: AppColors.cardLight,
@@ -78,30 +78,31 @@ class AppTheme {
     textTheme: const TextTheme(
       headlineLarge: TextStyle(
         color: AppColors.textPrimaryLight,
-        fontSize: 32,
-        fontWeight: FontWeight.w800,
-        height: 1.1,
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        height: 1.05,
+        letterSpacing: 0.2,
       ),
       headlineMedium: TextStyle(
         color: AppColors.textPrimaryLight,
         fontSize: 28,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
         height: 1.1,
       ),
       headlineSmall: TextStyle(
         color: AppColors.textPrimaryLight,
         fontSize: 26,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
       ),
       titleMedium: TextStyle(
         color: AppColors.textSecondaryLight,
         fontSize: 15,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.normal,
       ),
       bodyLarge: TextStyle(
         color: AppColors.textPrimaryLight,
         fontSize: 16,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w500,
       ),
       bodyMedium: TextStyle(
         color: AppColors.textSecondaryLight,
@@ -112,7 +113,7 @@ class AppTheme {
       labelLarge: TextStyle(
         color: AppColors.textPrimaryLight,
         fontSize: 12,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
         letterSpacing: 0.8,
       ),
       labelSmall: TextStyle(color: AppColors.labelLight, fontSize: 12),
@@ -132,7 +133,7 @@ class AppTheme {
       titleTextStyle: TextStyle(
         color: AppColors.textPrimaryDark,
         fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
       ),
     ),
     cardColor: AppColors.cardDark,
@@ -140,35 +141,37 @@ class AppTheme {
     textTheme: const TextTheme(
       headlineLarge: TextStyle(
         color: AppColors.textPrimaryDark,
-        fontSize: 32,
-        fontWeight: FontWeight.w800,
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        height: 1.05,
+        letterSpacing: 0.2,
       ),
       headlineMedium: TextStyle(
         color: AppColors.textPrimaryDark,
         fontSize: 28,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
       ),
       headlineSmall: TextStyle(
         color: AppColors.textPrimaryDark,
         fontSize: 24,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
       ),
       titleMedium: TextStyle(
         color: AppColors.textSecondaryDark,
         fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.normal,
       ),
       bodyLarge: TextStyle(
         color: AppColors.textPrimaryDark,
         fontSize: 16,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
       bodyMedium: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
       bodySmall: TextStyle(color: AppColors.textSecondaryDark, fontSize: 12),
       labelLarge: TextStyle(
         color: AppColors.textPrimaryDark,
         fontSize: 12,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.normal,
       ),
     ),
   );
