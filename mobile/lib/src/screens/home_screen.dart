@@ -8,6 +8,7 @@ import '../widgets/recent_expenses_card.dart';
 import '../widgets/section_header.dart';
 import 'expenses_screen.dart';
 import 'notifications_screen.dart';
+import 'profile_screen.dart';
 
 const _weeklyBalance = r'$5.000.000';
 const _spentAmount = r'$290.000';
@@ -85,16 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         return const NotificationsScreen();
       case 3:
-        return _buildPlaceholder(context, 'Perfil');
+        return const ProfileScreen();
       default:
         return _buildHomeContent(context);
     }
-  }
-
-  Widget _buildPlaceholder(BuildContext context, String title) {
-    return Center(
-      child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
-    );
   }
 
   Widget _buildHomeContent(BuildContext context) {
