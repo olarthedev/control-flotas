@@ -17,7 +17,7 @@ class SectionHeader extends StatelessWidget {
           title.toUpperCase(),
           style: theme.textTheme.titleMedium?.copyWith(
             color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
             letterSpacing: 0.8,
           ),
         ),
@@ -26,7 +26,7 @@ class SectionHeader extends StatelessWidget {
             actionLabel!,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
       ],

@@ -83,7 +83,7 @@ class _ExpenseTile extends StatelessWidget {
               Text(
                 item.title,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 4),
@@ -95,7 +95,12 @@ class _ExpenseTile extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(item.value, style: theme.textTheme.bodyLarge),
+            Text(
+              item.value,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -116,7 +121,6 @@ class _ExpenseTile extends StatelessWidget {
                     statusLabel,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: statusColor,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

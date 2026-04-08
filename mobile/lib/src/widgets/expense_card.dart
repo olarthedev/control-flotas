@@ -59,9 +59,7 @@ class ExpenseCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: theme.textTheme.bodyLarge?.copyWith(),
                 ),
                 if (description != null) ...[
                   const SizedBox(height: 4),
@@ -90,9 +88,7 @@ class ExpenseCard extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: theme.textTheme.bodyLarge?.copyWith(),
               ),
               const SizedBox(height: 8),
               Container(

@@ -51,9 +51,7 @@ class NotificationCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: theme.textTheme.bodyLarge?.copyWith(),
                 ),
                 const SizedBox(height: 6),
                 Text(subtitle, style: theme.textTheme.bodyMedium),

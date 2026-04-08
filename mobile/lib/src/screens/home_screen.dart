@@ -144,8 +144,14 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Hola,', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 6),
-              Text('Conductor', style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 2),
+              Text(
+                'Conductor',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 25,
+                ),
+              ),
             ],
           ),
         ),
