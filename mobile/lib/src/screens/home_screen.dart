@@ -7,6 +7,7 @@ import '../widgets/bottom_nav_bar.dart';
 import '../widgets/recent_expenses_card.dart';
 import '../widgets/section_header.dart';
 import 'expenses_screen.dart';
+import 'notifications_screen.dart';
 
 const _weeklyBalance = r'$5.000.000';
 const _spentAmount = r'$290.000';
@@ -82,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const ExpensesScreen();
       case 2:
-        return _buildPlaceholder(context, 'Notificaciones');
+        return const NotificationsScreen();
       case 3:
         return _buildPlaceholder(context, 'Perfil');
       default:
@@ -97,41 +98,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent(BuildContext context) {
-    return ScrollConfiguration(
-      behavior: const _NoGlowScrollBehavior(),
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 24),
-            BalanceSummaryCard(
-              title: 'Saldo Semanal',
-              statusLabel: 'Activo',
-              value: _weeklyBalance,
-              spent: _spentAmount,
-              available: _availableAmount,
-              utilization: _utilizationValue,
-            ),
-            const SizedBox(height: 24),
-            _buildActionButton(context),
-            const SizedBox(height: 18),
-            const AdvanceCard(
-              title: 'INICIAR RUTA',
-              description: 'Registra tu ruta diaria y cambios de vehículo',
-              icon: Icons.navigation,
-            ),
-            const SizedBox(height: 28),
-            const SectionHeader(
-              title: 'GASTOS RECIENTES',
-              actionLabel: 'Ver todo',
-            ),
-            const SizedBox(height: 16),
-            const RecentExpensesCard(items: _recentExpenses),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 24),
+          BalanceSummaryCard(
+            title: 'Saldo Semanal',
+            statusLabel: 'Activo',
+            value: _weeklyBalance,
+            spent: _spentAmount,
+            available: _availableAmount,
+            utilization: _utilizationValue,
+          ),
+          const SizedBox(height: 24),
+          _buildActionButton(context),
+          const SizedBox(height: 18),
+          const AdvanceCard(
+            title: 'INICIAR RUTA',
+            description: 'Registra tu ruta diaria y cambios de vehículo',
+            icon: Icons.navigation,
+          ),
+          const SizedBox(height: 28),
+          const SectionHeader(
+            title: 'GASTOS RECIENTES',
+            actionLabel: 'Ver todo',
+          ),
+          const SizedBox(height: 16),
+          const RecentExpensesCard(items: _recentExpenses),
+        ],
       ),
     );
   }
@@ -208,18 +205,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-}
-
-class _NoGlowScrollBehavior extends ScrollBehavior {
-  const _NoGlowScrollBehavior();
-
-  @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
-    return child;
   }
 }
