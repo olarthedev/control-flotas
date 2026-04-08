@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class AdvanceCard extends StatelessWidget {
   const AdvanceCard({
     super.key,
@@ -20,18 +22,22 @@ class AdvanceCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withAlpha(40)),
+        border: Border.all(color: AppColors.borderLight.withAlpha(80)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             height: 48,
             width: 48,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha(30),
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.primary.withAlpha(130),
+              ),
             ),
             child: Icon(icon, color: theme.colorScheme.primary),
           ),
@@ -44,12 +50,14 @@ class AdvanceCard extends StatelessWidget {
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.textTheme.bodySmall?.color,
                     fontWeight: FontWeight.w500,
@@ -58,14 +66,19 @@ class AdvanceCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 12),
           Container(
             height: 44,
             width: 44,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: theme.colorScheme.primary,
+                width: 1.5,
+              ),
             ),
-            child: const Icon(Icons.add, color: Colors.white),
+            child: Icon(Icons.add, color: theme.colorScheme.primary),
           ),
         ],
       ),

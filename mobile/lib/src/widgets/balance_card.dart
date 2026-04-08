@@ -30,6 +30,7 @@ class BalanceSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderLight.withAlpha(80)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x08000000),
@@ -49,7 +50,6 @@ class BalanceSummaryCard extends StatelessWidget {
                   title.toUpperCase(),
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: AppColors.textSecondaryLight,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -71,7 +71,6 @@ class BalanceSummaryCard extends StatelessWidget {
                       statusLabel,
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: AppColors.success,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -117,9 +116,7 @@ class BalanceSummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             '${(utilization * 100).toStringAsFixed(1)}% utilizado',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: theme.textTheme.bodyMedium?.copyWith(),
           ),
         ],
       ),
@@ -146,6 +143,7 @@ class BalanceSummaryCard extends StatelessWidget {
               color: isHighlight
                   ? AppColors.success
                   : theme.textTheme.bodyLarge?.color,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

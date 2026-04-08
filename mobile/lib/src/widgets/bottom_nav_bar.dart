@@ -18,7 +18,7 @@ class BottomNavigation extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: AppColors.surfaceVariantLight,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
@@ -33,28 +33,30 @@ class BottomNavigation extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: currentIndex,
           onTap: onTap,
-          backgroundColor: Theme.of(context).cardColor,
+          backgroundColor: AppColors.surfaceVariantLight,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: Theme.of(context).textTheme.bodyMedium?.color,
+          selectedIconTheme: const IconThemeData(opacity: 1.0),
+          unselectedIconTheme: const IconThemeData(opacity: 0.7),
           selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.normal,
             fontSize: 12,
           ),
           unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.normal,
             fontSize: 12,
           ),
           items: [
             const BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_filled),
+              activeIcon: Icon(Icons.home_outlined),
               label: 'Inicio',
             ),
             const BottomNavigationBarItem(
               icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet),
+              activeIcon: Icon(Icons.account_balance_wallet_outlined),
               label: 'Gastos',
             ),
             BottomNavigationBarItem(
@@ -76,10 +78,29 @@ class BottomNavigation extends StatelessWidget {
                   ),
                 ],
               ),
+              activeIcon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.notifications_none),
+                  Positioned(
+                    top: -2,
+                    right: -4,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               label: 'Notificaciones',
             ),
             const BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person_outline),
               label: 'Perfil',
             ),
           ],
