@@ -1,0 +1,13 @@
+{
+  "name": "Node.js & JavaScript",
+  "image": "ghcr.io/devcontainers/templates/javascript-node:5.0.0",
+  "customizations" : {
+    "vscode" : {
+      "extensions" : [
+        "GitHub.copilot-chat",
+        "ritwickdey.LiveServer"
+      
+      ]
+    }
+  }
+}
