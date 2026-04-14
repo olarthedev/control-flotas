@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Evidence } from './evidence.entity';
@@ -26,18 +26,15 @@ export class EvidenceService {
         evidence.fileUrl = createEvidenceDto.fileUrl;
         evidence.fileType = createEvidenceDto.fileType;
         evidence.fileSize = createEvidenceDto.fileSize;
-        evidence.description = (createEvidenceDto.description ?? null) as string | null;
-        evidence.notes = (createEvidenceDto.notes ?? null) as string | null;
+        evidence.description = createEvidenceDto.description ?? null;
+        evidence.notes = createEvidenceDto.notes ?? null;
 
-        // Resolver relación de expense
         if (createEvidenceDto.expenseId) {
             const expense = await this.expenseRepository.findOne({
                 where: { id: createEvidenceDto.expenseId },
             });
             if (!expense) {
-                throw new (require('@nestjs/common').NotFoundException)(
-                    `Expense con id ${createEvidenceDto.expenseId} no encontrado`,
-                );
+                throw new NotFoundException(`Expense con id ${createEvidenceDto.expenseId} no encontrado`);
             }
             evidence.expense = expense;
         }
@@ -80,7 +77,7 @@ export class EvidenceService {
     async update(id: number, updateEvidenceDto: UpdateEvidenceDto): Promise<Evidence> {
         const existing = await this.findById(id);
         if (!existing) {
-            throw new (require('@nestjs/common').NotFoundException)('Evidence not found');
+            throw new NotFoundException('Evidence not found');
         }
         await this.evidenceRepository.update(id, updateEvidenceDto);
         return this.findById(id) as Promise<Evidence>;
@@ -90,7 +87,7 @@ export class EvidenceService {
     async remove(id: number) {
         const result = await this.evidenceRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('Evidence not found');
+            throw new NotFoundException('Evidence not found');
         }
         return result;
     }
