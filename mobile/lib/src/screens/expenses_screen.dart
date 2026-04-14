@@ -208,7 +208,7 @@ class ExpensesScreen extends StatelessWidget {
 
   Widget _buildSummaryCards(BuildContext context) {
     return SizedBox(
-      height: 170,
+      height: 140,
       child: ListView(
         padding: const EdgeInsets.only(left: 14, right: 14),
         scrollDirection: Axis.horizontal,
@@ -251,38 +251,30 @@ class ExpensesScreen extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     return Container(
-      width: 190,
-      padding: const EdgeInsets.all(18),
+      width: 170,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withAlpha(20),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        color: AppColors.backgroundLight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 46,
-            width: 46,
+            height: 40,
+            width: 40,
             decoration: BoxDecoration(
               color: color.withAlpha(25),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Text(
             label.toUpperCase(),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.textTheme.bodySmall?.color,
-              fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
+              fontSize: 10,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -291,8 +283,8 @@ class ExpensesScreen extends StatelessWidget {
           Text(
             value,
             style: theme.textTheme.headlineSmall?.copyWith(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
