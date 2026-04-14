@@ -57,10 +57,7 @@ class ExpenseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyLarge?.copyWith(),
-                ),
+                Text(title, style: theme.textTheme.bodyLarge?.copyWith()),
                 if (description != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -86,10 +83,7 @@ class ExpenseCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                value,
-                style: theme.textTheme.bodyLarge?.copyWith(),
-              ),
+              Text(value, style: theme.textTheme.bodyLarge?.copyWith()),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(

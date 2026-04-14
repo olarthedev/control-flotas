@@ -49,10 +49,7 @@ class NotificationCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyLarge?.copyWith(),
-                ),
+                Text(title, style: theme.textTheme.bodyLarge?.copyWith()),
                 const SizedBox(height: 6),
                 Text(subtitle, style: theme.textTheme.bodyMedium),
               ],
