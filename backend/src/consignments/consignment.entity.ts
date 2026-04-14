@@ -18,6 +18,11 @@ export enum ConsignmentStatus {
     DISPUTED = 'DISPUTED', // En disputa por diferencias
 }
 
+export enum ConsignmentPurpose {
+    TRIP_EXPENSES = 'TRIP_EXPENSES',
+    SALARY_ADVANCE = 'SALARY_ADVANCE',
+}
+
 @Entity('consignments')
 export class Consignment {
     @PrimaryGeneratedColumn()
@@ -25,6 +30,12 @@ export class Consignment {
 
     @Column()
     consignmentNumber: string; // Número único de consignación
+
+    @Column({
+        type: 'enum',
+        enum: ConsignmentPurpose,
+    })
+    purpose: ConsignmentPurpose;
 
     // ================== DINERO CONSIGNADO ==================
     @Column({

@@ -1,5 +1,6 @@
-import { IsString, IsNumber, IsNotEmpty, MinLength, MaxLength, IsOptional, IsDateString, IsPositive } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, MinLength, MaxLength, IsOptional, IsDateString, IsPositive, IsEnum } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { ConsignmentPurpose } from '../consignment.entity';
 
 export class CreateConsignmentDto {
     @IsString({ message: 'consignmentNumber debe ser texto' })
@@ -13,6 +14,10 @@ export class CreateConsignmentDto {
     @IsNotEmpty({ message: 'amount es requerido' })
     @Transform(({ value }) => parseFloat(value))
     amount: number;
+
+    @IsEnum(ConsignmentPurpose, { message: 'purpose debe ser un propósito válido' })
+    @IsNotEmpty({ message: 'purpose es requerido' })
+    purpose: ConsignmentPurpose;
 
     @IsDateString({}, { message: 'consignmentDate debe ser una fecha válida' })
     @IsNotEmpty({ message: 'consignmentDate es requerido' })

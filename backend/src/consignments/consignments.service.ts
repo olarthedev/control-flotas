@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Consignment, ConsignmentStatus } from './consignment.entity';
+import { Consignment, ConsignmentStatus, ConsignmentPurpose } from './consignment.entity';
 import { CreateConsignmentDto } from './dto/create-consignment.dto';
 import { UpdateConsignmentDto } from './dto/update-consignment.dto';
 import { User } from '../users/user.entity';
@@ -31,23 +31,46 @@ export class ConsignmentsService {
         const consignment = new Consignment();
         consignment.consignmentNumber = createConsignmentDto.consignmentNumber;
         consignment.amount = createConsignmentDto.amount;
+        consignment.purpose = createConsignmentDto.purpose;
         consignment.consignmentDate = new Date(createConsignmentDto.consignmentDate);
         consignment.consignmentNotes = createConsignmentDto.consignmentNotes ?? null;
 
-        if (createConsignmentDto.driverId) {
-            const driver = await this.usersRepository.findOne({ where: { id: createConsignmentDto.driverId } });
-            if (driver) consignment.driver = driver;
+        const driver = await this.usersRepository.findOne({ where: { id: createConsignmentDto.driverId } });
+        if (!driver) {
+            throw new NotFoundException(`Driver con id ${createConsignmentDto.driverId} no encontrado`);
         }
+        consignment.driver = driver;
+
         if (createConsignmentDto.vehicleId) {
             const vehicle = await this.vehiclesRepository.findOne({ where: { id: createConsignmentDto.vehicleId } });
-            if (vehicle) consignment.vehicle = vehicle;
-        }
-        if (createConsignmentDto.tripId) {
-            const trip = await this.tripsRepository.findOne({ where: { id: createConsignmentDto.tripId } });
-            if (trip) consignment.trip = trip;
+            if (!vehicle) {
+                throw new NotFoundException(`Vehicle con id ${createConsignmentDto.vehicleId} no encontrado`);
+            }
+            consignment.vehicle = vehicle;
         }
 
-        // Inicializar saldos
+        if (createConsignmentDto.tripId) {
+            const trip = await this.tripsRepository.findOne({ where: { id: createConsignmentDto.tripId }, relations: ['driver', 'vehicle'] });
+            if (!trip) {
+                throw new NotFoundException(`Trip con id ${createConsignmentDto.tripId} no encontrado`);
+            }
+            if (trip.driver?.id !== driver.id) {
+                throw new BadRequestException('El viaje indicado no pertenece al conductor de la consignación.');
+            }
+            consignment.trip = trip;
+            if (!consignment.vehicle) {
+                consignment.vehicle = trip.vehicle;
+            }
+        }
+
+        if (consignment.purpose === ConsignmentPurpose.TRIP_EXPENSES && !consignment.trip) {
+            throw new BadRequestException('Las consignaciones de tipo TRIP_EXPENSES requieren un tripId válido.');
+        }
+
+        if (consignment.purpose === ConsignmentPurpose.SALARY_ADVANCE && consignment.trip) {
+            throw new BadRequestException('Las consignaciones de tipo SALARY_ADVANCE no pueden tener tripId.');
+        }
+
         consignment.totalExpensesReported = 0;
         consignment.totalApprovedExpenses = 0;
         consignment.balance = consignment.amount;
@@ -122,9 +145,39 @@ export class ConsignmentsService {
     async update(id: number, updateConsignmentDto: UpdateConsignmentDto): Promise<Consignment> {
         const existing = await this.findById(id);
         if (!existing) {
-            throw new (require('@nestjs/common').NotFoundException)('Consignment not found');
+            throw new NotFoundException('Consignment not found');
         }
-        await this.consignmentsRepository.update(id, updateConsignmentDto as any);
+
+        const updateData = { ...updateConsignmentDto } as unknown as Partial<Consignment>;
+        if (updateConsignmentDto.consignmentDate !== undefined) {
+            updateData.consignmentDate = new Date(updateConsignmentDto.consignmentDate);
+        }
+
+        if (updateConsignmentDto.tripId !== undefined) {
+            const trip = await this.tripsRepository.findOne({ where: { id: updateConsignmentDto.tripId } });
+            if (!trip) {
+                throw new NotFoundException(`Trip con id ${updateConsignmentDto.tripId} no encontrado`);
+            }
+            updateData.trip = trip;
+        }
+
+        if (updateConsignmentDto.vehicleId !== undefined) {
+            const vehicle = await this.vehiclesRepository.findOne({ where: { id: updateConsignmentDto.vehicleId } });
+            if (!vehicle) {
+                throw new NotFoundException(`Vehicle con id ${updateConsignmentDto.vehicleId} no encontrado`);
+            }
+            updateData.vehicle = vehicle;
+        }
+
+        if (updateConsignmentDto.driverId !== undefined) {
+            const driver = await this.usersRepository.findOne({ where: { id: updateConsignmentDto.driverId } });
+            if (!driver) {
+                throw new NotFoundException(`Driver con id ${updateConsignmentDto.driverId} no encontrado`);
+            }
+            updateData.driver = driver;
+        }
+
+        await this.consignmentsRepository.update(id, updateData);
         return this.findById(id) as Promise<Consignment>;
     }
 
@@ -132,7 +185,7 @@ export class ConsignmentsService {
     async remove(id: number) {
         const result = await this.consignmentsRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('Consignment not found');
+            throw new NotFoundException('Consignment not found');
         }
         return result;
     }
@@ -144,7 +197,7 @@ export class ConsignmentsService {
     async closeConsignment(id: number): Promise<Consignment> {
         const consignment = await this.findById(id);
         if (!consignment) {
-            throw new (require('@nestjs/common').NotFoundException)('Consignment not found');
+            throw new NotFoundException('Consignment not found');
         }
 
         // Calcular totales de gastos aprobados
