@@ -10,10 +10,16 @@ import { Vehicle } from '../vehicles/vehicle.entity';
 import { User } from '../users/user.entity';
 
 export enum MaintenanceType {
-    PREVENTIVE = 'PREVENTIVE', // Mantenimiento preventivo
-    CORRECTIVE = 'CORRECTIVE', // Reparación correctiva
-    EMERGENCY = 'EMERGENCY', // Reparación de emergencia
-    INSPECTION = 'INSPECTION', // Inspección técnica
+    PREVENTIVE = 'PREVENTIVE',
+    CORRECTIVE = 'CORRECTIVE',
+    EMERGENCY = 'EMERGENCY',
+    INSPECTION = 'INSPECTION',
+}
+
+export enum MaintenanceStatus {
+    COMPLETED = 'COMPLETED',
+    PENDING = 'PENDING',
+    SCHEDULED = 'SCHEDULED',
 }
 
 @Entity('maintenance_records')
@@ -21,7 +27,6 @@ export class MaintenanceRecord {
     @PrimaryGeneratedColumn()
     id: number;
 
-    // ================== INFORMACIÓN BÁSICA ==================
     @Column({
         type: 'enum',
         enum: MaintenanceType,
@@ -29,37 +34,43 @@ export class MaintenanceRecord {
     type: MaintenanceType;
 
     @Column()
-    title: string; // Título del servicio (Cambio de aceite, Alineación, etc)
+    title: string;
 
     @Column({ type: 'text' })
-    description: string; // Descripción detallada del trabajo
+    description: string;
 
     @Column({ type: 'timestamp' })
-    maintenanceDate: Date; // Fecha del mantenimiento
+    maintenanceDate: Date;
 
-    // ================== COSTOS ==================
     @Column({
-        type: 'decimal', precision: 10, scale: 2, transformer: {
+        type: 'decimal',
+        precision: 12,
+        scale: 2,
+        transformer: {
             to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
+            from: (value: string) => parseFloat(value),
+        },
     })
-    cost: number; // Costo del mantenimiento
+    cost: number;
 
     @Column({ type: 'text', nullable: true })
-    invoiceNumber: string | null; // Número de factura
+    invoiceNumber: string | null;
 
     @Column({ type: 'text', nullable: true })
-    provider: string | null; // Taller o proveedor
+    provider: string | null;
 
-    // ================== SEGUIMIENTO TÉCNICO ==================
     @Column({
-        type: 'decimal', precision: 12, scale: 2, nullable: true, transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
+        name: 'mileage',
+        type: 'decimal',
+        precision: 12,
+        scale: 2,
+        nullable: true,
+        transformer: {
+            to: (value: number | null) => value,
+            from: (value: string | null) => (value === null ? null : parseFloat(value)),
+        },
     })
-    mileageAtMaintenance: number | null; // Kilometraje al momento
+    mileageAtMaintenance: number | null;
 
     @Column({
         type: 'decimal',
@@ -67,42 +78,40 @@ export class MaintenanceRecord {
         scale: 2,
         nullable: true,
         transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
+            to: (value: number | null) => value,
+            from: (value: string | null) => (value === null ? null : parseFloat(value)),
+        },
     })
-    nextMaintenanceMileage: number | null; // Próximo mantenimiento sugerido a esta distancia
+    nextMaintenanceMileage: number | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    nextMaintenanceDate: Date | null; // Próximo mantenimiento sugerido en esta fecha
+    nextMaintenanceDate: Date | null;
 
     @Column({ type: 'text', nullable: true })
-    technicalNotes: string | null; // Notas técnicas
+    technicalNotes: string | null;
 
-    // ================== ESTADO ==================
     @Column({
         type: 'enum',
-        enum: ['COMPLETED', 'PENDING', 'SCHEDULED'],
-        default: 'COMPLETED',
+        enum: MaintenanceStatus,
+        default: MaintenanceStatus.COMPLETED,
     })
-    status: string;
+    status: MaintenanceStatus;
 
     @Column({ default: false })
-    requiresFollowUp: boolean; // Requiere seguimiento
+    requiresFollowUp: boolean;
 
     @Column({ type: 'text', nullable: true })
-    followUpNotes: string; // Notas de seguimiento
+    followUpNotes: string | null;
 
-    // ================== RELACIONES ==================
     @ManyToOne(() => Vehicle, (vehicle) => vehicle.maintenanceRecords, {
         nullable: false,
+        onDelete: 'CASCADE',
     })
-    vehicle: Vehicle; // Vehículo mantenido
+    vehicle: Vehicle;
 
-    @ManyToOne(() => User, { nullable: true })
-    performedBy: User; // Usuario que registró (administrador)
+    @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+    performedBy: User | null;
 
-    // ================== AUDITORÍA ==================
     @CreateDateColumn()
     createdAt: Date;
 

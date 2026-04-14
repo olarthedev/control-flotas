@@ -35,6 +35,11 @@ export class CreateMaintenanceDto {
     vehicleId: number;
 
     @IsOptional()
+    @IsNumber({}, { message: 'performedById debe ser un número' })
+    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
+    performedById?: number;
+
+    @IsOptional()
     @IsString({ message: 'invoiceNumber debe ser texto' })
     @MaxLength(50, { message: 'invoiceNumber no puede exceder 50 caracteres' })
     invoiceNumber?: string;

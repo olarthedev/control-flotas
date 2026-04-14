@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MaintenanceRecord } from './maintenance-record.entity';
+import { MaintenanceRecord, MaintenanceStatus, MaintenanceType } from './maintenance-record.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 import { Vehicle } from '../vehicles/vehicle.entity';
@@ -33,7 +33,9 @@ export class MaintenanceService {
         maintenance.provider = (createMaintenanceDto.provider ?? null) as string | null;
         maintenance.mileageAtMaintenance = (createMaintenanceDto.mileageAtMaintenance ?? null) as number | null;
         maintenance.nextMaintenanceMileage = (createMaintenanceDto.nextMaintenanceMileage ?? null) as number | null;
-        maintenance.nextMaintenanceDate = (createMaintenanceDto.nextMaintenanceDate ?? null) as Date | null;
+        maintenance.nextMaintenanceDate = createMaintenanceDto.nextMaintenanceDate
+            ? new Date(createMaintenanceDto.nextMaintenanceDate)
+            : null;
         maintenance.technicalNotes = (createMaintenanceDto.technicalNotes ?? null) as string | null;
 
         // Resolver relación de vehicle
@@ -42,11 +44,23 @@ export class MaintenanceService {
                 where: { id: createMaintenanceDto.vehicleId },
             });
             if (!vehicle) {
-                throw new (require('@nestjs/common').NotFoundException)(
-                    `Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`,
-                );
+                throw new NotFoundException(`Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`);
             }
             maintenance.vehicle = vehicle;
+        }
+
+        if (createMaintenanceDto.performedById !== undefined) {
+            if (createMaintenanceDto.performedById === null) {
+                maintenance.performedBy = null;
+            } else {
+                const user = await this.userRepository.findOne({
+                    where: { id: createMaintenanceDto.performedById },
+                });
+                if (!user) {
+                    throw new NotFoundException(`User con id ${createMaintenanceDto.performedById} no encontrado`);
+                }
+                maintenance.performedBy = user;
+            }
         }
 
         return await this.maintenanceRepository.save(maintenance);
@@ -79,7 +93,7 @@ export class MaintenanceService {
     /** Records that are still pending. */
     async findPending(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
-            where: { status: 'PENDING' },
+            where: { status: MaintenanceStatus.PENDING },
             relations: ['vehicle', 'performedBy'],
         });
     }
@@ -87,7 +101,7 @@ export class MaintenanceService {
     /** Filter by maintenance type. */
     async findByType(type: string): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
-            where: { type: type as any },
+            where: { type: type as MaintenanceType },
             relations: ['vehicle', 'performedBy'],
             order: { maintenanceDate: 'DESC' },
         });
@@ -97,9 +111,41 @@ export class MaintenanceService {
     async update(id: number, updateMaintenanceDto: UpdateMaintenanceDto): Promise<MaintenanceRecord> {
         const existing = await this.findById(id);
         if (!existing) {
-            throw new (require('@nestjs/common').NotFoundException)('Maintenance record not found');
+            throw new NotFoundException('Maintenance record not found');
         }
-        await this.maintenanceRepository.update(id, updateMaintenanceDto as any);
+
+        type MaintenanceUpdatePayload = Partial<MaintenanceRecord> & {
+            performedById?: number | null;
+            maintenanceDate?: string;
+            nextMaintenanceDate?: string | null;
+        };
+
+        const updateData = { ...updateMaintenanceDto } as unknown as MaintenanceUpdatePayload;
+        if (updateMaintenanceDto.maintenanceDate !== undefined) {
+            updateData.maintenanceDate = new Date(updateMaintenanceDto.maintenanceDate as string) as any;
+        }
+        if (updateMaintenanceDto.nextMaintenanceDate !== undefined) {
+            updateData.nextMaintenanceDate = updateMaintenanceDto.nextMaintenanceDate
+                ? (new Date(updateMaintenanceDto.nextMaintenanceDate as string) as any)
+                : null;
+        }
+
+        if (updateMaintenanceDto.performedById !== undefined) {
+            if (updateMaintenanceDto.performedById === null) {
+                updateData.performedBy = null;
+            } else {
+                const user = await this.userRepository.findOne({
+                    where: { id: updateMaintenanceDto.performedById },
+                });
+                if (!user) {
+                    throw new NotFoundException(`User con id ${updateMaintenanceDto.performedById} no encontrado`);
+                }
+                updateData.performedBy = user;
+            }
+            delete updateData.performedById;
+        }
+
+        await this.maintenanceRepository.update(id, updateData as Partial<MaintenanceRecord>);
         return this.findById(id) as Promise<MaintenanceRecord>;
     }
 
@@ -107,13 +153,13 @@ export class MaintenanceService {
     async remove(id: number) {
         const result = await this.maintenanceRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('Maintenance record not found');
+            throw new NotFoundException('Maintenance record not found');
         }
         return result;
     }
 
     /** Mark a maintenance record as completed. */
     async completeMaintenanceRecord(id: number) {
-        return await this.update(id, { status: 'COMPLETED' } as any);
+        return await this.update(id, { status: MaintenanceStatus.COMPLETED });
     }
 }
