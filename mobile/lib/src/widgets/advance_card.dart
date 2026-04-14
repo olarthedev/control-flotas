@@ -73,10 +73,7 @@ class AdvanceCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: theme.colorScheme.primary,
-                width: 1.5,
-              ),
+              border: Border.all(color: theme.colorScheme.primary, width: 1.5),
             ),
             child: Icon(Icons.add, color: theme.colorScheme.primary),
           ),
