@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Brackets } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,68 +9,65 @@ import { DriverSummaryDto } from './dto/driver-summary.dto';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { ConsignmentStatus } from '../consignments/consignment.entity';
 import { AssignDriverVehicleDto } from './dto/assign-driver-vehicle.dto';
+import { UserVehicleHistory } from './user-vehicle-history.entity';
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
-        private usersRepository: Repository<User>,
+        private readonly usersRepository: Repository<User>,
         @InjectRepository(Vehicle)
-        private vehiclesRepository: Repository<Vehicle>,
+        private readonly vehiclesRepository: Repository<Vehicle>,
+        @InjectRepository(UserVehicleHistory)
+        private readonly historyRepository: Repository<UserVehicleHistory>,
     ) { }
 
-    private ensureHistory(user: User): void {
-        if (!Array.isArray(user.vehicleAssignmentHistory)) {
-            user.vehicleAssignmentHistory = [];
-        }
-    }
-
-    private closeActiveVehicleAssignment(user: User, endDate: Date): void {
-        this.ensureHistory(user);
-
-        for (let index = user.vehicleAssignmentHistory.length - 1; index >= 0; index -= 1) {
-            const item = user.vehicleAssignmentHistory[index];
-            if (!item.endDate) {
-                item.endDate = endDate.toISOString();
-                return;
-            }
-        }
-    }
-
-    private addVehicleAssignment(user: User, vehicle: Vehicle, startDate: Date, reason: string, changedBy: string): void {
-        this.ensureHistory(user);
-
-        user.vehicleAssignmentHistory.push({
-            vehicleId: vehicle.id,
-            vehiclePlate: vehicle.licensePlate,
-            startDate: startDate.toISOString(),
-            endDate: null,
-            reason,
-            changedBy,
-        });
-    }
-
-    private async assertVehicleIsAvailable(vehicleId: number, driverId: number): Promise<void> {
-        const existingDriver = await this.usersRepository.findOne({
-            where: {
-                id: driverId,
-            },
-            relations: ['assignedVehicle'],
-        });
-
-        const conflictDriver = await this.usersRepository
-            .createQueryBuilder('user')
-            .leftJoinAndSelect('user.assignedVehicle', 'assignedVehicle')
-            .where('user.id != :driverId', { driverId })
-            .andWhere('user.role = :role', { role: UserRole.DRIVER })
-            .andWhere('assignedVehicle.id = :vehicleId', { vehicleId })
+    private async assertVehicleIsAvailableAtDate(
+        vehicleId: number,
+        driverId: number,
+        effectiveAt: Date,
+    ): Promise<void> {
+        const conflict = await this.historyRepository
+            .createQueryBuilder('history')
+            .innerJoin('history.user', 'user')
+            .where('history.vehicle_id = :vehicleId', { vehicleId })
+            .andWhere('user.id != :driverId', { driverId })
+            .andWhere('history.start_date <= :effectiveAt', { effectiveAt })
+            .andWhere(new Brackets((qb) => {
+                qb.where('history.end_date IS NULL').orWhere('history.end_date > :effectiveAt', { effectiveAt });
+            }))
             .getOne();
 
-        if (conflictDriver && conflictDriver.id !== existingDriver?.id) {
+        if (conflict) {
             throw new BadRequestException(
-                `El vehículo ${conflictDriver.assignedVehicle?.licensePlate ?? vehicleId} ya está asignado al conductor ${conflictDriver.fullName}.`,
+                `El vehículo ${vehicleId} ya está asignado a otro conductor para la fecha indicada.`,
             );
         }
+    }
+
+    private async closeActiveVehicleAssignments(userId: number, endDate: Date): Promise<void> {
+        await this.historyRepository
+            .createQueryBuilder()
+            .update(UserVehicleHistory)
+            .set({ endDate })
+            .where('user_id = :userId', { userId })
+            .andWhere('endDate IS NULL')
+            .execute();
+    }
+
+    private async createVehicleAssignmentHistory(
+        user: User,
+        vehicle: Vehicle,
+        startDate: Date,
+    ): Promise<void> {
+        const history = this.historyRepository.create({
+            user,
+            vehicle,
+            startDate,
+            endDate: null,
+        });
+
+        await this.historyRepository.save(history);
     }
 
     private async applyVehicleAssignmentChange(
@@ -97,10 +94,10 @@ export class UsersService {
         }
 
         if (assignedVehicleId !== null) {
-            await this.assertVehicleIsAvailable(assignedVehicleId, user.id);
+            await this.assertVehicleIsAvailableAtDate(assignedVehicleId, user.id, referenceDate);
         }
 
-        this.closeActiveVehicleAssignment(user, referenceDate);
+        await this.closeActiveVehicleAssignments(user.id, referenceDate);
 
         if (assignedVehicleId === null) {
             user.assignedVehicle = null;
@@ -113,13 +110,7 @@ export class UsersService {
         }
 
         user.assignedVehicle = vehicle;
-        this.addVehicleAssignment(user, vehicle, referenceDate, normalizedReason, changedBy);
-    }
-
-    private sortHistory(items: User['vehicleAssignmentHistory']): User['vehicleAssignmentHistory'] {
-        return [...(items ?? [])].sort((first, second) => {
-            return new Date(second.startDate).getTime() - new Date(first.startDate).getTime();
-        });
+        await this.createVehicleAssignmentHistory(user, vehicle, referenceDate);
     }
 
     /**
@@ -133,21 +124,29 @@ export class UsersService {
         const user = this.usersRepository.create({
             ...userPayload,
             password: hashedPassword,
-            vehicleAssignmentHistory: [],
         });
 
         if (assignedVehicleId) {
-            await this.assertVehicleIsAvailable(assignedVehicleId, user.id ?? -1);
+            const effectiveAt = new Date();
+            await this.assertVehicleIsAvailableAtDate(assignedVehicleId, user.id ?? -1, effectiveAt);
             const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
             if (!vehicle) {
                 throw new NotFoundException(`Vehicle con id ${assignedVehicleId} no encontrado`);
             }
 
             user.assignedVehicle = vehicle;
-            this.addVehicleAssignment(user, vehicle, new Date(), 'Asignación inicial de conductor', 'admin');
         }
 
-        return await this.usersRepository.save(user);
+        const savedUser = await this.usersRepository.save(user);
+
+        if (assignedVehicleId) {
+            const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
+            if (vehicle) {
+                await this.createVehicleAssignmentHistory(savedUser, vehicle, new Date());
+            }
+        }
+
+        return savedUser;
     }
 
     /**
@@ -163,10 +162,14 @@ export class UsersService {
      * @param id Numeric id of the user
      * @returns The user entity or undefined if not found
      */
-    async findById(id: number): Promise<User | null> {
+    async findById(id: number, includeHistory = false): Promise<User | null> {
+        const relations = ['assignedVehicle'];
+        if (includeHistory) {
+            relations.push('vehicleAssignmentHistory');
+        }
         return await this.usersRepository.findOne({
             where: { id },
-            relations: ['assignedVehicle'],
+            relations,
         });
     }
 
@@ -249,7 +252,6 @@ export class UsersService {
     async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
         const existing = await this.findById(id);
         if (!existing) {
-            // throw proper HTTP exception when user doesn't exist
             throw new NotFoundException('User not found');
         }
 
@@ -271,7 +273,7 @@ export class UsersService {
 
         Object.assign(existing, userPayload);
         await this.usersRepository.save(existing);
-        return this.findById(id) as Promise<User>;
+        return (await this.findById(id)) as User;
     }
 
     async assignDriverVehicle(driverId: number, payload: AssignDriverVehicleDto): Promise<User> {
@@ -302,27 +304,40 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
+        const historyRecords = await this.historyRepository.find({
+            where: { user: { id: driverId } },
+            relations: ['vehicle'],
+            order: { startDate: 'DESC' },
+        });
+
         return {
             driverId: driver.id,
             driverName: driver.fullName,
             currentVehicleId: driver.assignedVehicle?.id ?? null,
             currentVehiclePlate: driver.assignedVehicle?.licensePlate ?? null,
-            history: this.sortHistory(driver.vehicleAssignmentHistory ?? []),
+            history: historyRecords.map((item) => ({
+                vehicleId: item.vehicle.id,
+                vehiclePlate: item.vehicle.licensePlate,
+                startDate: item.startDate,
+                endDate: item.endDate,
+            })),
         };
     }
 
-    getAssignedVehicleIdAtDate(driver: User, referenceDate: Date): number | null {
-        this.ensureHistory(driver);
+    async getAssignedVehicleIdAtDate(driver: User, referenceDate: Date): Promise<number | null> {
+        const history = await this.historyRepository
+            .createQueryBuilder('history')
+            .leftJoinAndSelect('history.vehicle', 'vehicle')
+            .where('history.user_id = :userId', { userId: driver.id })
+            .andWhere('history.start_date <= :referenceDate', { referenceDate })
+            .andWhere(new Brackets((qb) => {
+                qb.where('history.end_date IS NULL').orWhere('history.end_date > :referenceDate', { referenceDate });
+            }))
+            .orderBy('history.start_date', 'DESC')
+            .getOne();
 
-        const referenceTime = referenceDate.getTime();
-        const match = driver.vehicleAssignmentHistory.find((item) => {
-            const start = new Date(item.startDate).getTime();
-            const end = item.endDate ? new Date(item.endDate).getTime() : Number.POSITIVE_INFINITY;
-            return start <= referenceTime && referenceTime < end;
-        });
-
-        if (match?.vehicleId) {
-            return match.vehicleId;
+        if (history?.vehicle?.id) {
+            return history.vehicle.id;
         }
 
         return driver.assignedVehicle?.id ?? null;
@@ -339,11 +354,11 @@ export class UsersService {
 
     /** Deactivate a user (set isActive = false) */
     async deactivate(id: number) {
-        return await this.update(id, { isActive: false } as any);
+        return await this.update(id, { isActive: false } as Partial<User>);
     }
 
     /** Activate a previously deactivated user */
     async activate(id: number) {
-        return await this.update(id, { isActive: true } as any);
+        return await this.update(id, { isActive: true } as Partial<User>);
     }
 }

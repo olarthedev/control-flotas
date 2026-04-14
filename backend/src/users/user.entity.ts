@@ -12,20 +12,13 @@ import { Expense } from '../expenses/expense.entity';
 import { Consignment } from '../consignments/consignment.entity';
 import { Trip } from '../trips/trip.entity';
 import { MaintenanceRecord } from '../maintenance/maintenance-record.entity';
+import { UserVehicleHistory } from './user-vehicle-history.entity';
+import { UserBankAccount } from './user-bank-account.entity';
 import { Exclude } from 'class-transformer';
 
 export enum UserRole {
     ADMIN = 'ADMIN',
     DRIVER = 'DRIVER',
-}
-
-export interface VehicleAssignmentHistoryItem {
-    vehicleId: number;
-    vehiclePlate: string;
-    startDate: string;
-    endDate: string | null;
-    reason?: string;
-    changedBy?: string;
 }
 
 @Entity('users')
@@ -70,8 +63,15 @@ export class User {
     @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })
     assignedVehicle?: Vehicle | null;
 
-    @Column({ type: 'simple-json', nullable: false, default: '[]' })
-    vehicleAssignmentHistory: VehicleAssignmentHistoryItem[];
+    @OneToMany(() => UserVehicleHistory, (history) => history.user, {
+        cascade: true,
+    })
+    vehicleAssignmentHistory: UserVehicleHistory[];
+
+    @OneToMany(() => UserBankAccount, (bankAccount) => bankAccount.user, {
+        cascade: true,
+    })
+    bankAccounts: UserBankAccount[];
 
     // ================== RELACIONES ==================
     @OneToMany(() => Expense, (expense) => expense.driver)
