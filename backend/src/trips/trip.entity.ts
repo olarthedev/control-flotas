@@ -12,6 +12,12 @@ import { Vehicle } from '../vehicles/vehicle.entity';
 import { Expense } from '../expenses/expense.entity';
 import { Consignment } from '../consignments/consignment.entity';
 
+export enum TripStatus {
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETED = 'COMPLETED',
+    CANCELLED = 'CANCELLED',
+}
+
 @Entity('trips')
 export class Trip {
     @PrimaryGeneratedColumn()
@@ -37,10 +43,10 @@ export class Trip {
 
     @Column({
         type: 'enum',
-        enum: ['IN_PROGRESS', 'COMPLETED', 'CANCELLED'],
-        default: 'IN_PROGRESS',
+        enum: TripStatus,
+        default: TripStatus.IN_PROGRESS,
     })
-    status: string;
+    status: TripStatus;
 
     @Column({
         type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {

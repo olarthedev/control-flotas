@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Trip } from './trip.entity';
+import { Trip, TripStatus } from './trip.entity';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { User } from '../users/user.entity';
@@ -35,7 +35,7 @@ export class TripsService {
         trip.destination = createTripDto.destination ?? null;
         trip.description = createTripDto.description ?? null;
         trip.plannedBudget = createTripDto.plannedBudget ?? 0;
-        trip.status = 'IN_PROGRESS';
+        trip.status = TripStatus.IN_PROGRESS;
 
         // resolve relations
         const driver = await this.usersRepository.findOne({
@@ -102,18 +102,30 @@ export class TripsService {
     /** Only trips that are still in progress. */
     async findInProgress(): Promise<Trip[]> {
         return await this.tripsRepository.find({
-            where: { status: 'IN_PROGRESS' },
+            where: { status: TripStatus.IN_PROGRESS },
             relations: ['driver', 'vehicle', 'expenses', 'consignments'],
         });
     }
 
     /** Update trip data; throws if not found. */
-    async update(id: number, updateTripDto: UpdateTripDto): Promise<Trip> {
+    async update(id: number, updateTripDto: Partial<Trip> | UpdateTripDto): Promise<Trip> {
         const existing = await this.findById(id);
         if (!existing) {
             throw new NotFoundException('Trip not found');
         }
-        await this.tripsRepository.update(id, updateTripDto);
+
+        const updateData = { ...updateTripDto } as unknown as Partial<Trip>;
+        if ('endDate' in updateTripDto && updateTripDto.endDate !== undefined) {
+            updateData.endDate = new Date(updateTripDto.endDate as string);
+        }
+        if ('startDate' in updateTripDto && updateTripDto.startDate !== undefined) {
+            updateData.startDate = new Date(updateTripDto.startDate as string);
+        }
+        if ('status' in updateTripDto && updateTripDto.status !== undefined) {
+            updateData.status = updateTripDto.status as TripStatus;
+        }
+
+        await this.tripsRepository.update(id, updateData);
         return this.findById(id) as Promise<Trip>;
     }
 
@@ -145,12 +157,13 @@ export class TripsService {
 
         const totalConsigned = consignments.reduce((sum, cons) => sum + Number(cons.amount), 0);
 
-        return await this.update(id, {
-            status: 'COMPLETED',
+        const updateData: Partial<Trip> = {
+            status: TripStatus.COMPLETED,
             endDate: new Date(),
             totalExpenses: totalExpenses,
             totalConsigned: totalConsigned,
             difference: totalConsigned - totalExpenses,
-        } as any);
+        };
+        return await this.update(id, updateData);
     }
 }
