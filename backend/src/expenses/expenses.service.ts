@@ -158,7 +158,7 @@ export class ExpensesService {
             expense.trip = trip;
         }
 
-        const assignedVehicleIdAtExpenseDate = this.usersService.getAssignedVehicleIdAtDate(driver, expense.expenseDate);
+        const assignedVehicleIdAtExpenseDate = await this.usersService.getAssignedVehicleIdAtDate(driver, expense.expenseDate);
         const resolvedVehicleId = createExpenseDto.vehicleId ?? trip?.vehicle?.id ?? assignedVehicleIdAtExpenseDate;
 
         if (!resolvedVehicleId) {
@@ -290,9 +290,12 @@ export class ExpensesService {
 
         await this.enforceSequentialWeekClosure(existing, updateExpenseDto.status);
 
-        const updateData: any = { ...updateExpenseDto };
-        if (updateExpenseDto.validatedAt) {
-            updateData.validatedAt = new Date(updateExpenseDto.validatedAt);
+        const updateData = { ...updateExpenseDto } as unknown as Partial<Expense>;
+        if (updateExpenseDto.expenseDate !== undefined) {
+            updateData.expenseDate = new Date(updateExpenseDto.expenseDate);
+        }
+        if (updateExpenseDto.validatedAt !== undefined) {
+            updateData.validatedAt = updateExpenseDto.validatedAt ? new Date(updateExpenseDto.validatedAt) : null;
         }
 
         await this.expensesRepository.update(id, updateData);

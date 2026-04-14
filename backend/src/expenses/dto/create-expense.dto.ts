@@ -41,4 +41,9 @@ export class CreateExpenseDto {
     @IsNumber({}, { message: 'tripId debe ser un número' })
     @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
     tripId?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'consignmentId debe ser un número' })
+    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
+    consignmentId?: number;
 }
