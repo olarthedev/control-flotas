@@ -89,10 +89,8 @@ class ExpensesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -173,37 +171,37 @@ class ExpensesScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: theme.dividerColor.withAlpha(46)),
+        color: AppColors.backgroundLight,
       ),
       child: Column(
-        children: _expenseItems.asMap().entries.map((entry) {
-          final isLast = entry.key == _expenseItems.length - 1;
-          final item = entry.value;
-          return Column(
-            children: [
-              ExpenseCard(
-                title: item.title,
-                subtitle: item.subtitle,
-                value: item.value,
-                description: item.description,
-                statusLabel: item.statusLabel,
-                statusColor: item.statusColor,
-                icon: item.icon,
-                iconColor: item.iconColor,
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  indent: 80,
-                  endIndent: 16,
-                  color: theme.dividerColor.withAlpha(56),
+        children: [
+          ..._expenseItems.asMap().entries.map((entry) {
+            final isLast = entry.key == _expenseItems.length - 1;
+            final item = entry.value;
+            return Column(
+              children: [
+                ExpenseCard(
+                  title: item.title,
+                  subtitle: item.subtitle,
+                  value: item.value,
+                  description: item.description,
+                  statusLabel: item.statusLabel,
+                  statusColor: item.statusColor,
+                  icon: item.icon,
+                  iconColor: item.iconColor,
                 ),
-            ],
-          );
-        }).toList(),
+                if (!isLast)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: 80,
+                    endIndent: 16,
+                    color: theme.dividerColor.withAlpha(56),
+                  ),
+              ],
+            );
+          }),
+        ],
       ),
     );
   }
