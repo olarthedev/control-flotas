@@ -296,18 +296,17 @@ class ExpensesScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.surfaceVariantLight,
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_month, color: AppColors.primary),
-          const SizedBox(width: 12),
-          Text('Febrero 2024', style: theme.textTheme.bodyLarge),
+          const Icon(Icons.calendar_month, color: AppColors.primary, size: 18),
+          const SizedBox(width: 10),
+          Text('Febrero 2024', style: theme.textTheme.bodyMedium),
           const Spacer(),
-          Icon(Icons.swap_vert, color: theme.colorScheme.primary),
+          Icon(Icons.swap_vert, color: theme.colorScheme.primary, size: 18),
         ],
       ),
     );
