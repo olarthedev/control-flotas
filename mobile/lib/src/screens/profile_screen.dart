@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: AppColors.backgroundLight,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
@@ -170,23 +170,32 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          Text('Juan Driver', style: theme.textTheme.headlineMedium),
+          Text(
+            'Juan Driver',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text('juan.driver@email.com', style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariantLight,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'ID: DRV-2024-001',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondaryLight,
-                fontWeight: FontWeight.w700,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('juan.driver@email.com', style: theme.textTheme.bodyMedium),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariantLight,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'ID: DRV-2024-001',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
