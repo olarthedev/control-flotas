@@ -31,25 +31,24 @@ class ExpenseCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.surfaceVariantLight,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            height: 46,
-            width: 46,
+            height: 38,
+            width: 38,
             decoration: BoxDecoration(
               color: resolvedIconColor.withAlpha(28),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon ?? Icons.local_parking,
               color: resolvedIconColor,
-              size: 24,
+              size: 18,
             ),
           ),
           const SizedBox(width: 14),
@@ -98,7 +97,7 @@ class ExpenseCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: statusColor.withAlpha(40),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   statusLabel,
