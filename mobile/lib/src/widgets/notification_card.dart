@@ -26,25 +26,24 @@ class NotificationCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.surfaceVariantLight,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 46,
-            width: 46,
+            height: 38,
+            width: 38,
             decoration: BoxDecoration(
               color: iconColor.withAlpha(30),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Icon(icon, color: iconColor, size: 18),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,12 +52,12 @@ class NotificationCard extends StatelessWidget {
                   title,
                   style: theme.textTheme.bodyLarge?.copyWith(),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 Text(subtitle, style: theme.textTheme.bodyMedium),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -66,13 +65,14 @@ class NotificationCard extends StatelessWidget {
                 timestamp,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.textTheme.bodyMedium?.color,
+                  fontSize: 11,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
               if (isUnread)
                 Container(
-                  width: 10,
-                  height: 10,
+                  width: 6,
+                  height: 6,
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
