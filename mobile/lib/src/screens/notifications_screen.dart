@@ -73,10 +73,8 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -185,23 +183,23 @@ class NotificationsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      height: 64,
+      height: 48,
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.borderLight),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight.withAlpha(120)),
       ),
       child: TextButton.icon(
         onPressed: () {},
         icon: const Icon(
           Icons.delete_outline,
           color: AppColors.textSecondaryLight,
+          size: 18,
         ),
         label: Text(
           'Limpiar historial',
-          style: theme.textTheme.bodyLarge?.copyWith(
+          style: theme.textTheme.bodyMedium?.copyWith(
             color: AppColors.textSecondaryLight,
-            fontWeight: FontWeight.w700,
           ),
         ),
       ),
