@@ -104,12 +104,12 @@ export function buildHistoryWeekSummaries(
             return;
         }
 
-        if (expense.status === 'APPROVED') {
+        if (expense.status === 'approved') {
             summary.approvedCount += 1;
             summary.totalAmount += expense.amount;
         }
 
-        if (expense.status === 'REJECTED') {
+        if (expense.status === 'rejected') {
             summary.rejectedCount += 1;
         }
     });
