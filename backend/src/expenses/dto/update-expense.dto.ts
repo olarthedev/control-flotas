@@ -1,11 +1,12 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsOptional, IsDateString, IsString, MaxLength, IsEnum } from 'class-validator';
+import { IsOptional, IsDateString, IsString, MaxLength, IsEnum, IsNumber } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { CreateExpenseDto } from './create-expense.dto';
 import { ExpenseStatus } from '../expense.entity';
 
 export class UpdateExpenseDto extends PartialType(CreateExpenseDto) {
     @IsOptional()
-    @IsEnum(ExpenseStatus, { message: 'status debe ser un estado válido' })
+    @IsEnum(ExpenseStatus, { message: 'status debe ser: pending, approved o rejected' })
     status?: ExpenseStatus;
 
     @IsOptional()
@@ -18,7 +19,7 @@ export class UpdateExpenseDto extends PartialType(CreateExpenseDto) {
     validatedAt?: string;
 
     @IsOptional()
-    @IsString({ message: 'validatedBy debe ser texto' })
-    @MaxLength(255, { message: 'validatedBy no puede exceder 255 caracteres' })
-    validatedBy?: string;
+    @IsNumber({}, { message: 'validatedById debe ser un número' })
+    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
+    validatedById?: number;
 }

@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsOptional, Matches, IsEnum, IsNumber, Min, IsBoolean } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsOptional, Matches, IsEnum, IsNumber, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from '../user.entity';
 
@@ -6,7 +6,7 @@ export class CreateUserDto {
     @IsString({ message: 'fullName debe ser texto' })
     @IsNotEmpty({ message: 'fullName es requerido' })
     @MinLength(3, { message: 'fullName debe tener al menos 3 caracteres' })
-    @MaxLength(100, { message: 'fullName no puede exceder 100 caracteres' })
+    @MaxLength(150, { message: 'fullName no puede exceder 150 caracteres' })
     fullName: string;
 
     @IsEmail({}, { message: 'email debe ser un correo válido' })
@@ -19,7 +19,7 @@ export class CreateUserDto {
     @MaxLength(100, { message: 'password no puede exceder 100 caracteres' })
     password: string;
 
-    @IsEnum(UserRole, { message: 'role debe ser un rol válido' })
+    @IsEnum(UserRole, { message: 'role debe ser: admin, driver, supervisor o accountant' })
     @IsNotEmpty({ message: 'role es requerido' })
     role: UserRole;
 
@@ -32,14 +32,8 @@ export class CreateUserDto {
 
     @IsOptional()
     @IsString({ message: 'licenseNumber debe ser texto' })
-    @MaxLength(20, { message: 'licenseNumber no puede exceder 20 caracteres' })
+    @MaxLength(50, { message: 'licenseNumber no puede exceder 50 caracteres' })
     licenseNumber?: string;
-
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber({}, { message: 'monthlySalary debe ser numérico' })
-    @Min(0, { message: 'monthlySalary no puede ser negativo' })
-    monthlySalary?: number;
 
     @IsOptional()
     @Type(() => Number)

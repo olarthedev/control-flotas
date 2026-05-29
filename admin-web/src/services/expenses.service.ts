@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
 
-export type ExpenseStatus = 'PENDING' | 'APPROVED' | 'OBSERVED' | 'REJECTED';
+export type ExpenseStatus = 'pending' | 'approved' | 'rejected';
+export type ExpenseType = 'fuel' | 'toll' | 'maintenance' | 'food' | 'lodging' | 'parking' | 'other';
 
 export interface ExpenseEvidence {
     id: number;
@@ -11,11 +12,10 @@ export interface ExpenseEvidence {
 
 export interface ExpenseItem {
     id: number;
-    type: string;
+    type: ExpenseType;
     amount: number;
     expenseDate: string;
     description: string | null;
-    notes: string | null;
     status: ExpenseStatus;
     rejectionReason: string | null;
     driver: {
@@ -49,11 +49,10 @@ export interface DriverLiquidationResponse {
 
 interface ExpenseResponse {
     id: number;
-    type: string;
+    type: ExpenseType;
     amount: number | string;
     expenseDate: string;
     description: string | null;
-    notes: string | null;
     status: ExpenseStatus;
     rejectionReason: string | null;
     driver: {
@@ -80,7 +79,6 @@ export function normalizeExpense(item: ExpenseResponse): ExpenseItem {
         amount: Number(item.amount ?? 0),
         expenseDate: item.expenseDate,
         description: item.description,
-        notes: item.notes,
         status: item.status,
         rejectionReason: item.rejectionReason,
         driver: item.driver,
@@ -120,7 +118,7 @@ export async function fetchPendingExpenseVehiclePlates(): Promise<string[]> {
 
 export async function updateExpenseStatus(
     id: number,
-    payload: { status: ExpenseStatus; rejectionReason?: string | null; validatedBy?: string },
+    payload: { status: ExpenseStatus; rejectionReason?: string | null; validatedById?: number },
 ): Promise<ExpenseItem> {
     const { data } = await axios.patch<ExpenseResponse>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}/${id}`, {
         ...payload,

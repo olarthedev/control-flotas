@@ -33,7 +33,7 @@ export class TypeOrmDashboardReadRepository implements DashboardReadRepository {
         const row = await this.consignmentRepository
             .createQueryBuilder('consignment')
             .select('COALESCE(SUM(consignment.amount), 0)', 'total')
-            .where('consignment.status = :status', { status: ConsignmentStatus.ACTIVE })
+            .where('consignment.status = :status', { status: ConsignmentStatus.OPEN })
             .getRawOne<AmountRow>();
 
         return this.toNumber(row?.total);

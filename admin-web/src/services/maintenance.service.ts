@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
 
-export type MaintenanceType = 'PREVENTIVE' | 'CORRECTIVE' | 'EMERGENCY' | 'INSPECTION';
-export type MaintenanceStatus = 'COMPLETED' | 'PENDING' | 'SCHEDULED';
+export type MaintenanceType = 'preventive' | 'corrective' | 'emergency';
+export type MaintenanceStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
 
 export interface MaintenanceVehicle {
     id: number;
@@ -16,48 +16,38 @@ export interface MaintenanceRecord {
     id: number;
     type: MaintenanceType;
     title: string;
-    description: string;
     maintenanceDate: string;
     cost: number;
     invoiceNumber: string | null;
     provider: string | null;
     mileageAtMaintenance: number | null;
-    nextMaintenanceMileage: number | null;
-    nextMaintenanceDate: string | null;
-    technicalNotes: string | null;
     status: MaintenanceStatus;
     requiresFollowUp: boolean;
-    followUpNotes: string | null;
     vehicle: MaintenanceVehicle;
     createdAt: string;
     updatedAt: string;
 }
 
-interface MaintenanceRecordResponse extends Omit<MaintenanceRecord, 'cost' | 'mileageAtMaintenance' | 'nextMaintenanceMileage'> {
+interface MaintenanceRecordResponse extends Omit<MaintenanceRecord, 'cost' | 'mileageAtMaintenance'> {
     cost: number | string;
     mileageAtMaintenance: number | string | null;
-    nextMaintenanceMileage: number | string | null;
 }
 
 export interface CreateMaintenanceDto {
     type: MaintenanceType;
     title: string;
-    description: string;
     maintenanceDate: string;
     cost: number;
     vehicleId: number;
+    performedById?: number;
     invoiceNumber?: string;
     provider?: string;
     mileageAtMaintenance?: number;
-    nextMaintenanceMileage?: number;
-    nextMaintenanceDate?: string;
-    technicalNotes?: string;
+    requiresFollowUp?: boolean;
 }
 
 export interface UpdateMaintenanceDto extends Partial<CreateMaintenanceDto> {
     status?: MaintenanceStatus;
-    requiresFollowUp?: boolean;
-    followUpNotes?: string;
 }
 
 function toNullableNumber(value: number | string | null): number | null {
@@ -73,7 +63,6 @@ function normalizeMaintenanceRecord(item: MaintenanceRecordResponse): Maintenanc
         ...item,
         cost: Number(item.cost ?? 0),
         mileageAtMaintenance: toNullableNumber(item.mileageAtMaintenance),
-        nextMaintenanceMileage: toNullableNumber(item.nextMaintenanceMileage),
     };
 }
 

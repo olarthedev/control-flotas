@@ -1,9 +1,10 @@
-import { IsEnum, IsNumber, IsDateString, IsOptional, IsString, IsPositive, MaxLength, Min, IsNotEmpty } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { ExpenseType, ExpenseStatus } from '../expense.entity';
+import { IsEnum, IsNumber, IsDateString, IsOptional, IsString, IsPositive, MaxLength, IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { ExpenseType } from '../expense.entity';
+
 
 export class CreateExpenseDto {
-    @IsEnum(ExpenseType, { message: 'type debe ser un tipo de gasto válido' })
+    @IsEnum(ExpenseType, { message: 'type debe ser: fuel, toll, maintenance, food, lodging, parking u other' })
     @IsNotEmpty({ message: 'type es requerido' })
     type: ExpenseType;
 
@@ -22,23 +23,23 @@ export class CreateExpenseDto {
     @MaxLength(500, { message: 'description no puede exceder 500 caracteres' })
     description?: string;
 
-    @IsOptional()
-    @IsString({ message: 'notes debe ser texto' })
-    @MaxLength(1000, { message: 'notes no puede exceder 1000 caracteres' })
-    notes?: string;
-
     @IsNumber({}, { message: 'driverId debe ser un número' })
     @IsNotEmpty({ message: 'driverId es requerido' })
     @Transform(({ value }) => parseInt(value, 10))
     driverId: number;
 
-    @IsOptional()
     @IsNumber({}, { message: 'vehicleId debe ser un número' })
-    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
-    vehicleId?: number;
+    @IsNotEmpty({ message: 'vehicleId es requerido' })
+    @Transform(({ value }) => parseInt(value, 10))
+    vehicleId: number;
 
     @IsOptional()
     @IsNumber({}, { message: 'tripId debe ser un número' })
     @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
     tripId?: number;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'consignmentId debe ser un número' })
+    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
+    consignmentId?: number;
 }

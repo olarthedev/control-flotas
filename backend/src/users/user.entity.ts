@@ -12,20 +12,15 @@ import { Expense } from '../expenses/expense.entity';
 import { Consignment } from '../consignments/consignment.entity';
 import { Trip } from '../trips/trip.entity';
 import { MaintenanceRecord } from '../maintenance/maintenance-record.entity';
+import { UserVehicleHistory } from './user-vehicle-history.entity';
+import { UserBankAccount } from './user-bank-account.entity';
 import { Exclude } from 'class-transformer';
 
 export enum UserRole {
-    ADMIN = 'ADMIN',
-    DRIVER = 'DRIVER',
-}
-
-export interface VehicleAssignmentHistoryItem {
-    vehicleId: number;
-    vehiclePlate: string;
-    startDate: string;
-    endDate: string | null;
-    reason?: string;
-    changedBy?: string;
+    ADMIN = 'admin',
+    DRIVER = 'driver',
+    SUPERVISOR = 'supervisor',
+    ACCOUNTANT = 'accountant',
 }
 
 @Entity('users')
@@ -33,13 +28,13 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ length: 150 })
     fullName: string;
 
-    @Column({ unique: true })
+    @Column({ length: 150, unique: true })
     email: string;
 
-    @Column()
+    @Column({ length: 255 })
     @Exclude()
     password: string;
 
@@ -53,27 +48,25 @@ export class User {
     @Column({ default: true })
     isActive: boolean;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({ length: 30, nullable: true })
     phone?: string;
 
-    @Column({ type: 'text', nullable: true })
-    licenseNumber?: string; // Número de licencia (para conductores)
-
-    @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
-    })
-    monthlySalary: number;
+    @Column({ length: 50, nullable: true })
+    licenseNumber?: string;
 
     @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })
     assignedVehicle?: Vehicle | null;
 
-    @Column({ type: 'simple-json', nullable: false, default: '[]' })
-    vehicleAssignmentHistory: VehicleAssignmentHistoryItem[];
+    @OneToMany(() => UserVehicleHistory, (history) => history.user, {
+        cascade: true,
+    })
+    vehicleAssignmentHistory: UserVehicleHistory[];
 
-    // ================== RELACIONES ==================
+    @OneToMany(() => UserBankAccount, (bankAccount) => bankAccount.user, {
+        cascade: true,
+    })
+    bankAccounts: UserBankAccount[];
+
     @OneToMany(() => Expense, (expense) => expense.driver)
     expenses: Expense[];
 
@@ -86,7 +79,6 @@ export class User {
     @OneToMany(() => MaintenanceRecord, (maintenance) => maintenance.performedBy)
     maintenanceRecords: MaintenanceRecord[];
 
-    // ================== AUDITORÍA ==================
     @CreateDateColumn()
     createdAt: Date;
 

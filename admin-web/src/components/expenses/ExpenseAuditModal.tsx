@@ -11,27 +11,25 @@ interface ExpenseAuditModalProps {
 }
 
 const STATUS_LABELS: Record<ExpenseStatus, string> = {
-    APPROVED: 'Aprobado',
-    PENDING: 'Pendiente',
-    OBSERVED: 'Observado',
-    REJECTED: 'Rechazado',
+    approved: 'Aprobado',
+    pending: 'Pendiente',
+    rejected: 'Rechazado',
 };
 
 const STATUS_HEADER_TEXT_COLOR: Record<ExpenseStatus, string> = {
-    APPROVED: 'text-emerald-600',
-    PENDING: 'text-amber-500',
-    OBSERVED: 'text-sky-600',
-    REJECTED: 'text-rose-600',
+    approved: 'text-emerald-600',
+    pending: 'text-amber-500',
+    rejected: 'text-rose-600',
 };
 
 const TYPE_LABELS: Record<string, string> = {
-    FUEL: 'Combustible',
-    TOLLS: 'Peajes',
-    MAINTENANCE: 'Mantenimiento',
-    LOADING_UNLOADING: 'Logistica',
-    MEALS: 'Comida',
-    PARKING: 'Parqueadero',
-    OTHER: 'Hotel / Otro',
+    fuel: 'Combustible',
+    toll: 'Peajes',
+    maintenance: 'Mantenimiento',
+    food: 'Comida',
+    lodging: 'Alojamiento',
+    parking: 'Parqueadero',
+    other: 'Otro',
 };
 
 function formatCurrency(value: number): string {
@@ -50,7 +48,6 @@ export function ExpenseAuditModal({ isOpen, onClose, expense, onStatusChange, is
     useEffect(() => {
         if (isOpen) {
             setShouldRender(true);
-            // Dar tiempo al navegador para renderizar el DOM antes de animar
             const timer = setTimeout(() => setIsVisible(true), 10);
             return () => clearTimeout(timer);
         }
@@ -149,21 +146,21 @@ export function ExpenseAuditModal({ isOpen, onClose, expense, onStatusChange, is
                             Observaciones del conductor
                         </p>
                         <p className="mt-1.5 text-sm font-medium italic text-slate-600">
-                            {expense.notes || expense.description || 'Sin observaciones registradas.'}
+                            {expense.description || 'Sin observaciones registradas.'}
                         </p>
                     </div>
 
                     <div className="sticky bottom-0 mt-5 grid grid-cols-2 gap-2.5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur">
                         <button
                             disabled={isSubmitting}
-                            onClick={() => onStatusChange('REJECTED')}
+                            onClick={() => onStatusChange('rejected')}
                             className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium tracking-[0.12em] text-rose-600 transition hover:bg-rose-100 disabled:opacity-60"
                         >
                             RECHAZAR
                         </button>
                         <button
                             disabled={isSubmitting}
-                            onClick={() => onStatusChange('APPROVED')}
+                            onClick={() => onStatusChange('approved')}
                             className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium tracking-[0.12em] text-emerald-600 transition hover:bg-emerald-100 disabled:opacity-60"
                         >
                             APROBAR GASTO

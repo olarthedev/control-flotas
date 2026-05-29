@@ -22,11 +22,6 @@ export class CreateTripDto {
     @MaxLength(200, { message: 'destination no puede exceder 200 caracteres' })
     destination?: string;
 
-    @IsOptional()
-    @IsString({ message: 'description debe ser texto' })
-    @MaxLength(1000, { message: 'description no puede exceder 1000 caracteres' })
-    description?: string;
-
     @IsNumber({}, { message: 'driverId debe ser un número' })
     @IsNotEmpty({ message: 'driverId es requerido' })
     @Transform(({ value }) => parseInt(value, 10))

@@ -8,51 +8,42 @@ interface ExpenseCardProps {
     showActions?: boolean;
 }
 
-const STATUS_STYLES: Record<string, { label: string; bgColor: string; textColor: string; icon: string }> = {
-    APPROVED: {
+const STATUS_STYLES: Record<string, { label: string; bgColor: string; textColor: string }> = {
+    approved: {
         label: 'Aprobado',
         bgColor: 'bg-emerald-50',
         textColor: 'text-emerald-700',
-        icon: '✓',
     },
-    PENDING: {
+    pending: {
         label: 'Pendiente',
         bgColor: 'bg-orange-50',
         textColor: 'text-orange-700',
-        icon: '⏳',
     },
-    OBSERVED: {
-        label: 'Observado',
-        bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
-        icon: '⚠',
-    },
-    REJECTED: {
+    rejected: {
         label: 'Rechazado',
         bgColor: 'bg-red-50',
         textColor: 'text-red-700',
-        icon: '✕',
     },
 };
 
 const TYPE_ICONS: Record<string, string> = {
-    FUEL: '🛢️',
-    TOLLS: '🚧',
-    MEALS: '🍽️',
-    PARKING: '🅿️',
-    MAINTENANCE: '🔧',
-    LOADING_UNLOADING: '📦',
-    OTHER: '📝',
+    fuel: '🛢️',
+    toll: '🚧',
+    food: '🍽️',
+    parking: '🅿️',
+    maintenance: '🔧',
+    lodging: '🏨',
+    other: '📝',
 };
 
 const TYPE_LABELS: Record<string, string> = {
-    FUEL: 'Combustible',
-    TOLLS: 'Peajes',
-    MEALS: 'Alimentación',
-    PARKING: 'Parqueadero',
-    MAINTENANCE: 'Mantenimiento',
-    LOADING_UNLOADING: 'Cargue y Descargue',
-    OTHER: 'Otro',
+    fuel: 'Combustible',
+    toll: 'Peajes',
+    food: 'Alimentación',
+    parking: 'Parqueadero',
+    maintenance: 'Mantenimiento',
+    lodging: 'Alojamiento',
+    other: 'Otro',
 };
 
 function formatCurrency(value: number): string {
@@ -65,14 +56,13 @@ function formatDate(value: string): string {
 
 export function ExpenseCard({ expense, onStatusUpdate, showActions = false }: ExpenseCardProps) {
     const [showDetails, setShowDetails] = useState(false);
-    const statusStyle = STATUS_STYLES[expense.status];
+    const statusStyle = STATUS_STYLES[expense.status] ?? STATUS_STYLES['pending'];
     const typeIcon = TYPE_ICONS[expense.type] || '📄';
     const typeLabel = TYPE_LABELS[expense.type] || expense.type;
     const hasPrimaryImage = expense.evidence.some((e) => e.isPrimary);
 
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-            {/* Header */}
             <div className="mb-3 flex items-start justify-between">
                 <div className="flex items-start gap-3">
                     <div className="mt-1 text-xl">{typeIcon}</div>
@@ -88,13 +78,11 @@ export function ExpenseCard({ expense, onStatusUpdate, showActions = false }: Ex
                 </div>
             </div>
 
-            {/* Monto */}
             <div className="mb-3 border-t border-slate-100 pt-3">
                 <p className="text-lg font-bold text-slate-900">{formatCurrency(expense.amount)}</p>
                 {expense.description && <p className="text-xs text-slate-600">{expense.description}</p>}
             </div>
 
-            {/* Evidencia */}
             {hasPrimaryImage && (
                 <div className="mb-3">
                     <div className="relative h-32 w-full overflow-hidden rounded-md bg-slate-100">
@@ -107,7 +95,6 @@ export function ExpenseCard({ expense, onStatusUpdate, showActions = false }: Ex
                 </div>
             )}
 
-            {/* Acciones */}
             <div className="flex gap-2">
                 <button
                     onClick={() => setShowDetails(!showDetails)}
@@ -119,9 +106,9 @@ export function ExpenseCard({ expense, onStatusUpdate, showActions = false }: Ex
                     </div>
                 </button>
 
-                {showActions && onStatusUpdate && expense.status === 'PENDING' && (
+                {showActions && onStatusUpdate && expense.status === 'pending' && (
                     <button
-                        onClick={() => onStatusUpdate('APPROVED')}
+                        onClick={() => onStatusUpdate('approved')}
                         className="flex-1 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
                     >
                         <div className="flex items-center justify-center gap-1.5">
@@ -131,9 +118,9 @@ export function ExpenseCard({ expense, onStatusUpdate, showActions = false }: Ex
                     </button>
                 )}
 
-                {showActions && onStatusUpdate && expense.status === 'PENDING' && (
+                {showActions && onStatusUpdate && expense.status === 'pending' && (
                     <button
-                        onClick={() => onStatusUpdate('REJECTED')}
+                        onClick={() => onStatusUpdate('rejected')}
                         className="flex-1 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-100"
                     >
                         <div className="flex items-center justify-center gap-1.5">
@@ -144,15 +131,8 @@ export function ExpenseCard({ expense, onStatusUpdate, showActions = false }: Ex
                 )}
             </div>
 
-            {/* Detalles expandibles */}
             {showDetails && (
                 <div className="mt-3 border-t border-slate-100 pt-3 space-y-2 text-xs">
-                    {expense.notes && (
-                        <div>
-                            <p className="font-medium text-slate-700">Notas:</p>
-                            <p className="text-slate-600">{expense.notes}</p>
-                        </div>
-                    )}
                     {expense.rejectionReason && (
                         <div>
                             <p className="font-medium text-slate-700">Razón de rechazo:</p>

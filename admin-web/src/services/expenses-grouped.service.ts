@@ -13,7 +13,6 @@ export interface VehicleExpenseSummary {
     monthlyTotal: number;
     pendingCount: number;
     approvedCount: number;
-    observedCount: number;
     rejectedCount: number;
     lastExpenseDate: string | null;
 }

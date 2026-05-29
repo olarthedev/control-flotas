@@ -14,20 +14,19 @@ import { Evidence } from '../evidence/evidence.entity';
 import { Consignment } from '../consignments/consignment.entity';
 
 export enum ExpenseType {
-    FUEL = 'FUEL',
-    TOLLS = 'TOLLS',
-    MAINTENANCE = 'MAINTENANCE',
-    LOADING_UNLOADING = 'LOADING_UNLOADING',
-    MEALS = 'MEALS',
-    PARKING = 'PARKING',
-    OTHER = 'OTHER',
+    FUEL = 'fuel',
+    TOLL = 'toll',
+    MAINTENANCE = 'maintenance',
+    FOOD = 'food',
+    LODGING = 'lodging',
+    PARKING = 'parking',
+    OTHER = 'other',
 }
 
 export enum ExpenseStatus {
-    PENDING = 'PENDING', // Pendiente de validación
-    APPROVED = 'APPROVED', // Aprobado
-    OBSERVED = 'OBSERVED', // Con observaciones
-    REJECTED = 'REJECTED', // Rechazado
+    PENDING = 'pending',
+    APPROVED = 'approved',
+    REJECTED = 'rejected',
 }
 
 @Entity('expenses')
@@ -35,7 +34,6 @@ export class Expense {
     @PrimaryGeneratedColumn()
     id: number;
 
-    // ================== INFORMACIÓN BÁSICA ==================
     @Column({
         type: 'enum',
         enum: ExpenseType,
@@ -43,23 +41,19 @@ export class Expense {
     type: ExpenseType;
 
     @Column({
-        type: 'decimal', precision: 10, scale: 2, transformer: {
+        type: 'decimal', precision: 14, scale: 2, transformer: {
             to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
+            from: (value: string) => parseFloat(value),
         }
     })
-    amount: number; // Monto del gasto
+    amount: number;
 
-    @Column({ type: 'timestamp' })
-    expenseDate: Date; // Fecha/hora del gasto (automática de inicio)
-
-    @Column({ type: 'text', nullable: true })
-    description: string | null; // Descripción o concepto
+    @Column({ type: 'timestamp', default: () => 'NOW()' })
+    expenseDate: Date;
 
     @Column({ type: 'text', nullable: true })
-    notes: string | null; // Observaciones adicionales
+    description: string | null;
 
-    // ================== VALIDACIÓN Y ESTADO ==================
     @Column({
         type: 'enum',
         enum: ExpenseStatus,
@@ -68,50 +62,47 @@ export class Expense {
     status: ExpenseStatus;
 
     @Column({ default: false })
-    hasEvidence: boolean; // Indica si tiene foto/recibo
-
-    @Column({ default: false })
-    isDuplicate: boolean; // Flag para gasto duplicado
-
-    @Column({ default: false })
-    isOutOfRange: boolean; // Flag para gasto fuera de rango
-
-    @Column({ default: false })
-    needsObservation: boolean; // Flag si el gasto es muy alto
+    hasEvidence: boolean;
 
     @Column({ type: 'text', nullable: true })
-    rejectionReason: string | null; // Razón del rechazo
+    rejectionReason: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    validatedAt: Date | null; // Fecha de validación
+    validatedAt: Date | null;
 
-    @Column({ type: 'text', nullable: true })
-    validatedBy: string | null; // Usuario que validó
-
-    // ================== RELACIONES ==================
-    @ManyToOne(() => User, { nullable: false })
-    driver: User; // Conductor que registró el gasto
+    @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
+    driver: User;
 
     @ManyToOne(() => Vehicle, (vehicle) => vehicle.expenses, {
-        nullable: true,
+        nullable: false,
+        onDelete: 'RESTRICT',
     })
-    vehicle: Vehicle; // Vehículo (opcional, podría relacionarse por viaje)
+    vehicle: Vehicle;
 
-    @ManyToOne(() => Trip, (trip) => trip.expenses, { nullable: true })
-    trip: Trip; // Viaje en el que ocurrió el gasto
+    @ManyToOne(() => Trip, (trip) => trip.expenses, {
+        nullable: true,
+        onDelete: 'SET NULL',
+    })
+    trip: Trip | null;
 
     @ManyToOne(() => Consignment, (consignment) => consignment.expenses, {
         nullable: true,
+        onDelete: 'SET NULL',
     })
-    consignment: Consignment; // Consignación a la que pertenece el gasto
+    consignment: Consignment | null;
+
+    @ManyToOne(() => User, {
+        nullable: true,
+        onDelete: 'SET NULL',
+    })
+    validatedBy: User | null;
 
     @OneToMany(() => Evidence, (evidence) => evidence.expense, {
         cascade: true,
         eager: true,
     })
-    evidence: Evidence[]; // Fotos/recibos del gasto
+    evidence: Evidence[];
 
-    // ================== AUDITORÍA ==================
     @CreateDateColumn()
     createdAt: Date;
 

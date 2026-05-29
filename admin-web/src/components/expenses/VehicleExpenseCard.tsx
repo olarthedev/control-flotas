@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { MdArrowForward, MdCheckCircle, MdPending, MdWarning } from 'react-icons/md';
+import { MdArrowForward, MdCheckCircle, MdPending } from 'react-icons/md';
 import type { VehicleExpenseSummary } from '../../services/expenses-grouped.service';
 
 interface VehicleExpenseCardProps {
@@ -13,11 +13,10 @@ function formatCurrency(value: number): string {
 export function VehicleExpenseCard({ vehicle }: VehicleExpenseCardProps) {
     const navigate = useNavigate();
 
-    const totalReceipts = vehicle.pendingCount + vehicle.approvedCount + vehicle.observedCount + vehicle.rejectedCount;
+    const totalReceipts = vehicle.pendingCount + vehicle.approvedCount + vehicle.rejectedCount;
 
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-            {/* Header */}
             <div className="mb-4 flex items-start justify-between">
                 <div>
                     <h3 className="text-sm font-semibold text-slate-900">{vehicle.licensePlate.toUpperCase()}</h3>
@@ -27,7 +26,6 @@ export function VehicleExpenseCard({ vehicle }: VehicleExpenseCardProps) {
                 </div>
             </div>
 
-            {/* Estadísticas principales */}
             <div className="mb-4 space-y-3 border-t border-slate-100 pt-4">
                 <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-slate-600">Gastos mes actual</span>
@@ -40,9 +38,7 @@ export function VehicleExpenseCard({ vehicle }: VehicleExpenseCardProps) {
                 </div>
             </div>
 
-            {/* Estado de recibos */}
-            <div className="mb-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
-                {/* Pendientes */}
+            <div className="mb-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
                 <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
                         <MdPending size={14} className="text-orange-500" />
@@ -51,7 +47,6 @@ export function VehicleExpenseCard({ vehicle }: VehicleExpenseCardProps) {
                     <p className="text-xs text-slate-500">Pendientes</p>
                 </div>
 
-                {/* Aprobados */}
                 <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
                         <MdCheckCircle size={14} className="text-emerald-500" />
@@ -59,18 +54,8 @@ export function VehicleExpenseCard({ vehicle }: VehicleExpenseCardProps) {
                     </div>
                     <p className="text-xs text-slate-500">Aprobados</p>
                 </div>
-
-                {/* Observados */}
-                <div className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                        <MdWarning size={14} className="text-amber-500" />
-                        <span className="font-semibold text-amber-600">{vehicle.observedCount}</span>
-                    </div>
-                    <p className="text-xs text-slate-500">Observados</p>
-                </div>
             </div>
 
-            {/* Botón de acción */}
             <button
                 onClick={() => navigate(`/expenses/vehicle/${vehicle.vehicleId}`)}
                 className="w-full rounded-md border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"

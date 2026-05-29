@@ -1,98 +1,211 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend — LogiControl API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST del sistema de control de flotas. Construida con NestJS y TypeORM sobre PostgreSQL. Expone todos los endpoints que consume el panel web y la app móvil.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Tecnología          | Version  | Rol                              |
+|---------------------|----------|----------------------------------|
+| Node.js             | >= 18    | Runtime                          |
+| NestJS              | 11       | Framework HTTP                   |
+| TypeScript          | 5.7      | Lenguaje                         |
+| TypeORM             | 0.3      | ORM y mapeo de entidades         |
+| PostgreSQL           | >= 14    | Base de datos                    |
+| class-validator     | 0.14     | Validación de DTOs               |
+| bcrypt              | 6        | Hash de contraseñas              |
+| Swagger             | 11       | Documentación de la API          |
 
-## Project setup
+---
 
-```bash
-$ npm install
+## Requisitos
+
+- Node.js >= 18
+- PostgreSQL >= 14 corriendo localmente o en red
+- Archivo `backend/.env` configurado (ver sección Variables de entorno)
+
+---
+
+## Variables de entorno
+
+Crear el archivo `backend/.env` con:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password
+DB_DATABASE=control_flotas
 ```
 
-## Compile and run the project
+---
+
+## Instalación
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd backend
+npm install
 ```
 
-## Run tests
+---
+
+## Comandos
 
 ```bash
-# unit tests
-$ npm run test
+# Desarrollo con hot-reload
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
+# Producción
+npm run build
+npm run start:prod
 
-# test coverage
-$ npm run test:cov
+# Tests
+npm run test
+npm run test:e2e
+npm run test:cov
+
+# Linting
+npm run lint
 ```
 
-## Deployment
+El servidor arranca en `http://localhost:3001`.  
+Swagger disponible en `http://localhost:3001/api`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Base de datos
+
+### Aplicar esquema desde cero
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Requiere que .env esté configurado
+node scripts/apply-database-schema.js
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Este script elimina y recrea la base de datos `control_flotas` aplicando el esquema de `database_nueva.sql`.
 
-## Resources
+### Configuración TypeORM
 
-Check out a few resources that may come in handy when working with NestJS:
+La conexión se configura en `src/orm/` y usa las variables del `.env`. El modo `synchronize` está desactivado en producción; el esquema se gestiona con el archivo SQL.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## Estructura de módulos
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```
+src/
+├── app.module.ts               # Módulo raíz, importa todos los módulos
+├── main.ts                     # Bootstrap, CORS, ValidationPipe, Swagger
+│
+├── users/                      # Usuarios y conductores
+│   ├── user.entity.ts          # Entidad: admin, driver, supervisor, accountant
+│   ├── users.service.ts        # CRUD + asignación de vehículos
+│   ├── users.controller.ts     # Endpoints REST
+│   ├── user-vehicle-history.entity.ts
+│   ├── user-bank-account.entity.ts
+│   └── dto/
+│
+├── vehicles/                   # Flota vehicular
+│   ├── vehicle.entity.ts
+│   ├── vehicles.service.ts
+│   ├── vehicles.controller.ts
+│   └── dto/
+│
+├── trips/                      # Viajes y rutas
+│   ├── trip.entity.ts
+│   ├── trips.service.ts        # Incluye completeTrip()
+│   ├── trips.controller.ts
+│   └── dto/
+│
+├── consignments/               # Adelantos de dinero al conductor
+│   ├── consignment.entity.ts   # balance = GENERATED ALWAYS (automático)
+│   ├── consignments.service.ts # closeConsignment(), closeDriverActiveConsignments()
+│   ├── consignments.controller.ts
+│   └── dto/
+│
+├── expenses/                   # Gastos reportados
+│   ├── expense.entity.ts
+│   ├── expenses.service.ts     # summaryByVehicle(), getDriverLiquidation()
+│   ├── expenses.controller.ts
+│   └── dto/
+│
+├── evidence/                   # Archivos de evidencia
+│   ├── evidence.entity.ts
+│   ├── evidence.service.ts
+│   ├── evidence.controller.ts
+│   └── dto/
+│
+├── maintenance/                # Mantenimientos de vehículos
+│   ├── maintenance-record.entity.ts
+│   ├── maintenance.service.ts  # completeMaintenanceRecord()
+│   ├── maintenance.controller.ts
+│   └── dto/
+│
+├── dashboard/                  # Métricas agregadas
+│   ├── domain/
+│   └── infrastructure/         # TypeORM read repository
+│
+└── orm/                        # Configuración TypeORM
+    └── snake-naming.strategy.ts
+```
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Endpoints principales
 
-## License
+### Usuarios `GET /users`
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET    | /users | Listar todos |
+| GET    | /users/drivers | Solo conductores |
+| GET    | /users/drivers/summaries | Resumen de tarjetas |
+| GET    | /users/:id | Detalle |
+| POST   | /users | Crear usuario |
+| PATCH  | /users/:id | Actualizar |
+| DELETE | /users/:id | Eliminar |
+| PATCH  | /users/:id/assign-vehicle | Asignar vehículo |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Gastos `GET /expenses`
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET    | /expenses | Listar con filtros y paginación |
+| GET    | /expenses/pending | Solo pendientes |
+| GET    | /expenses/summary/by-vehicle | Resumen agrupado |
+| GET    | /expenses/vehicle/:id | Por vehículo |
+| GET    | /expenses/driver/:id | Por conductor |
+| POST   | /expenses | Registrar gasto |
+| PATCH  | /expenses/:id | Actualizar / auditar |
+
+### Dashboard `GET /dashboard`
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET    | /dashboard/summary | KPIs principales |
+| GET    | /dashboard/weekly-trend | Tendencia semanal |
+| GET    | /dashboard/expense-distribution | Distribución por tipo |
+
+---
+
+## Modelos de datos (enums)
+
+```typescript
+UserRole:          admin | driver | supervisor | accountant
+TripStatus:        planned | in_progress | completed | cancelled
+ConsignmentStatus: open | closed | pending_approval
+ConsignmentPurpose: trip_advance | salary_advance
+ExpenseType:       fuel | toll | maintenance | food | lodging | parking | other
+ExpenseStatus:     pending | approved | rejected
+MaintenanceType:   preventive | corrective | emergency
+MaintenanceStatus: scheduled | in_progress | completed | cancelled
+DocumentType:      soat | technical_review | insurance
+```
+
+---
+
+## Convenciones
+
+- Nombres de columnas en `snake_case` (estrategia configurada en TypeORM)
+- Todas las rutas respetan REST: sustantivos en plural, verbos HTTP para acciones
+- Validación en todos los DTOs con `class-validator`
+- Contraseñas hasheadas con bcrypt (factor 10) antes de persistir
+- `balance` en consignaciones es una columna `GENERATED ALWAYS AS` — nunca se escribe manualmente

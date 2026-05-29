@@ -13,9 +13,14 @@ import { Trip } from '../trips/trip.entity';
 import { Expense } from '../expenses/expense.entity';
 
 export enum ConsignmentStatus {
-    ACTIVE = 'ACTIVE', // Consignación activa
-    CLOSED = 'CLOSED', // Consignación cerrada/finalizada
-    DISPUTED = 'DISPUTED', // En disputa por diferencias
+    OPEN = 'open',
+    CLOSED = 'closed',
+    PENDING_APPROVAL = 'pending_approval',
+}
+
+export enum ConsignmentPurpose {
+    TRIP_ADVANCE = 'trip_advance',
+    SALARY_ADVANCE = 'salary_advance',
 }
 
 @Entity('consignments')
@@ -23,96 +28,83 @@ export class Consignment {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    consignmentNumber: string; // Número único de consignación
-
-    // ================== DINERO CONSIGNADO ==================
-    @Column({
-        type: 'decimal', precision: 12, scale: 2, transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
-    })
-    amount: number; // Dinero entregado al conductor
-
-    @Column({ type: 'timestamp' })
-    consignmentDate: Date; // Fecha de entrega del dinero
-
-    @Column({ type: 'text', nullable: true })
-    consignmentNotes: string | null; // Notas sobre la consignación
-
-    // ================== SEGUIMIENTO FINANCIERO ==================
-    @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
-    })
-    totalExpensesReported: number; // Total de gastos reportados
+    @Column({ length: 50, unique: true })
+    consignmentNumber: string;
 
     @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
+        type: 'enum',
+        enum: ConsignmentPurpose,
     })
-    totalApprovedExpenses: number; // Total de gastos aprobados
+    purpose: ConsignmentPurpose;
 
     @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+        type: 'decimal', precision: 14, scale: 2, default: 0, transformer: {
             to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
+            from: (value: string) => parseFloat(value),
         }
     })
-    balance: number; // Saldo disponible (consignado - aprobados)
+    amount: number;
+
+    @Column({ type: 'timestamp', default: () => 'NOW()' })
+    consignmentDate: Date;
 
     @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+        type: 'decimal', precision: 14, scale: 2, default: 0, transformer: {
             to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
+            from: (value: string) => parseFloat(value),
         }
     })
-    surplus: number; // Dinero sobrante (si balance es positivo)
+    totalExpensesReported: number;
 
     @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+        type: 'decimal', precision: 14, scale: 2, default: 0, transformer: {
             to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
+            from: (value: string) => parseFloat(value),
         }
     })
-    deficit: number; // Dinero faltante (si balance es negativo)
+    totalApprovedExpenses: number;
+
+    // Columna generada por la BD: amount - total_approved_expenses
+    @Column({
+        type: 'decimal',
+        precision: 14,
+        scale: 2,
+        generatedType: 'STORED',
+        asExpression: 'amount - total_approved_expenses',
+        insert: false,
+        update: false,
+        transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value),
+        }
+    })
+    balance: number;
 
     @Column({
         type: 'enum',
         enum: ConsignmentStatus,
-        default: ConsignmentStatus.ACTIVE,
+        default: ConsignmentStatus.OPEN,
     })
     status: ConsignmentStatus;
 
-    // ================== CIERRE ==================
     @Column({ type: 'timestamp', nullable: true })
-    closingDate: Date | null; // Fecha de cierre de la consignación
+    closingDate: Date | null;
 
-    @Column({ type: 'text', nullable: true })
-    closingNotes: string | null; // Notas al cerrar
+    @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
+    driver: User;
 
-    @Column({ default: false })
-    fullyClosed: boolean; // Si se cerró completamente (saldo = 0)
+    @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'RESTRICT' })
+    vehicle: Vehicle | null;
 
-    // ================== RELACIONES ==================
-    @ManyToOne(() => User, { nullable: false })
-    driver: User; // Conductor que recibe el dinero
+    @ManyToOne(() => Trip, (trip) => trip.consignments, {
+        nullable: true,
+        onDelete: 'SET NULL',
+    })
+    trip: Trip | null;
 
-    @ManyToOne(() => Vehicle, { nullable: true })
-    vehicle: Vehicle; // Vehículo asociado (opcional)
+    @OneToMany(() => Expense, (expense) => expense.consignment)
+    expenses: Expense[];
 
-    @ManyToOne(() => Trip, (trip) => trip.consignments, { nullable: true })
-    trip: Trip; // Viaje asociado (opcional)
-
-    @OneToMany(() => Expense, (expense) => expense.consignment, { cascade: true })
-    expenses: Expense[]; // Gastos relacionados a esta consignación
-
-    // ================== AUDITORÍA ==================
     @CreateDateColumn()
     createdAt: Date;
 

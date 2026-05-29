@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MaintenanceRecord } from './maintenance-record.entity';
+import { MaintenanceRecord, MaintenanceStatus, MaintenanceType } from './maintenance-record.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 import { Vehicle } from '../vehicles/vehicle.entity';
@@ -18,48 +18,48 @@ export class MaintenanceService {
         private userRepository: Repository<User>,
     ) { }
 
-    /**
-     * Create a maintenance record; the vehicle relationship is required.
-     * Throws NotFoundException if the vehicle id is invalid.
-     */
     async create(createMaintenanceDto: CreateMaintenanceDto): Promise<MaintenanceRecord> {
         const maintenance = new MaintenanceRecord();
         maintenance.type = createMaintenanceDto.type;
         maintenance.title = createMaintenanceDto.title;
-        maintenance.description = createMaintenanceDto.description;
         maintenance.maintenanceDate = new Date(createMaintenanceDto.maintenanceDate);
         maintenance.cost = createMaintenanceDto.cost;
         maintenance.invoiceNumber = (createMaintenanceDto.invoiceNumber ?? null) as string | null;
         maintenance.provider = (createMaintenanceDto.provider ?? null) as string | null;
         maintenance.mileageAtMaintenance = (createMaintenanceDto.mileageAtMaintenance ?? null) as number | null;
-        maintenance.nextMaintenanceMileage = (createMaintenanceDto.nextMaintenanceMileage ?? null) as number | null;
-        maintenance.nextMaintenanceDate = (createMaintenanceDto.nextMaintenanceDate ?? null) as Date | null;
-        maintenance.technicalNotes = (createMaintenanceDto.technicalNotes ?? null) as string | null;
+        maintenance.requiresFollowUp = createMaintenanceDto.requiresFollowUp ?? false;
 
-        // Resolver relación de vehicle
-        if (createMaintenanceDto.vehicleId) {
-            const vehicle = await this.vehicleRepository.findOne({
-                where: { id: createMaintenanceDto.vehicleId },
-            });
-            if (!vehicle) {
-                throw new (require('@nestjs/common').NotFoundException)(
-                    `Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`,
-                );
+        const vehicle = await this.vehicleRepository.findOne({
+            where: { id: createMaintenanceDto.vehicleId },
+        });
+        if (!vehicle) {
+            throw new NotFoundException(`Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`);
+        }
+        maintenance.vehicle = vehicle;
+
+        if (createMaintenanceDto.performedById !== undefined) {
+            if (createMaintenanceDto.performedById === null) {
+                maintenance.performedBy = null;
+            } else {
+                const user = await this.userRepository.findOne({
+                    where: { id: createMaintenanceDto.performedById },
+                });
+                if (!user) {
+                    throw new NotFoundException(`User con id ${createMaintenanceDto.performedById} no encontrado`);
+                }
+                maintenance.performedBy = user;
             }
-            maintenance.vehicle = vehicle;
         }
 
         return await this.maintenanceRepository.save(maintenance);
     }
 
-    /** Get every maintenance record with relations. */
     async findAll(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    /** Find record by id. */
     async findById(id: number): Promise<MaintenanceRecord | null> {
         return await this.maintenanceRepository.findOne({
             where: { id },
@@ -67,7 +67,6 @@ export class MaintenanceService {
         });
     }
 
-    /** Records for a specific vehicle. */
     async findByVehicle(vehicleId: number): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             where: { vehicle: { id: vehicleId } },
@@ -76,44 +75,64 @@ export class MaintenanceService {
         });
     }
 
-    /** Records that are still pending. */
     async findPending(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
-            where: { status: 'PENDING' },
+            where: { status: MaintenanceStatus.SCHEDULED },
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    /** Filter by maintenance type. */
     async findByType(type: string): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
-            where: { type: type as any },
+            where: { type: type as MaintenanceType },
             relations: ['vehicle', 'performedBy'],
             order: { maintenanceDate: 'DESC' },
         });
     }
 
-    /** Update a maintenance record; throws if not found. */
     async update(id: number, updateMaintenanceDto: UpdateMaintenanceDto): Promise<MaintenanceRecord> {
         const existing = await this.findById(id);
         if (!existing) {
-            throw new (require('@nestjs/common').NotFoundException)('Maintenance record not found');
+            throw new NotFoundException('Maintenance record not found');
         }
-        await this.maintenanceRepository.update(id, updateMaintenanceDto as any);
+
+        if (updateMaintenanceDto.type !== undefined) existing.type = updateMaintenanceDto.type;
+        if (updateMaintenanceDto.title !== undefined) existing.title = updateMaintenanceDto.title;
+        if (updateMaintenanceDto.maintenanceDate !== undefined) existing.maintenanceDate = new Date(updateMaintenanceDto.maintenanceDate);
+        if (updateMaintenanceDto.cost !== undefined) existing.cost = updateMaintenanceDto.cost;
+        if (updateMaintenanceDto.invoiceNumber !== undefined) existing.invoiceNumber = updateMaintenanceDto.invoiceNumber ?? null;
+        if (updateMaintenanceDto.provider !== undefined) existing.provider = updateMaintenanceDto.provider ?? null;
+        if (updateMaintenanceDto.mileageAtMaintenance !== undefined) existing.mileageAtMaintenance = updateMaintenanceDto.mileageAtMaintenance ?? null;
+        if (updateMaintenanceDto.status !== undefined) existing.status = updateMaintenanceDto.status;
+        if (updateMaintenanceDto.requiresFollowUp !== undefined) existing.requiresFollowUp = updateMaintenanceDto.requiresFollowUp;
+
+        if (updateMaintenanceDto.performedById !== undefined) {
+            if (updateMaintenanceDto.performedById === null) {
+                existing.performedBy = null;
+            } else {
+                const user = await this.userRepository.findOne({
+                    where: { id: updateMaintenanceDto.performedById },
+                });
+                if (!user) {
+                    throw new NotFoundException(`User con id ${updateMaintenanceDto.performedById} no encontrado`);
+                }
+                existing.performedBy = user;
+            }
+        }
+
+        await this.maintenanceRepository.save(existing);
         return this.findById(id) as Promise<MaintenanceRecord>;
     }
 
-    /** Delete record by id. */
     async remove(id: number) {
         const result = await this.maintenanceRepository.delete(id);
         if (result.affected === 0) {
-            throw new (require('@nestjs/common').NotFoundException)('Maintenance record not found');
+            throw new NotFoundException('Maintenance record not found');
         }
         return result;
     }
 
-    /** Mark a maintenance record as completed. */
     async completeMaintenanceRecord(id: number) {
-        return await this.update(id, { status: 'COMPLETED' } as any);
+        return await this.update(id, { status: MaintenanceStatus.COMPLETED });
     }
 }

@@ -30,10 +30,10 @@ export class ConsignmentsController {
         return this.consignmentsService.findAll();
     }
 
-    /** GET /consignments/active */
-    @Get('active')
-    findActive() {
-        return this.consignmentsService.findActive();
+    /** GET /consignments/open */
+    @Get('open')
+    findOpen() {
+        return this.consignmentsService.findOpen();
     }
 
     /** GET /consignments/driver/:driverId */

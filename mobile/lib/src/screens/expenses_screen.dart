@@ -89,10 +89,8 @@ class ExpensesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -173,44 +171,44 @@ class ExpensesScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: theme.dividerColor.withAlpha(46)),
+        color: AppColors.backgroundLight,
       ),
       child: Column(
-        children: _expenseItems.asMap().entries.map((entry) {
-          final isLast = entry.key == _expenseItems.length - 1;
-          final item = entry.value;
-          return Column(
-            children: [
-              ExpenseCard(
-                title: item.title,
-                subtitle: item.subtitle,
-                value: item.value,
-                description: item.description,
-                statusLabel: item.statusLabel,
-                statusColor: item.statusColor,
-                icon: item.icon,
-                iconColor: item.iconColor,
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  indent: 80,
-                  endIndent: 16,
-                  color: theme.dividerColor.withAlpha(56),
+        children: [
+          ..._expenseItems.asMap().entries.map((entry) {
+            final isLast = entry.key == _expenseItems.length - 1;
+            final item = entry.value;
+            return Column(
+              children: [
+                ExpenseCard(
+                  title: item.title,
+                  subtitle: item.subtitle,
+                  value: item.value,
+                  description: item.description,
+                  statusLabel: item.statusLabel,
+                  statusColor: item.statusColor,
+                  icon: item.icon,
+                  iconColor: item.iconColor,
                 ),
-            ],
-          );
-        }).toList(),
+                if (!isLast)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: 80,
+                    endIndent: 16,
+                    color: theme.dividerColor.withAlpha(56),
+                  ),
+              ],
+            );
+          }),
+        ],
       ),
     );
   }
 
   Widget _buildSummaryCards(BuildContext context) {
     return SizedBox(
-      height: 170,
+      height: 140,
       child: ListView(
         padding: const EdgeInsets.only(left: 14, right: 14),
         scrollDirection: Axis.horizontal,
@@ -253,38 +251,30 @@ class ExpensesScreen extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     return Container(
-      width: 190,
-      padding: const EdgeInsets.all(18),
+      width: 170,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withAlpha(20),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        color: AppColors.backgroundLight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 46,
-            width: 46,
+            height: 40,
+            width: 40,
             decoration: BoxDecoration(
               color: color.withAlpha(25),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Text(
             label.toUpperCase(),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.textTheme.bodySmall?.color,
-              fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
+              fontSize: 10,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -293,8 +283,8 @@ class ExpensesScreen extends StatelessWidget {
           Text(
             value,
             style: theme.textTheme.headlineSmall?.copyWith(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -306,18 +296,17 @@ class ExpensesScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.surfaceVariantLight,
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_month, color: AppColors.primary),
-          const SizedBox(width: 12),
-          Text('Febrero 2024', style: theme.textTheme.bodyLarge),
+          const Icon(Icons.calendar_month, color: AppColors.primary, size: 18),
+          const SizedBox(width: 10),
+          Text('Febrero 2024', style: theme.textTheme.bodyMedium),
           const Spacer(),
-          Icon(Icons.swap_vert, color: theme.colorScheme.primary),
+          Icon(Icons.swap_vert, color: theme.colorScheme.primary, size: 18),
         ],
       ),
     );

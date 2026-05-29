@@ -13,12 +13,15 @@ import { TripsModule } from './trips/trips.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { User } from './users/user.entity';
+import { UserVehicleHistory } from './users/user-vehicle-history.entity';
+import { UserBankAccount } from './users/user-bank-account.entity';
 import { Vehicle } from './vehicles/vehicle.entity';
 import { Expense } from './expenses/expense.entity';
 import { Evidence } from './evidence/evidence.entity';
 import { Consignment } from './consignments/consignment.entity';
 import { Trip } from './trips/trip.entity';
 import { MaintenanceRecord } from './maintenance/maintenance-record.entity';
+import { SnakeNamingStrategy } from './orm/snake-naming.strategy';
 
 @Module({
   imports: [
@@ -33,8 +36,9 @@ import { MaintenanceRecord } from './maintenance/maintenance-record.entity';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', ''),
         database: config.get<string>('DB_DATABASE', 'control_flotas'),
-        entities: [User, Vehicle, Expense, Evidence, Consignment, Trip, MaintenanceRecord],
+        entities: [User, UserVehicleHistory, UserBankAccount, Vehicle, Expense, Evidence, Consignment, Trip, MaintenanceRecord],
         synchronize: true,
+        namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
     UsersModule,

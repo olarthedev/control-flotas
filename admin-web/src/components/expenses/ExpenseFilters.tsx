@@ -14,24 +14,23 @@ interface ExpenseFiltersProps {
 }
 
 const STATUS_LABELS: Record<ExpenseStatus, string> = {
-    PENDING: 'Pendiente',
-    APPROVED: 'Aprobado',
-    OBSERVED: 'Observado',
-    REJECTED: 'Rechazado',
+    pending: 'Pendiente',
+    approved: 'Aprobado',
+    rejected: 'Rechazado',
 };
 
 const TYPE_LABELS: Record<string, string> = {
-    FUEL: 'Combustible',
-    TOLLS: 'Peajes',
-    MEALS: 'Alimentación',
-    PARKING: 'Parqueadero',
-    MAINTENANCE: 'Mantenimiento',
-    LOADING_UNLOADING: 'Cargue y Descargue',
-    OTHER: 'Otro',
+    fuel: 'Combustible',
+    toll: 'Peajes',
+    food: 'Alimentación',
+    parking: 'Parqueadero',
+    maintenance: 'Mantenimiento',
+    lodging: 'Alojamiento',
+    other: 'Otro',
 };
 
-const ALL_STATUS: ExpenseStatus[] = ['PENDING', 'APPROVED', 'OBSERVED', 'REJECTED'];
-const ALL_TYPES = ['FUEL', 'TOLLS', 'MEALS', 'PARKING', 'MAINTENANCE', 'LOADING_UNLOADING', 'OTHER'];
+const ALL_STATUS: ExpenseStatus[] = ['pending', 'approved', 'rejected'];
+const ALL_TYPES = ['fuel', 'toll', 'food', 'parking', 'maintenance', 'lodging', 'other'];
 
 export function ExpenseFilters({
     statuses,
@@ -56,7 +55,6 @@ export function ExpenseFilters({
 
     return (
         <div className="rounded-lg border border-slate-200 bg-white">
-            {/* Header */}
             <button
                 onClick={onToggle}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition"
@@ -73,10 +71,8 @@ export function ExpenseFilters({
                 <span className="text-slate-400">{isOpen ? '▼' : '▶'}</span>
             </button>
 
-            {/* Contenido */}
             {isOpen && (
                 <div className="border-t border-slate-200 p-4 space-y-4">
-                    {/* Estados */}
                     <div>
                         <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Estado</h4>
                         <div className="space-y-2">
@@ -94,7 +90,6 @@ export function ExpenseFilters({
                         </div>
                     </div>
 
-                    {/* Tipos de gasto */}
                     <div>
                         <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Tipo de gasto</h4>
                         <div className="space-y-2">
@@ -112,7 +107,6 @@ export function ExpenseFilters({
                         </div>
                     </div>
 
-                    {/* Rango de fechas */}
                     <div>
                         <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Fecha</h4>
                         <div className="space-y-2">
@@ -133,7 +127,6 @@ export function ExpenseFilters({
                         </div>
                     </div>
 
-                    {/* Botón reset */}
                     {activeFiltersCount > 0 && (
                         <button
                             onClick={onReset}

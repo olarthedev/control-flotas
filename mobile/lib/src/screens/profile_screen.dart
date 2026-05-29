@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: AppColors.backgroundLight,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
@@ -170,23 +170,32 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          Text('Juan Driver', style: theme.textTheme.headlineMedium),
+          Text(
+            'Juan Driver',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text('juan.driver@email.com', style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariantLight,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'ID: DRV-2024-001',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondaryLight,
-                fontWeight: FontWeight.w700,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('juan.driver@email.com', style: theme.textTheme.bodyMedium),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariantLight,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'ID: DRV-2024-001',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -237,7 +246,7 @@ class ProfileScreen extends StatelessWidget {
               value,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
             ),
@@ -246,7 +255,6 @@ class ProfileScreen extends StatelessWidget {
               label,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.textTheme.bodySmall?.color,
-                fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -300,7 +308,7 @@ class ProfileScreen extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -314,32 +322,28 @@ class ProfileScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(icon, color: AppColors.primary, size: 22),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (subtitle != null) ...[
-                      const SizedBox(width: 12),
+                    if (subtitle != null)
                       Text(
                         subtitle,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondaryLight,
-                          fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ],
                   ],
                 ),
               ),
@@ -365,7 +369,7 @@ class ProfileScreen extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -379,32 +383,28 @@ class ProfileScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(icon, color: AppColors.primary, size: 20),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (subtitle != null) ...[
-                      const SizedBox(width: 12),
+                    if (subtitle != null)
                       Text(
                         subtitle,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondaryLight,
-                          fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ],
                   ],
                 ),
               ),

@@ -1,5 +1,6 @@
-import { IsString, IsNumber, IsNotEmpty, MinLength, MaxLength, IsOptional, IsDateString, IsPositive } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { IsString, IsNumber, IsNotEmpty, MinLength, MaxLength, IsOptional, IsDateString, IsPositive, IsEnum } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { ConsignmentPurpose } from '../consignment.entity';
 
 export class CreateConsignmentDto {
     @IsString({ message: 'consignmentNumber debe ser texto' })
@@ -13,6 +14,10 @@ export class CreateConsignmentDto {
     @IsNotEmpty({ message: 'amount es requerido' })
     @Transform(({ value }) => parseFloat(value))
     amount: number;
+
+    @IsEnum(ConsignmentPurpose, { message: 'purpose debe ser: trip_advance o salary_advance' })
+    @IsNotEmpty({ message: 'purpose es requerido' })
+    purpose: ConsignmentPurpose;
 
     @IsDateString({}, { message: 'consignmentDate debe ser una fecha válida' })
     @IsNotEmpty({ message: 'consignmentDate es requerido' })
@@ -32,9 +37,4 @@ export class CreateConsignmentDto {
     @IsNumber({}, { message: 'tripId debe ser un número' })
     @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
     tripId?: number;
-
-    @IsOptional()
-    @IsString({ message: 'consignmentNotes debe ser texto' })
-    @MaxLength(1000, { message: 'consignmentNotes no puede exceder 1000 caracteres' })
-    consignmentNotes?: string;
 }
