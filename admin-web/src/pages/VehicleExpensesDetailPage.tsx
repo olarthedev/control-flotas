@@ -56,15 +56,15 @@ interface ExpenseSelectionState {
 const COLUMN_ORDER: ExpenseColumn[] = ['fuel', 'meals', 'maintenance', 'hotel', 'tolls', 'parking'];
 const SELECTED_VEHICLE_STORAGE_KEY = 'expenses:selectedVehicleId';
 const SELECTED_HISTORY_WEEK_STORAGE_KEY = 'expenses:selectedHistoryWeek';
-const ACTIVE_STATUSES: ExpenseStatus[] = ['PENDING', 'OBSERVED'];
-const HISTORY_STATUSES: ExpenseStatus[] = ['APPROVED', 'REJECTED'];
+const ACTIVE_STATUSES: ExpenseStatus[] = ['pending'];
+const HISTORY_STATUSES: ExpenseStatus[] = ['approved', 'rejected'];
 
 const TYPE_TO_COLUMN: Record<string, ExpenseColumn> = {
-    FUEL: 'fuel',
-    MEALS: 'meals',
-    MAINTENANCE: 'maintenance',
-    TOLLS: 'tolls',
-    PARKING: 'parking',
+    fuel: 'fuel',
+    food: 'meals',
+    maintenance: 'maintenance',
+    toll: 'tolls',
+    parking: 'parking',
 };
 
 const EXPENSES_PAGE_BREADCRUMBS = [
@@ -112,27 +112,24 @@ function getColumnFromExpenseType(type: string): ExpenseColumn {
 }
 
 function getStatusDot(expenses: ExpenseItem[]): string {
-    if (expenses.some((expense) => expense.status === 'PENDING')) {
+    if (expenses.some((expense) => expense.status === 'pending')) {
         return 'bg-amber-500';
     }
-    if (expenses.some((expense) => expense.status === 'APPROVED')) {
+    if (expenses.some((expense) => expense.status === 'approved')) {
         return 'bg-emerald-500';
-    }
-    if (expenses.some((expense) => expense.status === 'OBSERVED')) {
-        return 'bg-sky-500';
     }
     return 'bg-rose-500';
 }
 
 function getExpenseTypeLabel(type: string): string {
     const labels: Record<string, string> = {
-        FUEL: 'Combustible',
-        TOLLS: 'Peajes',
-        MAINTENANCE: 'Mantenimiento',
-        LOADING_UNLOADING: 'Logistica',
-        MEALS: 'Comida',
-        PARKING: 'Parqueadero',
-        OTHER: 'Hotel / Otro',
+        fuel: 'Combustible',
+        toll: 'Peajes',
+        maintenance: 'Mantenimiento',
+        food: 'Comida',
+        lodging: 'Alojamiento',
+        parking: 'Parqueadero',
+        other: 'Otro',
     };
 
     return labels[type] ?? type;
@@ -140,10 +137,9 @@ function getExpenseTypeLabel(type: string): string {
 
 function getStatusLabel(status: ExpenseStatus): string {
     const labels: Record<ExpenseStatus, string> = {
-        PENDING: 'Pendiente',
-        APPROVED: 'Aprobado',
-        OBSERVED: 'Observado',
-        REJECTED: 'Rechazado',
+        pending: 'Pendiente',
+        approved: 'Aprobado',
+        rejected: 'Rechazado',
     };
 
     return labels[status];
@@ -151,10 +147,9 @@ function getStatusLabel(status: ExpenseStatus): string {
 
 function getStatusClasses(status: ExpenseStatus): string {
     const styles: Record<ExpenseStatus, string> = {
-        PENDING: 'border-amber-200 bg-amber-50 text-amber-700',
-        APPROVED: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        OBSERVED: 'border-sky-200 bg-sky-50 text-sky-700',
-        REJECTED: 'border-rose-200 bg-rose-50 text-rose-700',
+        pending: 'border-amber-200 bg-amber-50 text-amber-700',
+        approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        rejected: 'border-rose-200 bg-rose-50 text-rose-700',
     };
 
     return styles[status];

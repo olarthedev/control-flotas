@@ -36,69 +36,62 @@ type StatusFilter = 'ALL' | MaintenanceStatus;
 interface MaintenanceFormState {
     type: MaintenanceType;
     title: string;
-    description: string;
     maintenanceDate: string;
     cost: string;
     vehicleId: string;
     invoiceNumber: string;
     provider: string;
     mileageAtMaintenance: string;
-    nextMaintenanceMileage: string;
-    nextMaintenanceDate: string;
-    technicalNotes: string;
     status: MaintenanceStatus;
     requiresFollowUp: boolean;
-    followUpNotes: string;
 }
 
 const TYPE_LABEL: Record<MaintenanceType, string> = {
-    PREVENTIVE: 'Preventivo',
-    CORRECTIVE: 'Correctivo',
-    EMERGENCY: 'Emergencia',
-    INSPECTION: 'Inspeccion',
+    preventive: 'Preventivo',
+    corrective: 'Correctivo',
+    emergency: 'Emergencia',
 };
 
 const STATUS_LABEL: Record<MaintenanceStatus, string> = {
-    COMPLETED: 'Completado',
-    PENDING: 'Pendiente',
-    SCHEDULED: 'Programado',
+    scheduled: 'Programado',
+    in_progress: 'En progreso',
+    completed: 'Completado',
+    cancelled: 'Cancelado',
 };
 
 const STATUS_STYLES: Record<MaintenanceStatus, string> = {
-    COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
-    SCHEDULED: 'bg-sky-50 text-sky-700 border-sky-200',
+    scheduled: 'bg-sky-50 text-sky-700 border-sky-200',
+    in_progress: 'bg-amber-50 text-amber-700 border-amber-200',
+    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    cancelled: 'bg-slate-50 text-slate-500 border-slate-200',
 };
 
 const STATUS_DESCRIPTION: Record<MaintenanceStatus, string> = {
-    PENDING: 'Trabajo abierto que requiere gestion o cierre tecnico.',
-    SCHEDULED: 'Trabajo planificado para una fecha futura.',
-    COMPLETED: 'Trabajo finalizado y cerrado correctamente.',
+    scheduled: 'Trabajo planificado para una fecha futura.',
+    in_progress: 'Trabajo en ejecucion actualmente.',
+    completed: 'Trabajo finalizado y cerrado correctamente.',
+    cancelled: 'Trabajo cancelado.',
 };
 
 const STATUS_SHORT_HINT: Record<MaintenanceStatus, string> = {
-    PENDING: 'Aun sin cerrar',
-    SCHEDULED: 'Planificado',
-    COMPLETED: 'Cerrado',
+    scheduled: 'Planificado',
+    in_progress: 'En curso',
+    completed: 'Cerrado',
+    cancelled: 'Cancelado',
 };
 
 
 const EMPTY_FORM: MaintenanceFormState = {
-    type: 'PREVENTIVE',
+    type: 'preventive',
     title: '',
-    description: '',
     maintenanceDate: new Date().toISOString().split('T')[0],
     cost: '',
     vehicleId: '',
     invoiceNumber: '',
     provider: '',
     mileageAtMaintenance: '',
-    nextMaintenanceMileage: '',
-    nextMaintenanceDate: '',
-    technicalNotes: '',
-    status: 'SCHEDULED',
+    status: 'scheduled',
     requiresFollowUp: false,
-    followUpNotes: '',
 };
 
 const PAGE_SIZE_OPTIONS = [5, 10, 15, 20];
@@ -153,7 +146,7 @@ function parseOptionalNumber(value: string): number | undefined {
 }
 
 function getPriorityMeta(record: MaintenanceRecord): PriorityMeta {
-    if (record.status === 'PENDING') {
+    if (record.status === 'in_progress') {
         return {
             level: 'HIGH',
             label: 'Alta',
@@ -162,28 +155,13 @@ function getPriorityMeta(record: MaintenanceRecord): PriorityMeta {
         };
     }
 
-    if (record.nextMaintenanceDate) {
-        const now = new Date();
-        const next = new Date(record.nextMaintenanceDate);
-        const diffDays = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (diffDays <= 7) {
-            return {
-                level: 'HIGH',
-                label: 'Alta',
-                dotClass: 'bg-rose-500',
-                textClass: 'text-rose-700',
-            };
-        }
-
-        if (diffDays <= 30) {
-            return {
-                level: 'MEDIUM',
-                label: 'Media',
-                dotClass: 'bg-amber-500',
-                textClass: 'text-amber-700',
-            };
-        }
+    if (record.status === 'scheduled') {
+        return {
+            level: 'MEDIUM',
+            label: 'Media',
+            dotClass: 'bg-amber-500',
+            textClass: 'text-amber-700',
+        };
     }
 
     return {
@@ -198,19 +176,14 @@ function toFormState(record: MaintenanceRecord): MaintenanceFormState {
     return {
         type: record.type,
         title: record.title,
-        description: record.description,
         maintenanceDate: record.maintenanceDate.split('T')[0],
         cost: String(record.cost ?? ''),
         vehicleId: String(record.vehicle?.id ?? ''),
         invoiceNumber: record.invoiceNumber ?? '',
         provider: record.provider ?? '',
         mileageAtMaintenance: record.mileageAtMaintenance != null ? String(record.mileageAtMaintenance) : '',
-        nextMaintenanceMileage: record.nextMaintenanceMileage != null ? String(record.nextMaintenanceMileage) : '',
-        nextMaintenanceDate: record.nextMaintenanceDate ? record.nextMaintenanceDate.split('T')[0] : '',
-        technicalNotes: record.technicalNotes ?? '',
         status: record.status,
         requiresFollowUp: record.requiresFollowUp,
-        followUpNotes: record.followUpNotes ?? '',
     };
 }
 
@@ -302,17 +275,6 @@ function MaintenanceFormModal({
                             />
                         </label>
 
-                        <label className="space-y-1 md:col-span-2">
-                            <span className="text-xs font-semibold text-slate-500">Descripcion</span>
-                            <textarea
-                                value={form.description}
-                                onChange={(event) => onChange({ ...form, description: event.target.value })}
-                                rows={3}
-                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Que se hizo, por que se hizo y observaciones clave"
-                            />
-                        </label>
-
                         <label className="space-y-1">
                             <span className="text-xs font-semibold text-slate-500">Fecha mantenimiento</span>
                             <input
@@ -368,27 +330,6 @@ function MaintenanceFormModal({
                         </label>
 
                         <label className="space-y-1">
-                            <span className="text-xs font-semibold text-slate-500">Proximo kilometraje</span>
-                            <input
-                                type="number"
-                                min="0"
-                                value={form.nextMaintenanceMileage}
-                                onChange={(event) => onChange({ ...form, nextMaintenanceMileage: event.target.value })}
-                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                        </label>
-
-                        <label className="space-y-1">
-                            <span className="text-xs font-semibold text-slate-500">Proxima fecha</span>
-                            <input
-                                type="date"
-                                value={form.nextMaintenanceDate}
-                                onChange={(event) => onChange({ ...form, nextMaintenanceDate: event.target.value })}
-                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                        </label>
-
-                        <label className="space-y-1">
                             <span className="text-xs font-semibold text-slate-500">Estado</span>
                             <select
                                 value={form.status}
@@ -403,16 +344,6 @@ function MaintenanceFormModal({
                             </select>
                         </label>
 
-                        <label className="space-y-1 md:col-span-2">
-                            <span className="text-xs font-semibold text-slate-500">Notas tecnicas</span>
-                            <textarea
-                                value={form.technicalNotes}
-                                onChange={(event) => onChange({ ...form, technicalNotes: event.target.value })}
-                                rows={2}
-                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                        </label>
-
                         <label className="md:col-span-2 flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2">
                             <input
                                 type="checkbox"
@@ -423,18 +354,6 @@ function MaintenanceFormModal({
                             <span className="text-sm text-slate-700">Requiere seguimiento posterior</span>
                         </label>
 
-                        {form.requiresFollowUp && (
-                            <label className="space-y-1 md:col-span-2">
-                                <span className="text-xs font-semibold text-slate-500">Notas de seguimiento</span>
-                                <textarea
-                                    value={form.followUpNotes}
-                                    onChange={(event) => onChange({ ...form, followUpNotes: event.target.value })}
-                                    rows={2}
-                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                    placeholder="Que revisar en el siguiente control"
-                                />
-                            </label>
-                        )}
                     </div>
                 </div>
 
@@ -519,7 +438,6 @@ export function MaintenancePage() {
 
             const text = [
                 record.title,
-                record.description,
                 record.provider ?? '',
                 record.vehicle?.licensePlate ?? '',
                 `${record.vehicle?.brand ?? ''} ${record.vehicle?.model ?? ''}`,
@@ -557,26 +475,14 @@ export function MaintenancePage() {
 
     const summary = useMemo(() => {
         const totalCost = filteredRecords.reduce((acc, item) => acc + item.cost, 0);
-        const pendingCount = filteredRecords.filter((item) => item.status === 'PENDING').length;
-        const scheduledCount = filteredRecords.filter((item) => item.status === 'SCHEDULED').length;
-
-        const now = new Date();
-        const futureLimit = new Date();
-        futureLimit.setDate(futureLimit.getDate() + 30);
-
-        const dueSoon = filteredRecords.filter((item) => {
-            if (!item.nextMaintenanceDate) {
-                return false;
-            }
-            const nextDate = new Date(item.nextMaintenanceDate);
-            return nextDate >= now && nextDate <= futureLimit;
-        }).length;
+        const inProgressCount = filteredRecords.filter((item) => item.status === 'in_progress').length;
+        const scheduledCount = filteredRecords.filter((item) => item.status === 'scheduled').length;
 
         return {
             totalCost,
-            pendingCount,
+            pendingCount: inProgressCount,
             scheduledCount,
-            dueSoon,
+            dueSoon: 0,
         };
     }, [filteredRecords]);
 
@@ -615,18 +521,18 @@ export function MaintenancePage() {
         const vehicleId = Number(form.vehicleId);
         const cost = Number(form.cost);
 
-        if (!form.title.trim() || !form.description.trim() || !form.maintenanceDate || Number.isNaN(vehicleId) || Number.isNaN(cost) || cost <= 0) {
+        if (!form.title.trim() || !form.maintenanceDate || Number.isNaN(vehicleId) || Number.isNaN(cost) || cost <= 0) {
             setToast({
                 type: 'warning',
-                message: 'Completa los campos obligatorios: vehiculo, titulo, descripcion, fecha y costo.',
+                message: 'Completa los campos obligatorios: vehiculo, titulo, fecha y costo.',
             });
             return;
         }
 
-        if (form.title.trim().length < 3 || form.description.trim().length < 10) {
+        if (form.title.trim().length < 3) {
             setToast({
                 type: 'warning',
-                message: 'El titulo debe tener minimo 3 caracteres y la descripcion minimo 10.',
+                message: 'El titulo debe tener minimo 3 caracteres.',
             });
             return;
         }
@@ -638,25 +544,18 @@ export function MaintenancePage() {
                 const created = await createMaintenanceRecord({
                     type: form.type,
                     title: form.title.trim(),
-                    description: form.description.trim(),
                     maintenanceDate: toIsoDay(form.maintenanceDate),
                     cost,
                     vehicleId,
                     invoiceNumber: form.invoiceNumber.trim() || undefined,
                     provider: form.provider.trim() || undefined,
                     mileageAtMaintenance: parseOptionalNumber(form.mileageAtMaintenance),
-                    nextMaintenanceMileage: parseOptionalNumber(form.nextMaintenanceMileage),
-                    nextMaintenanceDate: form.nextMaintenanceDate ? toIsoDay(form.nextMaintenanceDate) : undefined,
-                    technicalNotes: form.technicalNotes.trim() || undefined,
+                    requiresFollowUp: form.requiresFollowUp,
                 });
 
                 const recordWithStatus =
-                    form.status !== 'COMPLETED' || form.requiresFollowUp || form.followUpNotes.trim()
-                        ? await updateMaintenanceRecord(created.id, {
-                            status: form.status,
-                            requiresFollowUp: form.requiresFollowUp,
-                            followUpNotes: form.followUpNotes.trim() || undefined,
-                        })
+                    form.status !== 'completed'
+                        ? await updateMaintenanceRecord(created.id, { status: form.status })
                         : created;
 
                 setRecords((current) => [recordWithStatus, ...current]);
@@ -669,19 +568,14 @@ export function MaintenancePage() {
                 const updated = await updateMaintenanceRecord(editingRecordId, {
                     type: form.type,
                     title: form.title.trim(),
-                    description: form.description.trim(),
                     maintenanceDate: toIsoDay(form.maintenanceDate),
                     cost,
                     vehicleId,
                     invoiceNumber: form.invoiceNumber.trim() || undefined,
                     provider: form.provider.trim() || undefined,
                     mileageAtMaintenance: parseOptionalNumber(form.mileageAtMaintenance),
-                    nextMaintenanceMileage: parseOptionalNumber(form.nextMaintenanceMileage),
-                    nextMaintenanceDate: form.nextMaintenanceDate ? toIsoDay(form.nextMaintenanceDate) : undefined,
-                    technicalNotes: form.technicalNotes.trim() || undefined,
                     status: form.status,
                     requiresFollowUp: form.requiresFollowUp,
-                    followUpNotes: form.followUpNotes.trim() || undefined,
                 });
 
                 setRecords((current) => current.map((item) => (item.id === updated.id ? updated : item)));
@@ -972,9 +866,9 @@ export function MaintenancePage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[record.status]}`}>
-                                                {record.status === 'COMPLETED' && <MdCheckCircle className="mr-1" size={14} />}
-                                                {record.status === 'PENDING' && <MdWarning className="mr-1" size={14} />}
-                                                {record.status === 'SCHEDULED' && <MdSchedule className="mr-1" size={14} />}
+                                                {record.status === 'completed' && <MdCheckCircle className="mr-1" size={14} />}
+                                                {record.status === 'in_progress' && <MdWarning className="mr-1" size={14} />}
+                                                {record.status === 'scheduled' && <MdSchedule className="mr-1" size={14} />}
                                                 <span title={STATUS_DESCRIPTION[record.status]}>{STATUS_LABEL[record.status]}</span>
                                             </span>
                                             <p className="mt-1 text-[10px] text-slate-400">{STATUS_SHORT_HINT[record.status]}</p>
@@ -982,10 +876,7 @@ export function MaintenancePage() {
                                         </td>
                                         <td className="px-4 py-3 font-semibold text-[#12264f]">{formatCurrency(record.cost)}</td>
                                         <td className="px-4 py-3 text-xs text-slate-600">
-                                            <p>{formatDate(record.nextMaintenanceDate)}</p>
-                                            {record.nextMaintenanceMileage != null && (
-                                                <p className="text-slate-500">{record.nextMaintenanceMileage.toLocaleString('es-CO')} km</p>
-                                            )}
+                                            <p>{record.mileageAtMaintenance != null ? `${record.mileageAtMaintenance.toLocaleString('es-CO')} km` : '-'}</p>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end">
@@ -1097,13 +988,11 @@ export function MaintenancePage() {
                                 <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Proveedor / Factura</p>
                                 <p className="mt-1 text-sm font-semibold text-slate-700">{selectedDetail.provider ?? '-'} / {selectedDetail.invoiceNumber ?? '-'}</p>
                             </div>
-                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 md:col-span-2">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Descripcion</p>
-                                <p className="mt-1 text-sm text-slate-700">{selectedDetail.description}</p>
-                            </div>
-                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 md:col-span-2">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Notas tecnicas</p>
-                                <p className="mt-1 text-sm text-slate-700">{selectedDetail.technicalNotes || 'Sin notas tecnicas.'}</p>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Kilometraje</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-700">
+                                    {selectedDetail.mileageAtMaintenance != null ? `${selectedDetail.mileageAtMaintenance.toLocaleString('es-CO')} km` : '-'}
+                                </p>
                             </div>
                         </div>
 
@@ -1130,7 +1019,7 @@ export function MaintenancePage() {
                                 <MdEdit size={14} />
                                 Editar
                             </button>
-                            {selectedDetail.status !== 'COMPLETED' && (
+                            {selectedDetail.status !== 'completed' && (
                                 <button
                                     type="button"
                                     onClick={() => {
