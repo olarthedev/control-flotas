@@ -17,8 +17,10 @@ import { UserBankAccount } from './user-bank-account.entity';
 import { Exclude } from 'class-transformer';
 
 export enum UserRole {
-    ADMIN = 'ADMIN',
-    DRIVER = 'DRIVER',
+    ADMIN = 'admin',
+    DRIVER = 'driver',
+    SUPERVISOR = 'supervisor',
+    ACCOUNTANT = 'accountant',
 }
 
 @Entity('users')
@@ -26,13 +28,13 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ length: 150 })
     fullName: string;
 
-    @Column({ unique: true })
+    @Column({ length: 150, unique: true })
     email: string;
 
-    @Column()
+    @Column({ length: 255 })
     @Exclude()
     password: string;
 
@@ -46,19 +48,11 @@ export class User {
     @Column({ default: true })
     isActive: boolean;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({ length: 30, nullable: true })
     phone?: string;
 
-    @Column({ type: 'text', nullable: true })
-    licenseNumber?: string; // Número de licencia (para conductores)
-
-    @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
-            to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
-        }
-    })
-    monthlySalary: number;
+    @Column({ length: 50, nullable: true })
+    licenseNumber?: string;
 
     @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })
     assignedVehicle?: Vehicle | null;
@@ -73,7 +67,6 @@ export class User {
     })
     bankAccounts: UserBankAccount[];
 
-    // ================== RELACIONES ==================
     @OneToMany(() => Expense, (expense) => expense.driver)
     expenses: Expense[];
 
@@ -86,7 +79,6 @@ export class User {
     @OneToMany(() => MaintenanceRecord, (maintenance) => maintenance.performedBy)
     maintenanceRecords: MaintenanceRecord[];
 
-    // ================== AUDITORÍA ==================
     @CreateDateColumn()
     createdAt: Date;
 

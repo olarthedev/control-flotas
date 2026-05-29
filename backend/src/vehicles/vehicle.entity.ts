@@ -16,51 +16,36 @@ export class Vehicle {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ length: 20, unique: true })
     licensePlate: string;
 
-    @Column()
+    @Column({ length: 80 })
     brand: string;
 
-    @Column()
+    @Column({ length: 80 })
     model: string;
 
-    @Column()
+    @Column({ length: 50 })
     type: string;
 
     @Column({ type: 'date', nullable: true })
-    soatExpiryDate: Date;
+    soatExpiryDate: Date | null;
 
     @Column({ type: 'date', nullable: true })
-    technicalReviewExpiryDate: Date;
+    technicalReviewExpiryDate: Date | null;
 
     @Column({ type: 'date', nullable: true })
-    insuranceExpiryDate: Date;
-
-    // ================== ALERTAS Y SEGUIMIENTO ==================
-    @Column({ default: false })
-    soatAboutToExpire: boolean;
-
-    @Column({ default: false })
-    technicalReviewAboutToExpire: boolean;
-
-    @Column({ default: false })
-    insuranceAboutToExpire: boolean;
-
-    @Column({ type: 'text', nullable: true })
-    documentNotes: string;
+    insuranceExpiryDate: Date | null;
 
     @Column({
-        type: 'decimal', precision: 12, scale: 2, default: 0, transformer: {
+        type: 'decimal', precision: 14, scale: 2, default: 0, transformer: {
             to: (value: number) => value,
-            from: (value: string) => parseFloat(value)
+            from: (value: string) => parseFloat(value),
         }
     })
     maintenanceSpent: number;
 
-    @OneToMany(() => Expense, (expense) => expense.vehicle, {
-        cascade: true,
-    })
+    @OneToMany(() => Expense, (expense) => expense.vehicle)
     expenses: Expense[];
 
     @OneToMany(() => MaintenanceRecord, (maintenance) => maintenance.vehicle, {
@@ -74,7 +59,6 @@ export class Vehicle {
     @OneToMany(() => User, (user) => user.assignedVehicle)
     assignedDrivers: User[];
 
-    // ================== AUDITORÍA ==================
     @CreateDateColumn()
     createdAt: Date;
 
