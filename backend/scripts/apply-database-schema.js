@@ -16,7 +16,7 @@ function loadEnv(envPath) {
 
 async function main() {
   const env = loadEnv(path.resolve(__dirname, '..', '.env'));
-  const sqlFile = path.resolve(__dirname, '..', '..', 'database.sql');
+  const sqlFile = path.resolve(__dirname, '..', '..', 'database_nueva.sql');
   const sql = fs.readFileSync(sqlFile, 'utf8');
 
   const adminClient = new Client({
