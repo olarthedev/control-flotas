@@ -31,11 +31,10 @@ export class TripsService {
         const trip = new Trip();
         trip.tripNumber = createTripDto.tripNumber;
         trip.startDate = new Date(createTripDto.startDate);
-        trip.origin = createTripDto.origin ?? null;
-        trip.destination = createTripDto.destination ?? null;
-        trip.description = createTripDto.description ?? null;
-        trip.plannedBudget = createTripDto.plannedBudget ?? 0;
-        trip.status = TripStatus.IN_PROGRESS;
+        trip.origin = createTripDto.origin ?? '';
+        trip.destination = createTripDto.destination ?? '';
+        trip.plannedBudget = createTripDto.plannedBudget ?? null;
+        trip.status = TripStatus.PLANNED;
 
         // resolve relations
         const driver = await this.usersRepository.findOne({
@@ -160,9 +159,6 @@ export class TripsService {
         const updateData: Partial<Trip> = {
             status: TripStatus.COMPLETED,
             endDate: new Date(),
-            totalExpenses: totalExpenses,
-            totalConsigned: totalConsigned,
-            difference: totalConsigned - totalExpenses,
         };
         return await this.update(id, updateData);
     }

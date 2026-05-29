@@ -7,6 +7,7 @@ import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { Trip } from '../trips/trip.entity';
+import { Consignment } from '../consignments/consignment.entity';
 import { FindExpensesQueryDto } from './dto/find-expenses-query.dto';
 import { FindExpensesByVehicleQueryDto } from './dto/find-expenses-by-vehicle-query.dto';
 import { UsersService } from '../users/users.service';
@@ -30,7 +31,6 @@ export interface VehicleExpenseSummaryResponse {
     monthlyTotal: number;
     pendingCount: number;
     approvedCount: number;
-    observedCount: number;
     rejectedCount: number;
     lastExpenseDate: string | null;
 }
@@ -62,10 +62,12 @@ export class ExpensesService {
         private vehiclesRepository: Repository<Vehicle>,
         @InjectRepository(Trip)
         private tripsRepository: Repository<Trip>,
+        @InjectRepository(Consignment)
+        private consignmentsRepository: Repository<Consignment>,
         private readonly usersService: UsersService,
     ) { }
 
-    private readonly openStatuses: ExpenseStatus[] = [ExpenseStatus.PENDING, ExpenseStatus.OBSERVED];
+    private readonly openStatuses: ExpenseStatus[] = [ExpenseStatus.PENDING];
     private readonly closingStatuses: ExpenseStatus[] = [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED];
 
     private getStartOfWeek(date: Date): Date {
@@ -117,26 +119,19 @@ export class ExpensesService {
         }
     }
 
-    /**
-     * Create a new expense record, resolving required relations.
-     * Validates that expense vehicle matches driver's assignment at expenseDate.
-     */
     async create(createExpenseDto: CreateExpenseDto): Promise<Expense> {
         const expense = new Expense();
         expense.type = createExpenseDto.type;
         expense.amount = createExpenseDto.amount;
         expense.expenseDate = new Date(createExpenseDto.expenseDate);
         expense.description = createExpenseDto.description ?? null;
-        expense.notes = createExpenseDto.notes ?? null;
 
         const driver = await this.usersRepository.findOne({
             where: { id: createExpenseDto.driverId },
             relations: ['assignedVehicle'],
         });
         if (!driver) {
-            throw new NotFoundException(
-                `Driver con id ${createExpenseDto.driverId} no encontrado`,
-            );
+            throw new NotFoundException(`Driver con id ${createExpenseDto.driverId} no encontrado`);
         }
         expense.driver = driver;
 
@@ -156,6 +151,16 @@ export class ExpensesService {
             }
 
             expense.trip = trip;
+        }
+
+        if (createExpenseDto.consignmentId) {
+            const consignment = await this.consignmentsRepository.findOne({
+                where: { id: createExpenseDto.consignmentId },
+            });
+            if (!consignment) {
+                throw new NotFoundException(`Consignment con id ${createExpenseDto.consignmentId} no encontrado`);
+            }
+            expense.consignment = consignment;
         }
 
         const assignedVehicleIdAtExpenseDate = await this.usersService.getAssignedVehicleIdAtDate(driver, expense.expenseDate);
@@ -187,9 +192,6 @@ export class ExpensesService {
         return await this.expensesRepository.save(expense);
     }
 
-    /**
-     * Retrieve expenses with optional filters and pagination.
-     */
     async findAll(query: FindExpensesQueryDto = {}): Promise<PaginatedExpensesResponse> {
         const { page = 1, limit = 20, status, dateFrom, dateTo, vehicleId, driverId } = query;
 
@@ -226,15 +228,13 @@ export class ExpensesService {
         return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
 
-    /** Find expense by id. */
     async findById(id: number): Promise<Expense | null> {
         return await this.expensesRepository.findOne({
             where: { id },
-            relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment'],
+            relations: ['driver', 'vehicle', 'trip', 'evidence', 'consignment', 'validatedBy'],
         });
     }
 
-    /** Expenses submitted by a specific driver. */
     async findByDriver(driverId: number): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { driver: { id: driverId } },
@@ -243,7 +243,6 @@ export class ExpensesService {
         });
     }
 
-    /** Expenses associated to a trip. */
     async findByTrip(tripId: number): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { trip: { id: tripId } },
@@ -252,7 +251,6 @@ export class ExpensesService {
         });
     }
 
-    /** Expenses charged to a vehicle. */
     async findByVehicle(vehicleId: number, query?: FindExpensesByVehicleQueryDto): Promise<Expense[]> {
         const qb = this.expensesRepository
             .createQueryBuilder('expense')
@@ -279,9 +277,6 @@ export class ExpensesService {
         return await qb.getMany();
     }
 
-    /**
-     * Update an expense. Throws NotFoundException if not present.
-     */
     async update(id: number, updateExpenseDto: UpdateExpenseDto): Promise<Expense> {
         const existing = await this.findById(id);
         if (!existing) {
@@ -290,19 +285,32 @@ export class ExpensesService {
 
         await this.enforceSequentialWeekClosure(existing, updateExpenseDto.status);
 
-        const updateData = { ...updateExpenseDto } as unknown as Partial<Expense>;
-        if (updateExpenseDto.expenseDate !== undefined) {
-            updateData.expenseDate = new Date(updateExpenseDto.expenseDate);
-        }
+        if (updateExpenseDto.type !== undefined) existing.type = updateExpenseDto.type;
+        if (updateExpenseDto.amount !== undefined) existing.amount = updateExpenseDto.amount;
+        if (updateExpenseDto.expenseDate !== undefined) existing.expenseDate = new Date(updateExpenseDto.expenseDate);
+        if (updateExpenseDto.description !== undefined) existing.description = updateExpenseDto.description ?? null;
+        if (updateExpenseDto.status !== undefined) existing.status = updateExpenseDto.status;
+        if (updateExpenseDto.rejectionReason !== undefined) existing.rejectionReason = updateExpenseDto.rejectionReason ?? null;
         if (updateExpenseDto.validatedAt !== undefined) {
-            updateData.validatedAt = updateExpenseDto.validatedAt ? new Date(updateExpenseDto.validatedAt) : null;
+            existing.validatedAt = updateExpenseDto.validatedAt ? new Date(updateExpenseDto.validatedAt) : null;
         }
 
-        await this.expensesRepository.update(id, updateData);
+        if (updateExpenseDto.validatedById !== undefined) {
+            if (updateExpenseDto.validatedById === null) {
+                existing.validatedBy = null;
+            } else {
+                const validator = await this.usersRepository.findOne({ where: { id: updateExpenseDto.validatedById } });
+                if (!validator) {
+                    throw new NotFoundException(`User con id ${updateExpenseDto.validatedById} no encontrado`);
+                }
+                existing.validatedBy = validator;
+            }
+        }
+
+        await this.expensesRepository.save(existing);
         return this.findById(id) as Promise<Expense>;
     }
 
-    /** Delete an expense. */
     async remove(id: number) {
         const result = await this.expensesRepository.delete(id);
         if (result.affected === 0) {
@@ -311,7 +319,6 @@ export class ExpensesService {
         return result;
     }
 
-    /** Pending expenses that require approval. */
     async findPendingExpenses(): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { status: ExpenseStatus.PENDING },
@@ -338,7 +345,6 @@ export class ExpensesService {
 
             const pendingCount = expenses.filter((expense) => expense.status === ExpenseStatus.PENDING).length;
             const approvedCount = expenses.filter((expense) => expense.status === ExpenseStatus.APPROVED).length;
-            const observedCount = expenses.filter((expense) => expense.status === ExpenseStatus.OBSERVED).length;
             const rejectedCount = expenses.filter((expense) => expense.status === ExpenseStatus.REJECTED).length;
 
             const lastExpense = expenses
@@ -360,7 +366,6 @@ export class ExpensesService {
                 monthlyTotal,
                 pendingCount,
                 approvedCount,
-                observedCount,
                 rejectedCount,
                 lastExpenseDate: lastExpense?.expenseDate ? new Date(lastExpense.expenseDate).toISOString() : null,
             };
@@ -378,7 +383,6 @@ export class ExpensesService {
         });
     }
 
-    /** Expenses that lack any attached evidence. */
     async findExpensesWithoutEvidence(): Promise<Expense[]> {
         return await this.expensesRepository.find({
             where: { hasEvidence: false },

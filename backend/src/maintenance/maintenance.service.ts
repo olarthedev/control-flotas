@@ -18,36 +18,24 @@ export class MaintenanceService {
         private userRepository: Repository<User>,
     ) { }
 
-    /**
-     * Create a maintenance record; the vehicle relationship is required.
-     * Throws NotFoundException if the vehicle id is invalid.
-     */
     async create(createMaintenanceDto: CreateMaintenanceDto): Promise<MaintenanceRecord> {
         const maintenance = new MaintenanceRecord();
         maintenance.type = createMaintenanceDto.type;
         maintenance.title = createMaintenanceDto.title;
-        maintenance.description = createMaintenanceDto.description;
         maintenance.maintenanceDate = new Date(createMaintenanceDto.maintenanceDate);
         maintenance.cost = createMaintenanceDto.cost;
         maintenance.invoiceNumber = (createMaintenanceDto.invoiceNumber ?? null) as string | null;
         maintenance.provider = (createMaintenanceDto.provider ?? null) as string | null;
         maintenance.mileageAtMaintenance = (createMaintenanceDto.mileageAtMaintenance ?? null) as number | null;
-        maintenance.nextMaintenanceMileage = (createMaintenanceDto.nextMaintenanceMileage ?? null) as number | null;
-        maintenance.nextMaintenanceDate = createMaintenanceDto.nextMaintenanceDate
-            ? new Date(createMaintenanceDto.nextMaintenanceDate)
-            : null;
-        maintenance.technicalNotes = (createMaintenanceDto.technicalNotes ?? null) as string | null;
+        maintenance.requiresFollowUp = createMaintenanceDto.requiresFollowUp ?? false;
 
-        // Resolver relación de vehicle
-        if (createMaintenanceDto.vehicleId) {
-            const vehicle = await this.vehicleRepository.findOne({
-                where: { id: createMaintenanceDto.vehicleId },
-            });
-            if (!vehicle) {
-                throw new NotFoundException(`Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`);
-            }
-            maintenance.vehicle = vehicle;
+        const vehicle = await this.vehicleRepository.findOne({
+            where: { id: createMaintenanceDto.vehicleId },
+        });
+        if (!vehicle) {
+            throw new NotFoundException(`Vehicle con id ${createMaintenanceDto.vehicleId} no encontrado`);
         }
+        maintenance.vehicle = vehicle;
 
         if (createMaintenanceDto.performedById !== undefined) {
             if (createMaintenanceDto.performedById === null) {
@@ -66,14 +54,12 @@ export class MaintenanceService {
         return await this.maintenanceRepository.save(maintenance);
     }
 
-    /** Get every maintenance record with relations. */
     async findAll(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    /** Find record by id. */
     async findById(id: number): Promise<MaintenanceRecord | null> {
         return await this.maintenanceRepository.findOne({
             where: { id },
@@ -81,7 +67,6 @@ export class MaintenanceService {
         });
     }
 
-    /** Records for a specific vehicle. */
     async findByVehicle(vehicleId: number): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             where: { vehicle: { id: vehicleId } },
@@ -90,15 +75,13 @@ export class MaintenanceService {
         });
     }
 
-    /** Records that are still pending. */
     async findPending(): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
-            where: { status: MaintenanceStatus.PENDING },
+            where: { status: MaintenanceStatus.SCHEDULED },
             relations: ['vehicle', 'performedBy'],
         });
     }
 
-    /** Filter by maintenance type. */
     async findByType(type: string): Promise<MaintenanceRecord[]> {
         return await this.maintenanceRepository.find({
             where: { type: type as MaintenanceType },
@@ -107,32 +90,25 @@ export class MaintenanceService {
         });
     }
 
-    /** Update a maintenance record; throws if not found. */
     async update(id: number, updateMaintenanceDto: UpdateMaintenanceDto): Promise<MaintenanceRecord> {
         const existing = await this.findById(id);
         if (!existing) {
             throw new NotFoundException('Maintenance record not found');
         }
 
-        type MaintenanceUpdatePayload = Partial<MaintenanceRecord> & {
-            performedById?: number | null;
-            maintenanceDate?: string;
-            nextMaintenanceDate?: string | null;
-        };
-
-        const updateData = { ...updateMaintenanceDto } as unknown as MaintenanceUpdatePayload;
-        if (updateMaintenanceDto.maintenanceDate !== undefined) {
-            updateData.maintenanceDate = new Date(updateMaintenanceDto.maintenanceDate as string) as any;
-        }
-        if (updateMaintenanceDto.nextMaintenanceDate !== undefined) {
-            updateData.nextMaintenanceDate = updateMaintenanceDto.nextMaintenanceDate
-                ? (new Date(updateMaintenanceDto.nextMaintenanceDate as string) as any)
-                : null;
-        }
+        if (updateMaintenanceDto.type !== undefined) existing.type = updateMaintenanceDto.type;
+        if (updateMaintenanceDto.title !== undefined) existing.title = updateMaintenanceDto.title;
+        if (updateMaintenanceDto.maintenanceDate !== undefined) existing.maintenanceDate = new Date(updateMaintenanceDto.maintenanceDate);
+        if (updateMaintenanceDto.cost !== undefined) existing.cost = updateMaintenanceDto.cost;
+        if (updateMaintenanceDto.invoiceNumber !== undefined) existing.invoiceNumber = updateMaintenanceDto.invoiceNumber ?? null;
+        if (updateMaintenanceDto.provider !== undefined) existing.provider = updateMaintenanceDto.provider ?? null;
+        if (updateMaintenanceDto.mileageAtMaintenance !== undefined) existing.mileageAtMaintenance = updateMaintenanceDto.mileageAtMaintenance ?? null;
+        if (updateMaintenanceDto.status !== undefined) existing.status = updateMaintenanceDto.status;
+        if (updateMaintenanceDto.requiresFollowUp !== undefined) existing.requiresFollowUp = updateMaintenanceDto.requiresFollowUp;
 
         if (updateMaintenanceDto.performedById !== undefined) {
             if (updateMaintenanceDto.performedById === null) {
-                updateData.performedBy = null;
+                existing.performedBy = null;
             } else {
                 const user = await this.userRepository.findOne({
                     where: { id: updateMaintenanceDto.performedById },
@@ -140,16 +116,14 @@ export class MaintenanceService {
                 if (!user) {
                     throw new NotFoundException(`User con id ${updateMaintenanceDto.performedById} no encontrado`);
                 }
-                updateData.performedBy = user;
+                existing.performedBy = user;
             }
-            delete updateData.performedById;
         }
 
-        await this.maintenanceRepository.update(id, updateData as Partial<MaintenanceRecord>);
+        await this.maintenanceRepository.save(existing);
         return this.findById(id) as Promise<MaintenanceRecord>;
     }
 
-    /** Delete record by id. */
     async remove(id: number) {
         const result = await this.maintenanceRepository.delete(id);
         if (result.affected === 0) {
@@ -158,7 +132,6 @@ export class MaintenanceService {
         return result;
     }
 
-    /** Mark a maintenance record as completed. */
     async completeMaintenanceRecord(id: number) {
         return await this.update(id, { status: MaintenanceStatus.COMPLETED });
     }

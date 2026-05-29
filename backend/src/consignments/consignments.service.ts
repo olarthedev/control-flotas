@@ -24,16 +24,12 @@ export class ConsignmentsService {
         private expenseRepository: Repository<Expense>,
     ) { }
 
-    /**
-     * Create a new consignment and initialize its balances.
-     */
     async create(createConsignmentDto: CreateConsignmentDto): Promise<Consignment> {
         const consignment = new Consignment();
         consignment.consignmentNumber = createConsignmentDto.consignmentNumber;
         consignment.amount = createConsignmentDto.amount;
         consignment.purpose = createConsignmentDto.purpose;
         consignment.consignmentDate = new Date(createConsignmentDto.consignmentDate);
-        consignment.consignmentNotes = createConsignmentDto.consignmentNotes ?? null;
 
         const driver = await this.usersRepository.findOne({ where: { id: createConsignmentDto.driverId } });
         if (!driver) {
@@ -50,7 +46,10 @@ export class ConsignmentsService {
         }
 
         if (createConsignmentDto.tripId) {
-            const trip = await this.tripsRepository.findOne({ where: { id: createConsignmentDto.tripId }, relations: ['driver', 'vehicle'] });
+            const trip = await this.tripsRepository.findOne({
+                where: { id: createConsignmentDto.tripId },
+                relations: ['driver', 'vehicle'],
+            });
             if (!trip) {
                 throw new NotFoundException(`Trip con id ${createConsignmentDto.tripId} no encontrado`);
             }
@@ -63,31 +62,26 @@ export class ConsignmentsService {
             }
         }
 
-        if (consignment.purpose === ConsignmentPurpose.TRIP_EXPENSES && !consignment.trip) {
-            throw new BadRequestException('Las consignaciones de tipo TRIP_EXPENSES requieren un tripId válido.');
+        if (consignment.purpose === ConsignmentPurpose.TRIP_ADVANCE && !consignment.trip) {
+            throw new BadRequestException('Las consignaciones de tipo trip_advance requieren un tripId válido.');
         }
 
         if (consignment.purpose === ConsignmentPurpose.SALARY_ADVANCE && consignment.trip) {
-            throw new BadRequestException('Las consignaciones de tipo SALARY_ADVANCE no pueden tener tripId.');
+            throw new BadRequestException('Las consignaciones de tipo salary_advance no pueden tener tripId.');
         }
 
         consignment.totalExpensesReported = 0;
         consignment.totalApprovedExpenses = 0;
-        consignment.balance = consignment.amount;
-        consignment.surplus = 0;
-        consignment.deficit = 0;
 
         return await this.consignmentsRepository.save(consignment);
     }
 
-    /** Get every consignment with relations. */
     async findAll(): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
             relations: ['driver', 'vehicle', 'trip', 'expenses'],
         });
     }
 
-    /** Find one consignment by id. */
     async findById(id: number): Promise<Consignment | null> {
         return await this.consignmentsRepository.findOne({
             where: { id },
@@ -95,7 +89,6 @@ export class ConsignmentsService {
         });
     }
 
-    /** Consignments belonging to a specific driver. */
     async findByDriver(driverId: number): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
             where: { driver: { id: driverId } },
@@ -104,53 +97,52 @@ export class ConsignmentsService {
         });
     }
 
-    /**
-     * Close all ACTIVE consignments for a driver (used to start a new salary month).
-     */
     async closeDriverActiveConsignments(driverId: number): Promise<{ updated: number }> {
-        const activeConsignments = await this.consignmentsRepository.find({
+        const openConsignments = await this.consignmentsRepository.find({
             where: {
                 driver: { id: driverId },
-                status: ConsignmentStatus.ACTIVE,
+                status: ConsignmentStatus.OPEN,
             },
         });
 
-        if (!activeConsignments.length) {
+        if (!openConsignments.length) {
             return { updated: 0 };
         }
 
-        const ids = activeConsignments.map((consignment) => consignment.id);
+        const ids = openConsignments.map((consignment) => consignment.id);
 
         await this.consignmentsRepository.update(
             { id: In(ids) },
             {
                 status: ConsignmentStatus.CLOSED,
                 closingDate: new Date(),
-                closingNotes: 'Cierre mensual automático desde módulo de conductores',
             },
         );
 
         return { updated: ids.length };
     }
 
-    /** Only consignments in ACTIVE status */
-    async findActive(): Promise<Consignment[]> {
+    async findOpen(): Promise<Consignment[]> {
         return await this.consignmentsRepository.find({
-            where: { status: ConsignmentStatus.ACTIVE },
+            where: { status: ConsignmentStatus.OPEN },
             relations: ['driver', 'vehicle', 'trip', 'expenses'],
         });
     }
 
-    /** Update a consignment; throws if not found. */
     async update(id: number, updateConsignmentDto: UpdateConsignmentDto): Promise<Consignment> {
         const existing = await this.findById(id);
         if (!existing) {
             throw new NotFoundException('Consignment not found');
         }
 
-        const updateData = { ...updateConsignmentDto } as unknown as Partial<Consignment>;
+        if (updateConsignmentDto.amount !== undefined) existing.amount = updateConsignmentDto.amount;
+        if (updateConsignmentDto.purpose !== undefined) existing.purpose = updateConsignmentDto.purpose;
+        if (updateConsignmentDto.status !== undefined) existing.status = updateConsignmentDto.status;
         if (updateConsignmentDto.consignmentDate !== undefined) {
-            updateData.consignmentDate = new Date(updateConsignmentDto.consignmentDate);
+            existing.consignmentDate = new Date(updateConsignmentDto.consignmentDate);
+        }
+        if (updateConsignmentDto.closingDate !== undefined) {
+            existing.closingDate = updateConsignmentDto.closingDate ? new Date(updateConsignmentDto.closingDate) : null;
         }
 
         if (updateConsignmentDto.tripId !== undefined) {
@@ -158,7 +150,7 @@ export class ConsignmentsService {
             if (!trip) {
                 throw new NotFoundException(`Trip con id ${updateConsignmentDto.tripId} no encontrado`);
             }
-            updateData.trip = trip;
+            existing.trip = trip;
         }
 
         if (updateConsignmentDto.vehicleId !== undefined) {
@@ -166,7 +158,7 @@ export class ConsignmentsService {
             if (!vehicle) {
                 throw new NotFoundException(`Vehicle con id ${updateConsignmentDto.vehicleId} no encontrado`);
             }
-            updateData.vehicle = vehicle;
+            existing.vehicle = vehicle;
         }
 
         if (updateConsignmentDto.driverId !== undefined) {
@@ -174,14 +166,13 @@ export class ConsignmentsService {
             if (!driver) {
                 throw new NotFoundException(`Driver con id ${updateConsignmentDto.driverId} no encontrado`);
             }
-            updateData.driver = driver;
+            existing.driver = driver;
         }
 
-        await this.consignmentsRepository.update(id, updateData);
+        await this.consignmentsRepository.save(existing);
         return this.findById(id) as Promise<Consignment>;
     }
 
-    /** Delete a consignment. */
     async remove(id: number) {
         const result = await this.consignmentsRepository.delete(id);
         if (result.affected === 0) {
@@ -190,17 +181,12 @@ export class ConsignmentsService {
         return result;
     }
 
-    /**
-     * Close a consignment by calculating approved expenses and adjusting
-     * balance, surplus, deficit and fullyClosed flag.
-     */
     async closeConsignment(id: number): Promise<Consignment> {
         const consignment = await this.findById(id);
         if (!consignment) {
             throw new NotFoundException('Consignment not found');
         }
 
-        // Calcular totales de gastos aprobados
         const approvedExpenses = await this.expenseRepository.find({
             where: {
                 consignment: { id: consignment.id },
@@ -209,29 +195,11 @@ export class ConsignmentsService {
         });
 
         const totalApproved = approvedExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
-        const balance = consignment.amount - totalApproved;
 
-        const updateData: any = {
+        return await this.update(id, {
             status: ConsignmentStatus.CLOSED,
-            closingDate: new Date(),
+            closingDate: new Date().toISOString(),
             totalApprovedExpenses: totalApproved,
-            balance: balance,
-        };
-
-        if (balance > 0) {
-            updateData.surplus = balance;
-            updateData.deficit = 0;
-            updateData.fullyClosed = false;
-        } else if (balance < 0) {
-            updateData.surplus = 0;
-            updateData.deficit = Math.abs(balance);
-            updateData.fullyClosed = false;
-        } else {
-            updateData.surplus = 0;
-            updateData.deficit = 0;
-            updateData.fullyClosed = true;
-        }
-
-        return await this.update(id, updateData);
+        } as unknown as UpdateConsignmentDto);
     }
 }
