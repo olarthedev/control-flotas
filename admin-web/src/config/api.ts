@@ -20,6 +20,7 @@ export const apiConfig = {
 
         // Vehicles
         VEHICLES: '/vehicles',
+        VEHICLES_SUMMARY: '/vehicles/summary',
         VEHICLES_BY_ID: (id: number) => `/vehicles/${id}`,
 
         // Drivers

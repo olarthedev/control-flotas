@@ -45,14 +45,6 @@ export async function fetchAllVehiclesWithExpensesSummary(): Promise<VehicleExpe
     return Array.isArray(data) ? data : [];
 }
 
-/**
- * Legacy function - kept for compatibility
- * Use fetchAllVehiclesWithExpensesSummary() instead
- */
-export async function fetchExpensesGroupedByVehicle(): Promise<VehicleExpenseSummary[]> {
-    return fetchAllVehiclesWithExpensesSummary();
-}
-
 export async function fetchExpensesByVehicle(
     vehicleId: number,
     filters?: ExpensesByVehicleFilters,

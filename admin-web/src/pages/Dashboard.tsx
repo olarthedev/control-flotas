@@ -15,6 +15,8 @@ import {
   type WeeklyTrendPoint,
 } from '../services/dashboard.service';
 import { getApiErrorMessage } from '../utils/api-error';
+import { formatCurrency } from '../utils/format';
+import { LoadingState } from '../components/LoadingState';
 
 export const Dashboard = () => {
   const [searchParams] = useSearchParams();
@@ -70,10 +72,6 @@ export const Dashboard = () => {
 
     loadSummary();
   }, []);
-
-  const formatCurrency = (value: number): string => {
-    return `$${Math.round(value).toLocaleString('es-CO')}`;
-  };
 
   const statCards = summary ? [
     {
@@ -134,14 +132,7 @@ export const Dashboard = () => {
       <DashboardTopBar />
 
       {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white py-16">
-          <div className="space-y-2 text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-[#5848f4]" />
-            <p className="text-sm text-slate-500">Cargando resumen...</p>
-          </div>
-        </div>
-      )}
+      {isLoading && <LoadingState message="Cargando resumen..." />}
 
       {/* Intelligence Alert */}
       {!isLoading && showAlert && <IntelligenceAlert title={alertTitle} message={alertMessage} />}

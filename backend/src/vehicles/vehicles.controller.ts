@@ -30,6 +30,11 @@ export class VehiclesController {
     return this.vehiclesService.findAll();
   }
 
+  @Get('summary')
+  getVehicleListSummaries() {
+    return this.vehiclesService.getVehicleListSummaries();
+  }
+
   /** GET /vehicles/expired-documents */
   @Get('expired-documents')
   findWithExpiredDocuments() {

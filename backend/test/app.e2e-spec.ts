@@ -35,21 +35,21 @@ describe('AppController (e2e)', () => {
     // create a driver
     const userResp = await request(server)
       .post('/users')
-      .send({ fullName: 'Test Driver', email: 'driver@example.com', role: 'DRIVER', isActive: true });
+      .send({ fullName: 'Test Driver', email: 'driver@example.com', password: 'password123', role: 'driver', isActive: true });
     expect(userResp.status).toBe(201);
-    const userId = userResp.body.id;
+    const driverId = userResp.body.id;
 
     // create a vehicle
     const vehicleResp = await request(server)
       .post('/vehicles')
-      .send({ licensePlate: 'XYZ123', brand: 'Test', model: 'Model', year: 2020, driverId });
+      .send({ licensePlate: 'XYZ123', brand: 'Test', model: 'Model', type: 'truck' });
     expect(vehicleResp.status).toBe(201);
     const vehicleId = vehicleResp.body.id;
 
     // create a trip
     const tripResp = await request(server)
       .post('/trips')
-      .send({ tripNumber: 'T100', startDate: '2026-02-22', driverId, vehicleId });
+      .send({ tripNumber: 'T100', startDate: '2026-02-22', origin: 'Bogota', destination: 'Medellin', driverId, vehicleId });
     expect(tripResp.status).toBe(201);
 
     // GET trips

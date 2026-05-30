@@ -1,5 +1,18 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
+import { formatCurrency } from '../utils/format';
+
+interface VehicleListSummary {
+    id: number;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    type: string;
+    soatExpiryDate: string | null;
+    technicalReviewExpiryDate: string | null;
+    totalExpense: number;
+    lastMaintenanceDate: string | null;
+}
 
 export interface Vehicle {
     id: number;
@@ -9,9 +22,7 @@ export interface Vehicle {
     type: string;
     soatExpiryDate: string | null;
     technicalReviewExpiryDate: string | null;
-    maintenanceSpent: number;
-    maintenanceRecords: { createdAt: string }[];
-    expenses: { amount: number }[];
+    insuranceExpiryDate: string | null;
 }
 
 export interface VehicleCardData {
@@ -23,37 +34,6 @@ export interface VehicleCardData {
     lastMaintenance: string;
     soatStatus: string;
     tecnoStatus: string;
-}
-
-function isDateExpired(dateString: string | null): boolean {
-    if (!dateString) return false;
-    const expiryDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expiryDate.setHours(0, 0, 0, 0);
-    return expiryDate < today;
-}
-
-function formatDate(dateString: string | null): string {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
-}
-
-function calculateTotalExpense(vehicle: Vehicle): number {
-    const maintenanceSpent = Number(vehicle.maintenanceSpent) || 0;
-    const expensesTotal = vehicle.expenses?.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0) || 0;
-    return maintenanceSpent + expensesTotal;
-}
-
-function getLastMaintenanceDate(vehicle: Vehicle): string {
-    if (!vehicle.maintenanceRecords || vehicle.maintenanceRecords.length === 0) {
-        return 'N/A';
-    }
-    const sortedRecords = [...vehicle.maintenanceRecords].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    return formatDate(sortedRecords[0].createdAt);
 }
 
 export interface CreateVehicleDto {
@@ -69,33 +49,61 @@ export interface CreateVehicleDto {
 
 export interface UpdateVehicleDto extends Partial<CreateVehicleDto> { }
 
-export async function fetchVehicles(): Promise<VehicleCardData[]> {
-    const { data } = await axios.get<Vehicle[]>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`);
+function isDateExpired(dateString: string | null): boolean {
+    if (!dateString) return false;
+    const expiryDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    expiryDate.setHours(0, 0, 0, 0);
+    return expiryDate < today;
+}
 
-    return data.map(vehicle => ({
+function formatMaintenanceDate(isoDate: string | null): string {
+    if (!isoDate) return 'N/A';
+    return new Date(isoDate).toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+}
+
+export async function fetchVehicles(): Promise<VehicleCardData[]> {
+    const { data } = await axios.get<VehicleListSummary[]>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_SUMMARY}`,
+    );
+
+    return data.map((vehicle) => ({
         id: vehicle.id,
         name: `${vehicle.brand} ${vehicle.model}`,
         plate: vehicle.licensePlate,
         type: vehicle.type,
-        totalExpense: `$${calculateTotalExpense(vehicle).toLocaleString('es-CO')}`,
-        lastMaintenance: getLastMaintenanceDate(vehicle),
+        totalExpense: formatCurrency(vehicle.totalExpense),
+        lastMaintenance: formatMaintenanceDate(vehicle.lastMaintenanceDate),
         soatStatus: isDateExpired(vehicle.soatExpiryDate) ? 'Vencido' : 'Vigente',
         tecnoStatus: isDateExpired(vehicle.technicalReviewExpiryDate) ? 'Vencido' : 'Vigente',
     }));
 }
 
 export async function createVehicle(vehicleData: CreateVehicleDto): Promise<Vehicle> {
-    const { data } = await axios.post<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`, vehicleData);
+    const { data } = await axios.post<Vehicle>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES}`,
+        vehicleData,
+    );
     return data;
 }
 
 export async function updateVehicle(id: number, vehicleData: UpdateVehicleDto): Promise<Vehicle> {
-    const { data } = await axios.patch<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`, vehicleData);
+    const { data } = await axios.patch<Vehicle>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`,
+        vehicleData,
+    );
     return data;
 }
 
 export async function getVehicleById(id: number): Promise<Vehicle> {
-    const { data } = await axios.get<Vehicle>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`);
+    const { data } = await axios.get<Vehicle>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.VEHICLES_BY_ID(id)}`,
+    );
     return data;
 }
 

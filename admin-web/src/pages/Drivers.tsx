@@ -28,6 +28,7 @@ import {
     type DriverPayment,
 } from '../services/consignments.service';
 import { getApiErrorMessage } from '../utils/api-error';
+import { LoadingState } from '../components/LoadingState';
 
 export function DriversPage() {
     const [searchParams] = useSearchParams();
@@ -175,11 +176,9 @@ export function DriversPage() {
                         changedBy: 'admin-panel',
                     });
                 }
-
-                // Recargar la lista para reflejar el nuevo saldo pendiente calculado en el backend
-                await loadDrivers();
             }
 
+            await loadDrivers();
             setIsModalOpen(false);
         } catch (err) {
             setToast({
@@ -388,14 +387,7 @@ export function DriversPage() {
                 }
             />
 
-            {isLoading && (
-                <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white py-16">
-                    <div className="space-y-2 text-center">
-                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-[#5848f4]" />
-                        <p className="text-sm text-slate-500">Cargando conductores...</p>
-                    </div>
-                </div>
-            )}
+            {isLoading && <LoadingState message="Cargando conductores..." />}
 
             {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-600">

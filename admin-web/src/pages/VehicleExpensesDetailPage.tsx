@@ -1,20 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-    MdAttachMoney,
-    MdClose,
-    MdDownload,
-    MdKeyboardArrowDown,
-    MdPerson,
-    MdReceiptLong,
-} from 'react-icons/md';
+import { MdAttachMoney, MdDownload, MdKeyboardArrowDown } from 'react-icons/md';
 import { type ExpenseItem, type ExpenseStatus, updateExpenseStatus } from '../services/expenses.service';
 import { fetchAllVehiclesWithExpensesSummary, fetchExpensesByVehicle, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
 import { createConsignment, fetchAllConsignments, type ConsignmentItem } from '../services/consignments.service';
 import { Toast, type ToastType } from '../components/Toast';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ExpenseAuditModal } from '../components/expenses/ExpenseAuditModal';
+import { ExpenseGroupModal, type ExpenseSelectionState } from '../components/expenses/ExpenseGroupModal';
+import { ConsignmentModal } from '../components/expenses/ConsignmentModal';
 import { ExportButton } from '../components/ExportButton';
 import { getApiErrorMessage } from '../utils/api-error';
+import { formatCurrency } from '../utils/format';
 import {
     buildHistoryWeekSummaries,
     buildOpenWeekSummaries,
@@ -46,13 +42,6 @@ interface TableRow {
     dayExpenses: ExpenseItem[];
 }
 
-interface ExpenseSelectionState {
-    title: string;
-    subtitle: string;
-    expenses: ExpenseItem[];
-    total: number;
-}
-
 const COLUMN_ORDER: ExpenseColumn[] = ['fuel', 'meals', 'maintenance', 'hotel', 'tolls', 'parking'];
 const SELECTED_VEHICLE_STORAGE_KEY = 'expenses:selectedVehicleId';
 const SELECTED_HISTORY_WEEK_STORAGE_KEY = 'expenses:selectedHistoryWeek';
@@ -75,10 +64,6 @@ const EXPENSES_PAGE_BREADCRUMBS = [
 
 const EXPENSES_PAGE_TITLE = 'Control de gastos por ruta';
 const EXPENSES_PAGE_SUBTITLE = 'Revisa y aprueba gastos por semana, visualiza saldos a favor o en contra y exporta reportes en CSV.';
-
-function formatCurrency(value: number): string {
-    return `$${Math.round(value).toLocaleString('es-CO')}`;
-}
 
 function formatDayLabel(value: string): string {
     const [year, month, day] = value.split('-').map(Number);
@@ -121,40 +106,6 @@ function getStatusDot(expenses: ExpenseItem[]): string {
     return 'bg-rose-500';
 }
 
-function getExpenseTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-        fuel: 'Combustible',
-        toll: 'Peajes',
-        maintenance: 'Mantenimiento',
-        food: 'Comida',
-        lodging: 'Alojamiento',
-        parking: 'Parqueadero',
-        other: 'Otro',
-    };
-
-    return labels[type] ?? type;
-}
-
-function getStatusLabel(status: ExpenseStatus): string {
-    const labels: Record<ExpenseStatus, string> = {
-        pending: 'Pendiente',
-        approved: 'Aprobado',
-        rejected: 'Rechazado',
-    };
-
-    return labels[status];
-}
-
-function getStatusClasses(status: ExpenseStatus): string {
-    const styles: Record<ExpenseStatus, string> = {
-        pending: 'border-amber-200 bg-amber-50 text-amber-700',
-        approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        rejected: 'border-rose-200 bg-rose-50 text-rose-700',
-    };
-
-    return styles[status];
-}
-
 export function VehicleExpensesDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
@@ -173,24 +124,7 @@ export function VehicleExpensesDetailPage() {
     const currentWeekKey = useMemo(() => getCurrentWeekKey(), []);
 
     const [showConsignmentModal, setShowConsignmentModal] = useState(false);
-    const [shouldRenderConsignment, setShouldRenderConsignment] = useState(false);
-    const [isVisibleConsignment, setIsVisibleConsignment] = useState(false);
-    const [consignmentAmount, setConsignmentAmount] = useState('');
     const hasCompletedInitialLoad = useRef(false);
-
-    // Manejar transiciones del modal de consignación
-    useEffect(() => {
-        if (showConsignmentModal) {
-            setShouldRenderConsignment(true);
-            // Dar tiempo al navegador para renderizar el DOM antes de animar
-            const timer = setTimeout(() => setIsVisibleConsignment(true), 10);
-            return () => clearTimeout(timer);
-        }
-
-        setIsVisibleConsignment(false);
-        const timeout = setTimeout(() => setShouldRenderConsignment(false), 200);
-        return () => clearTimeout(timeout);
-    }, [showConsignmentModal]);
 
     // Cargar lista de vehículos al inicio
     useEffect(() => {
@@ -474,16 +408,14 @@ export function VehicleExpensesDetailPage() {
 
             setAllExpenses((current) => current.map((item) => (item.id === updated.id ? updated : item)));
 
-            // Notificar al sidebar para que refresque el contador de gastos pendientes
             if (status === 'approved' || status === 'rejected') {
                 window.dispatchEvent(new Event('expenseUpdated'));
             }
 
-            // Cerrar el modal inmediatamente
             setSelectedExpense(null);
 
             setToast({
-                message: status === 'APPROVED' ? 'Gasto aprobado correctamente.' : 'Gasto rechazado correctamente.',
+                message: status === 'approved' ? 'Gasto aprobado correctamente.' : 'Gasto rechazado correctamente.',
                 type: 'success',
             });
         } catch (error) {
@@ -496,53 +428,23 @@ export function VehicleExpensesDetailPage() {
         }
     };
 
-    const handleConsignmentSubmit = async () => {
-        if (!selectedVehicleId) {
-            setToast({
-                message: 'Selecciona un vehículo primero.',
-                type: 'error',
-            });
+    const handleConsignmentConfirm = async (amount: number) => {
+        const vehicleSummary = vehicleOptions.find((option) => option.vehicleId === selectedVehicleId);
+        if (!vehicleSummary?.driverId) {
+            setToast({ message: 'El vehículo seleccionado no tiene conductor asignado.', type: 'error' });
             return;
         }
 
-        const amount = parseFloat(consignmentAmount);
-        if (Number.isNaN(amount) || amount <= 0) {
-            setToast({
-                message: 'Ingresa un monto válido mayor a 0.',
-                type: 'error',
-            });
-            return;
-        }
-
-        const vehicle = vehicleOptions.find((v) => v.vehicleId === selectedVehicleId);
-        if (!vehicle?.driverId) {
-            setToast({
-                message: 'El vehículo seleccionado no tiene conductor asignado.',
-                type: 'error',
-            });
-            return;
-        }
-
+        setIsSubmitting(true);
         try {
-            setIsSubmitting(true);
             const { start } = getWeekRange(selectedWeek);
-            await createConsignment(vehicle.driverId, selectedVehicleId, amount, start.toISOString());
-
+            await createConsignment(vehicleSummary.driverId, selectedVehicleId!, amount, start.toISOString());
             const updatedConsignments = await fetchAllConsignments();
             setConsignments(updatedConsignments);
-
-            setToast({
-                message: `Consignación de ${formatCurrency(amount)} registrada correctamente.`,
-                type: 'success',
-            });
-
             setShowConsignmentModal(false);
-            setConsignmentAmount('');
+            setToast({ message: `Consignación de ${formatCurrency(amount)} registrada correctamente.`, type: 'success' });
         } catch (error) {
-            setToast({
-                message: getApiErrorMessage(error, 'No se pudo registrar la consignación.'),
-                type: 'error',
-            });
+            setToast({ message: getApiErrorMessage(error, 'No se pudo registrar la consignación.'), type: 'error' });
         } finally {
             setIsSubmitting(false);
         }
@@ -908,209 +810,25 @@ export function VehicleExpensesDetailPage() {
                 isSubmitting={isSubmitting}
             />
 
-            {selectedExpenseGroup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
-                        onClick={() => setSelectedExpenseGroup(null)}
-                    />
-                    <div className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_40px_120px_-30px_rgba(15,23,42,0.45)]">
-                        <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_100%)] px-6 py-5">
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
-                                        <MdReceiptLong size={14} />
-                                        Revision de gastos
-                                    </div>
-                                    <h3 className="mt-3 text-2xl font-semibold text-[#0f1f45]">{selectedExpenseGroup.title}</h3>
-                                    <p className="mt-1 text-sm text-slate-500">{selectedExpenseGroup.subtitle}</p>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedExpenseGroup(null)}
-                                    className="rounded-xl p-2 text-slate-400 transition hover:bg-white hover:text-slate-700"
-                                >
-                                    <MdClose size={22} />
-                                </button>
-                            </div>
+            <ExpenseGroupModal
+                group={selectedExpenseGroup}
+                onClose={() => setSelectedExpenseGroup(null)}
+                onSelectExpense={(expense) => {
+                    setSelectedExpenseGroup(null);
+                    setSelectedExpense(expense);
+                }}
+            />
 
-                            <div className="mt-4 flex items-end justify-between gap-4 rounded-2xl border border-white/70 bg-white/90 px-4 py-3">
-                                <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Total mostrado en tabla</p>
-                                    <p className="mt-1 text-3xl font-semibold text-slate-900">{formatCurrency(selectedExpenseGroup.total)}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Registros incluidos</p>
-                                    <p className="mt-1 text-lg font-semibold text-slate-700">{selectedExpenseGroup.expenses.length}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
-                            <div className="space-y-3">
-                                {selectedExpenseGroup.expenses.map((expense) => (
-                                    <button
-                                        key={expense.id}
-                                        onClick={() => {
-                                            setSelectedExpenseGroup(null);
-                                            setSelectedExpense(expense);
-                                        }}
-                                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-slate-50 hover:shadow-sm"
-                                    >
-                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                            <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <span className="text-sm font-semibold text-[#12264f]">{getExpenseTypeLabel(expense.type)}</span>
-                                                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getStatusClasses(expense.status)}`}>
-                                                        {getStatusLabel(expense.status)}
-                                                    </span>
-                                                </div>
-                                                <p className="mt-1 text-sm text-slate-500">
-                                                    {new Date(expense.expenseDate).toLocaleString('es-CO', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </p>
-                                                <p className="mt-2 line-clamp-2 text-sm font-medium text-slate-700">
-                                                    {expense.description ?? 'Sin observaciones registradas.'}
-                                                </p>
-                                            </div>
-                                            <div className="shrink-0 text-left sm:text-right">
-                                                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Monto</p>
-                                                <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(expense.amount)}</p>
-                                                <p className="mt-2 text-xs font-medium text-indigo-600">Abrir auditoria</p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {shouldRenderConsignment && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div
-                        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${isVisibleConsignment ? 'opacity-100' : 'opacity-0'
-                            }`}
-                        onClick={() => setShowConsignmentModal(false)}
-                    />
-                    <div
-                        className={`relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5 transition-all duration-200 ${isVisibleConsignment ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'
-                            }`}
-                    >
-
-                        {/* Encabezado */}
-                        <div className="bg-white px-6 py-5 border-b border-slate-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="rounded-lg bg-indigo-100 p-2">
-                                        <MdAttachMoney size={20} className="text-indigo-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-normal text-slate-800">
-                                            Nueva Consignación
-                                        </h3>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => setShowConsignmentModal(false)}
-                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                >
-                                    <MdClose size={20} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="p-6 space-y-6">
-
-                            {/* Vehículo */}
-                            <div>
-                                <label className="mb-2 block text-xs font-normal text-slate-500">
-                                    Vehículo
-                                </label>
-                                <select
-                                    value={selectedVehicleId ?? ''}
-                                    onChange={(e) => setSelectedVehicleId(Number(e.target.value))}
-                                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-normal text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                                >
-                                    {vehicleOptions.map((v) => (
-                                        <option key={v.vehicleId} value={v.vehicleId}>
-                                            {v.licensePlate.toUpperCase()} - {v.driverName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Conductor */}
-                            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                <div className="flex items-center gap-2 text-slate-600">
-                                    <MdPerson size={16} />
-                                    <p className="text-sm font-normal">
-                                        {vehicleOptions.find((v) => v.vehicleId === selectedVehicleId)?.driverName ?? 'Sin conductor'}
-                                    </p>
-                                </div>
-
-                                <span className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-normal text-slate-500">
-                                    {getWeekLabel(selectedWeek)}
-                                </span>
-                            </div>
-
-                            {/* Monto */}
-                            <div>
-                                <label
-                                    htmlFor="consignment-amount"
-                                    className="mb-2 block text-xs font-normal text-slate-500"
-                                >
-                                    Monto a Consignar
-                                </label>
-
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-normal text-slate-400">
-                                        $
-                                    </span>
-
-                                    <input
-                                        id="consignment-amount"
-                                        type="number"
-                                        value={consignmentAmount}
-                                        onChange={(e) => setConsignmentAmount(e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-lg font-normal text-slate-900 placeholder:text-slate-300 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                                    />
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* Footer */}
-                        <div className="border-t border-slate-100 bg-slate-50 p-4">
-                            <div className="flex gap-3">
-
-                                <button
-                                    onClick={() => setShowConsignmentModal(false)}
-                                    disabled={isSubmitting}
-                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-normal text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    onClick={handleConsignmentSubmit}
-                                    disabled={isSubmitting}
-                                    className="flex-1 rounded-xl bg-slate-800 px-4 py-3 text-sm font-normal text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50"
-                                >
-                                    {isSubmitting ? 'Procesando...' : 'Confirmar'}
-                                </button>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConsignmentModal
+                isOpen={showConsignmentModal}
+                isSubmitting={isSubmitting}
+                vehicleOptions={vehicleOptions}
+                selectedVehicleId={selectedVehicleId}
+                selectedWeek={selectedWeek}
+                onVehicleChange={setSelectedVehicleId}
+                onClose={() => setShowConsignmentModal(false)}
+                onConfirm={handleConsignmentConfirm}
+            />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </section>

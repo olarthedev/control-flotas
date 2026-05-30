@@ -17,55 +17,41 @@ export class UsersController {
         private readonly changeUserPasswordUseCase: ChangeUserPasswordUseCase,
     ) { }
 
-    /**
-     * POST /users
-     * Create a new user with the provided data.
-     */
     @Post()
     create(@Body() createUserDto: CreateUserDto) {
         return this.usersService.create(createUserDto);
     }
 
-    /**
-     * GET /users
-     * Return a list of all users in the system.
-     */
     @Get()
     findAll() {
         return this.usersService.findAll();
     }
 
-    /** GET /users/drivers */
     @Get('drivers')
     findDrivers() {
         return this.usersService.findDrivers();
     }
 
-    /** GET /users/drivers/summary */
     @Get('drivers/summary')
     findDriverSummaries() {
         return this.usersService.findDriverSummaries();
     }
 
-    /** GET /users/admins */
     @Get('admins')
     findAdmins() {
         return this.usersService.findAdmins();
     }
 
-    /** GET /users/active */
     @Get('active')
     findActive() {
         return this.usersService.findActive();
     }
 
-    /** GET /users/:id/vehicle-assignment-history */
     @Get(':id/vehicle-assignment-history')
     getVehicleAssignmentHistory(@Param('id') id: string) {
         return this.usersService.getDriverVehicleAssignmentHistory(+id);
     }
 
-    /** PATCH /users/:id/assign-vehicle */
     @Patch(':id/assign-vehicle')
     assignVehicle(
         @Param('id') id: string,
@@ -74,19 +60,11 @@ export class UsersController {
         return this.usersService.assignDriverVehicle(+id, assignDriverVehicleDto);
     }
 
-    /**
-     * GET /users/:id
-     * Get a single user by its numeric ID.
-     */
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.usersService.findById(+id);
     }
 
-    /**
-     * PATCH /users/:id
-     * Update the user with partial data.
-     */
     @Patch(':id')
     update(
         @Param('id') id: string,
@@ -95,10 +73,6 @@ export class UsersController {
         return this.usersService.update(+id, updateUserDto);
     }
 
-    /**
-     * PATCH /users/:id/change-password
-     * Change the password for a user. Requires current password for verification.
-     */
     @Patch(':id/change-password')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Change user password' })
@@ -112,19 +86,16 @@ export class UsersController {
         return this.changeUserPasswordUseCase.execute(+id, changePasswordDto);
     }
 
-    /** DELETE /users/:id */
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.usersService.remove(+id);
     }
 
-    /** PATCH /users/:id/deactivate */
     @Patch(':id/deactivate')
     deactivate(@Param('id') id: string) {
         return this.usersService.deactivate(+id);
     }
 
-    /** PATCH /users/:id/activate */
     @Patch(':id/activate')
     activate(@Param('id') id: string) {
         return this.usersService.activate(+id);

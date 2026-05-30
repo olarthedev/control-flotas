@@ -82,8 +82,8 @@ export class ExpensesService {
         private readonly usersService: UsersService,
     ) { }
 
-    private readonly openStatuses: ExpenseStatus[] = [ExpenseStatus.PENDING];
-    private readonly closingStatuses: ExpenseStatus[] = [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED];
+    private readonly pendingStatuses: ExpenseStatus[] = [ExpenseStatus.PENDING];
+    private readonly terminalStatuses: ExpenseStatus[] = [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED];
 
     private getStartOfWeek(date: Date): Date {
         const copy = new Date(date);
@@ -95,7 +95,7 @@ export class ExpensesService {
     }
 
     private async enforceSequentialWeekClosure(existing: Expense, requestedStatus?: ExpenseStatus): Promise<void> {
-        if (!requestedStatus || !this.closingStatuses.includes(requestedStatus)) {
+        if (!requestedStatus || !this.terminalStatuses.includes(requestedStatus)) {
             return;
         }
 
@@ -109,7 +109,7 @@ export class ExpensesService {
         const qb = this.expensesRepository
             .createQueryBuilder('expense')
             .select(['expense.id', 'expense.expenseDate'])
-            .where('expense.status IN (:...statuses)', { statuses: this.openStatuses });
+            .where('expense.status IN (:...statuses)', { statuses: this.pendingStatuses });
 
         if (vehicleId) {
             qb.andWhere('expense.vehicleId = :vehicleId', { vehicleId });
