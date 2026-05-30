@@ -86,16 +86,15 @@ export async function createConsignment(
     driverId: number,
     vehicleId: number,
     amount: number,
-    notes?: string,
-    date?: string
+    date?: string,
 ): Promise<ConsignmentItem> {
     const payload = {
         consignmentNumber: buildConsignmentNumber(),
+        purpose: 'salary_advance',
         amount,
-        consignmentDate: date || new Date().toISOString(),
+        consignmentDate: date ?? new Date().toISOString(),
         driverId,
         vehicleId,
-        consignmentNotes: notes || 'Consignación semanal',
     };
 
     const { data } = await axios.post<ConsignmentResponse>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.CONSIGNMENTS}`, payload);

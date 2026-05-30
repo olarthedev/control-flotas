@@ -8,7 +8,7 @@ import {
     MdReceiptLong,
 } from 'react-icons/md';
 import { type ExpenseItem, type ExpenseStatus, updateExpenseStatus } from '../services/expenses.service';
-import { fetchExpensesByVehicle, fetchExpensesGroupedByVehicle, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
+import { fetchAllVehiclesWithExpensesSummary, fetchExpensesByVehicle, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
 import { createConsignment, fetchAllConsignments, type ConsignmentItem } from '../services/consignments.service';
 import { Toast, type ToastType } from '../components/Toast';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -176,7 +176,6 @@ export function VehicleExpensesDetailPage() {
     const [shouldRenderConsignment, setShouldRenderConsignment] = useState(false);
     const [isVisibleConsignment, setIsVisibleConsignment] = useState(false);
     const [consignmentAmount, setConsignmentAmount] = useState('');
-    const [consignmentNotes, setConsignmentNotes] = useState('');
     const hasCompletedInitialLoad = useRef(false);
 
     // Manejar transiciones del modal de consignación
@@ -197,7 +196,7 @@ export function VehicleExpensesDetailPage() {
     useEffect(() => {
         const loadVehicles = async () => {
             try {
-                const vehicleList = await fetchExpensesGroupedByVehicle();
+                const vehicleList = await fetchAllVehiclesWithExpensesSummary();
                 setVehicleOptions(vehicleList);
 
                 const storedVehicleIdRaw = localStorage.getItem(SELECTED_VEHICLE_STORAGE_KEY);
@@ -357,7 +356,7 @@ export function VehicleExpensesDetailPage() {
                     byColumn[column].push(expense);
                 });
 
-                const route = dayExpenses[0]?.description || dayExpenses[0]?.notes || 'Ruta general';
+                const route = dayExpenses[0]?.description ?? 'Ruta general';
 
                 return {
                     dayKey,
@@ -389,7 +388,7 @@ export function VehicleExpensesDetailPage() {
 
     const approvedTotal = useMemo(() => {
         return filteredExpenses
-            .filter((expense) => expense.status === 'APPROVED')
+            .filter((expense) => expense.status === 'approved')
             .reduce((sum, expense) => sum + expense.amount, 0);
     }, [filteredExpenses]);
 
@@ -471,15 +470,12 @@ export function VehicleExpensesDetailPage() {
 
         try {
             setIsSubmitting(true);
-            const updated = await updateExpenseStatus(selectedExpense.id, {
-                status,
-                validatedBy: 'Admin Web',
-            });
+            const updated = await updateExpenseStatus(selectedExpense.id, { status });
 
             setAllExpenses((current) => current.map((item) => (item.id === updated.id ? updated : item)));
 
             // Notificar al sidebar para que refresque el contador de gastos pendientes
-            if (status === 'APPROVED' || status === 'REJECTED') {
+            if (status === 'approved' || status === 'rejected') {
                 window.dispatchEvent(new Event('expenseUpdated'));
             }
 
@@ -530,7 +526,7 @@ export function VehicleExpensesDetailPage() {
         try {
             setIsSubmitting(true);
             const { start } = getWeekRange(selectedWeek);
-            await createConsignment(vehicle.driverId, selectedVehicleId, amount, consignmentNotes || undefined, start.toISOString());
+            await createConsignment(vehicle.driverId, selectedVehicleId, amount, start.toISOString());
 
             const updatedConsignments = await fetchAllConsignments();
             setConsignments(updatedConsignments);
@@ -542,7 +538,6 @@ export function VehicleExpensesDetailPage() {
 
             setShowConsignmentModal(false);
             setConsignmentAmount('');
-            setConsignmentNotes('');
         } catch (error) {
             setToast({
                 message: getApiErrorMessage(error, 'No se pudo registrar la consignación.'),
@@ -978,7 +973,7 @@ export function VehicleExpensesDetailPage() {
                                                     })}
                                                 </p>
                                                 <p className="mt-2 line-clamp-2 text-sm font-medium text-slate-700">
-                                                    {expense.notes || expense.description || 'Sin observaciones registradas.'}
+                                                    {expense.description ?? 'Sin observaciones registradas.'}
                                                 </p>
                                             </div>
                                             <div className="shrink-0 text-left sm:text-right">
@@ -1089,24 +1084,6 @@ export function VehicleExpensesDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Notas */}
-                            <div>
-                                <label
-                                    htmlFor="consignment-notes"
-                                    className="mb-2 block text-xs font-normal text-slate-500"
-                                >
-                                    Notas (Opcional)
-                                </label>
-
-                                <textarea
-                                    id="consignment-notes"
-                                    value={consignmentNotes}
-                                    onChange={(e) => setConsignmentNotes(e.target.value)}
-                                    placeholder="Ej: Consignación semanal..."
-                                    rows={2}
-                                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-normal text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                                />
-                            </div>
                         </div>
 
                         {/* Footer */}
