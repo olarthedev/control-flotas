@@ -51,6 +51,21 @@ export interface DriverLiquidationResponse {
     totalByVehicle: DriverLiquidationByVehicleItem[];
 }
 
+interface VehicleSummaryRawRow {
+    vehicleId: string;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    driverId: string;
+    driverName: string;
+    totalExpenses: string;
+    monthlyTotal: string;
+    pendingCount: number;
+    approvedCount: number;
+    rejectedCount: number;
+    lastExpenseDate: Date | null;
+}
+
 @Injectable()
 export class ExpensesService {
     constructor(
@@ -328,59 +343,52 @@ export class ExpensesService {
     }
 
     async summaryByVehicle(): Promise<VehicleExpenseSummaryResponse[]> {
-        const vehicles = await this.vehiclesRepository.find({
-            relations: ['expenses', 'expenses.driver', 'assignedDrivers'],
-        });
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-        const now = new Date();
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const rows = await this.vehiclesRepository.query<VehicleSummaryRawRow[]>(
+            `SELECT
+                v.id                                                                                    AS "vehicleId",
+                v.license_plate                                                                         AS "licensePlate",
+                v.brand,
+                v.model,
+                COALESCE(d.id, -1)                                                                      AS "driverId",
+                COALESCE(d.full_name, 'Sin asignar')                                                    AS "driverName",
+                COALESCE(SUM(e.amount), 0)                                                              AS "totalExpenses",
+                COALESCE(SUM(CASE WHEN e.expense_date >= $1 THEN e.amount ELSE 0 END), 0)               AS "monthlyTotal",
+                COUNT(CASE WHEN e.status = 'pending'  THEN 1 END)::int                                  AS "pendingCount",
+                COUNT(CASE WHEN e.status = 'approved' THEN 1 END)::int                                  AS "approvedCount",
+                COUNT(CASE WHEN e.status = 'rejected' THEN 1 END)::int                                  AS "rejectedCount",
+                MAX(e.expense_date)                                                                     AS "lastExpenseDate"
+            FROM vehicles v
+            LEFT JOIN expenses e ON e.vehicle_id = v.id
+            LEFT JOIN LATERAL (
+                SELECT id, full_name
+                FROM users
+                WHERE assigned_vehicle_id = v.id
+                  AND role = 'driver'
+                  AND is_active = true
+                ORDER BY id
+                LIMIT 1
+            ) d ON true
+            GROUP BY v.id, v.license_plate, v.brand, v.model, d.id, d.full_name
+            ORDER BY MAX(e.expense_date) DESC NULLS LAST, v.license_plate ASC`,
+            [firstDayOfMonth],
+        );
 
-        const summaries = vehicles.map((vehicle) => {
-            const expenses = vehicle.expenses ?? [];
-
-            const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
-            const monthlyTotal = expenses
-                .filter((expense) => new Date(expense.expenseDate) >= firstDayOfMonth)
-                .reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
-
-            const pendingCount = expenses.filter((expense) => expense.status === ExpenseStatus.PENDING).length;
-            const approvedCount = expenses.filter((expense) => expense.status === ExpenseStatus.APPROVED).length;
-            const rejectedCount = expenses.filter((expense) => expense.status === ExpenseStatus.REJECTED).length;
-
-            const lastExpense = expenses
-                .slice()
-                .sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())[0];
-
-            const assignedDriver = vehicle.assignedDrivers?.[0] ?? null;
-            const fallbackDriver = lastExpense?.driver ?? null;
-            const effectiveDriver = assignedDriver ?? fallbackDriver;
-
-            return {
-                vehicleId: vehicle.id,
-                licensePlate: vehicle.licensePlate,
-                brand: vehicle.brand,
-                model: vehicle.model,
-                driverId: effectiveDriver?.id ?? -1,
-                driverName: effectiveDriver?.fullName ?? 'Sin asignar',
-                totalExpenses,
-                monthlyTotal,
-                pendingCount,
-                approvedCount,
-                rejectedCount,
-                lastExpenseDate: lastExpense?.expenseDate ? new Date(lastExpense.expenseDate).toISOString() : null,
-            };
-        });
-
-        return summaries.sort((first, second) => {
-            const firstDate = first.lastExpenseDate ? new Date(first.lastExpenseDate).getTime() : 0;
-            const secondDate = second.lastExpenseDate ? new Date(second.lastExpenseDate).getTime() : 0;
-
-            if (secondDate !== firstDate) {
-                return secondDate - firstDate;
-            }
-
-            return first.licensePlate.localeCompare(second.licensePlate);
-        });
+        return rows.map((row) => ({
+            vehicleId: Number(row.vehicleId),
+            licensePlate: row.licensePlate,
+            brand: row.brand,
+            model: row.model,
+            driverId: Number(row.driverId),
+            driverName: row.driverName,
+            totalExpenses: Number(row.totalExpenses),
+            monthlyTotal: Number(row.monthlyTotal),
+            pendingCount: Number(row.pendingCount),
+            approvedCount: Number(row.approvedCount),
+            rejectedCount: Number(row.rejectedCount),
+            lastExpenseDate: row.lastExpenseDate ? new Date(row.lastExpenseDate).toISOString() : null,
+        }));
     }
 
     async findExpensesWithoutEvidence(): Promise<Expense[]> {

@@ -30,16 +30,10 @@ export class VehiclesController {
     return this.vehiclesService.findAll();
   }
 
-  /** GET /vehicles/active */
-  @Get('active')
-  findActive() {
-    return this.vehiclesService.findActive();
-  }
-
   /** GET /vehicles/expired-documents */
   @Get('expired-documents')
   findWithExpiredDocuments() {
-    return this.vehiclesService.findWithExpiredDocuments();
+    return this.vehiclesService.findVehiclesWithExpiringDocuments();
   }
 
   /** GET /vehicles/plate/:licensePlate */

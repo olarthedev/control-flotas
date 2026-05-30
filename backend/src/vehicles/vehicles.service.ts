@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Vehicle } from './vehicle.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -62,30 +62,18 @@ export class VehiclesService {
     });
   }
 
-  /**
-   * Get only active vehicles.
-   */
-  async findActive(): Promise<Vehicle[]> {
-    return await this.vehiclesRepository.find({
-      relations: ['expenses', 'maintenanceRecords', 'trips'],
-    });
-  }
+  private static readonly DOCUMENT_EXPIRY_WARNING_DAYS = 30;
 
-  /**
-   * Return vehicles with documents expiring within 30 days.
-   */
-  async findWithExpiredDocuments(): Promise<Vehicle[]> {
-    const vehicles = await this.vehiclesRepository.find();
-    const today = new Date();
-    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  async findVehiclesWithExpiringDocuments(): Promise<Vehicle[]> {
+    const warningThreshold = new Date();
+    warningThreshold.setDate(warningThreshold.getDate() + VehiclesService.DOCUMENT_EXPIRY_WARNING_DAYS);
 
-    return vehicles.filter((v) => {
-      return (
-        (v.soatExpiryDate && v.soatExpiryDate <= thirtyDaysFromNow) ||
-        (v.technicalReviewExpiryDate && v.technicalReviewExpiryDate <= thirtyDaysFromNow) ||
-        (v.insuranceExpiryDate && v.insuranceExpiryDate <= thirtyDaysFromNow)
-      );
-    });
+    return this.vehiclesRepository
+      .createQueryBuilder('vehicle')
+      .where('vehicle.soatExpiryDate <= :threshold', { threshold: warningThreshold })
+      .orWhere('vehicle.technicalReviewExpiryDate <= :threshold', { threshold: warningThreshold })
+      .orWhere('vehicle.insuranceExpiryDate <= :threshold', { threshold: warningThreshold })
+      .getMany();
   }
 
   /**
@@ -119,10 +107,9 @@ export class VehiclesService {
     // Delete all expenses for this vehicle (including those via trips)
     await this.expensesRepository.delete({ vehicle: { id } });
 
-    // Delete consignments for this vehicle's trips
-    const trips = vehicle.trips || [];
-    for (const trip of trips) {
-      await this.consignmentRepository.delete({ trip: { id: trip.id } });
+    const trips = vehicle.trips ?? [];
+    if (trips.length > 0) {
+      await this.consignmentRepository.delete({ trip: { id: In(trips.map((trip) => trip.id)) } });
     }
 
     // Delete trips for this vehicle
