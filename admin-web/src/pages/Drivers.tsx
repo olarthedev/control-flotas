@@ -148,7 +148,7 @@ export function DriversPage() {
                     phone: driverData.phone || undefined,
                     licenseNumber: driverData.licenseNumber || undefined,
                     monthlySalary: driverData.monthlySalary,
-                    role: 'DRIVER',
+                    role: 'driver',
                     assignedVehicleId: driverData.assignedVehicleId,
                 });
             } else {

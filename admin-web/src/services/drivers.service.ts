@@ -18,7 +18,7 @@ export interface DriverDetail {
     phone?: string;
     licenseNumber?: string;
     monthlySalary?: number;
-    role: 'DRIVER' | 'ADMIN';
+    role: 'driver' | 'admin';
     isActive: boolean;
     assignedVehicle?: {
         id: number;
@@ -35,7 +35,7 @@ export interface CreateDriverDto {
     phone?: string;
     licenseNumber?: string;
     monthlySalary?: number;
-    role: 'DRIVER';
+    role: 'driver';
     isActive?: boolean;
     assignedVehicleId?: number;
 }

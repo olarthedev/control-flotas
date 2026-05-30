@@ -54,6 +54,14 @@ export class User {
     @Column({ length: 50, nullable: true })
     licenseNumber?: string;
 
+    @Column({
+        type: 'decimal', precision: 14, scale: 2, default: 0, transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value),
+        }
+    })
+    monthlySalary: number;
+
     @ManyToOne(() => Vehicle, { nullable: true, onDelete: 'SET NULL' })
     assignedVehicle?: Vehicle | null;
 

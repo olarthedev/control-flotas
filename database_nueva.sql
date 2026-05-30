@@ -1,13 +1,3 @@
--- ============================================================
---  PASO 1: Base de datos "postgres"
--- ============================================================
-
-CREATE DATABASE control_flotas;
-
--- ============================================================
---  PASO 2: Conéctate a control_flotas y ejecuta el resto
--- ============================================================
-
 -- ENUMS
 CREATE TYPE user_role AS ENUM ('admin', 'driver', 'supervisor', 'accountant');
 CREATE TYPE trip_status AS ENUM ('planned', 'in_progress', 'completed', 'cancelled');
@@ -44,6 +34,7 @@ CREATE TABLE users (
     phone               VARCHAR(30),
     license_number      VARCHAR(50),
     assigned_vehicle_id INTEGER         REFERENCES vehicles(id) ON DELETE SET NULL,
+    monthly_salary      NUMERIC(14,2)   NOT NULL DEFAULT 0,
     is_active           BOOLEAN         NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMP       NOT NULL DEFAULT NOW()

@@ -9,6 +9,7 @@ import { DriverSummaryDto } from './dto/driver-summary.dto';
 import { Vehicle } from '../vehicles/vehicle.entity';
 import { AssignDriverVehicleDto } from './dto/assign-driver-vehicle.dto';
 import { UserVehicleHistory } from './user-vehicle-history.entity';
+import { Consignment, ConsignmentPurpose, ConsignmentStatus } from '../consignments/consignment.entity';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +20,8 @@ export class UsersService {
         private readonly vehiclesRepository: Repository<Vehicle>,
         @InjectRepository(UserVehicleHistory)
         private readonly historyRepository: Repository<UserVehicleHistory>,
+        @InjectRepository(Consignment)
+        private readonly consignmentsRepository: Repository<Consignment>,
     ) { }
 
     private async assertVehicleIsAvailableAtDate(
@@ -50,7 +53,7 @@ export class UsersService {
             .update(UserVehicleHistory)
             .set({ endDate })
             .where('user_id = :userId', { userId })
-            .andWhere('endDate IS NULL')
+            .andWhere('end_date IS NULL')
             .execute();
     }
 
@@ -119,24 +122,21 @@ export class UsersService {
             password: hashedPassword,
         });
 
+        let assignedVehicle: Vehicle | null = null;
         if (assignedVehicleId) {
             const effectiveAt = new Date();
             await this.assertVehicleIsAvailableAtDate(assignedVehicleId, user.id ?? -1, effectiveAt);
-            const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
-            if (!vehicle) {
+            assignedVehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
+            if (!assignedVehicle) {
                 throw new NotFoundException(`Vehicle con id ${assignedVehicleId} no encontrado`);
             }
-
-            user.assignedVehicle = vehicle;
+            user.assignedVehicle = assignedVehicle;
         }
 
         const savedUser = await this.usersRepository.save(user);
 
-        if (assignedVehicleId) {
-            const vehicle = await this.vehiclesRepository.findOne({ where: { id: assignedVehicleId } });
-            if (vehicle) {
-                await this.createVehicleAssignmentHistory(savedUser, vehicle, new Date());
-            }
+        if (assignedVehicle) {
+            await this.createVehicleAssignmentHistory(savedUser, assignedVehicle, new Date());
         }
 
         return savedUser;
@@ -175,6 +175,22 @@ export class UsersService {
             order: { id: 'ASC' },
         });
 
+        const currentMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+        const salaryRows = await this.consignmentsRepository
+            .createQueryBuilder('c')
+            .select('c.driver_id', 'driverId')
+            .addSelect('COALESCE(SUM(c.amount), 0)', 'total')
+            .where('c.purpose = :purpose', { purpose: ConsignmentPurpose.SALARY_ADVANCE })
+            .andWhere('c.status = :status', { status: ConsignmentStatus.OPEN })
+            .andWhere('c.consignment_date >= :monthStart', { monthStart: currentMonthStart })
+            .groupBy('c.driver_id')
+            .getRawMany<{ driverId: string; total: string }>();
+
+        const paidByDriver = new Map<number, number>(
+            salaryRows.map((row) => [Number(row.driverId), parseFloat(row.total)]),
+        );
+
         return drivers.map((driver) => {
             const sortedTrips = [...(driver.trips ?? [])].sort((a, b) => {
                 const first = b.startDate?.getTime() ?? 0;
@@ -187,10 +203,16 @@ export class UsersService {
                 ?? sortedTrips.find((trip) => trip.vehicle?.licensePlate)?.vehicle?.licensePlate
                 ?? null;
 
+            const monthlySalary = driver.monthlySalary ?? 0;
+            const paid = paidByDriver.get(driver.id) ?? 0;
+            const pendingBalance = Math.max(0, monthlySalary - paid);
+
             return {
                 id: driver.id,
                 fullName: driver.fullName,
                 email: driver.email,
+                monthlySalary,
+                pendingBalance,
                 assignedVehiclePlate,
                 isActive: driver.isActive,
             };

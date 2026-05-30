@@ -37,7 +37,7 @@ import { SnakeNamingStrategy } from './orm/snake-naming.strategy';
         password: config.get<string>('DB_PASSWORD', ''),
         database: config.get<string>('DB_DATABASE', 'control_flotas'),
         entities: [User, UserVehicleHistory, UserBankAccount, Vehicle, Expense, Evidence, Consignment, Trip, MaintenanceRecord],
-        synchronize: true,
+        synchronize: config.get<string>('NODE_ENV') !== 'production',
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),

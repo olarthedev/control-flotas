@@ -6,12 +6,13 @@ import { User } from './user.entity';
 import { UserVehicleHistory } from './user-vehicle-history.entity';
 import { UserBankAccount } from './user-bank-account.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
+import { Consignment } from '../consignments/consignment.entity';
 import { ChangeUserPasswordUseCase } from './application/change-user-password.use-case';
 import { BankAccountsController } from './bank-accounts.controller';
 import { BankAccountsService } from './bank-accounts.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Vehicle, UserVehicleHistory, UserBankAccount])],
+  imports: [TypeOrmModule.forFeature([User, Vehicle, UserVehicleHistory, UserBankAccount, Consignment])],
   controllers: [UsersController, BankAccountsController],
   providers: [UsersService, ChangeUserPasswordUseCase, BankAccountsService],
   exports: [UsersService],

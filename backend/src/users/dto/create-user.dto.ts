@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsOptional, Matches, IsEnum, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, IsOptional, Matches, IsEnum, IsNumber, IsBoolean, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from '../user.entity';
 
@@ -34,6 +34,12 @@ export class CreateUserDto {
     @IsString({ message: 'licenseNumber debe ser texto' })
     @MaxLength(50, { message: 'licenseNumber no puede exceder 50 caracteres' })
     licenseNumber?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: 'monthlySalary debe ser numérico' })
+    @Min(0, { message: 'monthlySalary no puede ser negativo' })
+    monthlySalary?: number;
 
     @IsOptional()
     @Type(() => Number)

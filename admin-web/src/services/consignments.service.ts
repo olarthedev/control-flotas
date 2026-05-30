@@ -66,10 +66,10 @@ function buildConsignmentNumber(): string {
 export async function createDriverPayment(driverId: number, amount: number): Promise<DriverPayment> {
     const payload = {
         consignmentNumber: buildPaymentNumber(),
+        purpose: 'salary_advance',
         amount,
         consignmentDate: new Date().toISOString(),
         driverId,
-        consignmentNotes: 'Abono de salario generado desde módulo de conductores',
     };
 
     const { data } = await axios.post<DriverPaymentResponse>(`${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.CONSIGNMENTS}`, payload);
