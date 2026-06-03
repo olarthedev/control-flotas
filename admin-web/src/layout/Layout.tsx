@@ -36,7 +36,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isSidebarExpanded = !isSidebarCollapsed || isSidebarPreviewExpanded;
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen overflow-x-hidden">
+    <div className="bg-[#FAFBFC] min-h-screen overflow-x-hidden">
       {/* TopBar */}
       <div className="fixed top-0 left-0 w-full z-50">
         <TopBar

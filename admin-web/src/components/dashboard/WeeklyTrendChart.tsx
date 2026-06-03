@@ -1,78 +1,135 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid,
+    Tooltip, ResponsiveContainer,
+} from 'recharts';
 import type { WeeklyTrendPoint } from '../../services/dashboard.service';
 
 interface WeeklyTrendChartProps {
-  data: WeeklyTrendPoint[];
+    data: WeeklyTrendPoint[];
 }
 
-function formatCompactCurrency(value: number): string {
-  return `$${Math.round(value).toLocaleString('es-CO')}`;
+function formatMillions(value: number): string {
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000)     return `$${(value / 1_000).toFixed(0)}K`;
+    return `$${value}`;
 }
+
+function formatFull(value: number): string {
+    return `$${Math.round(value).toLocaleString('es-CO')}`;
+}
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div
+            className="rounded-xl border bg-white px-4 py-3"
+            style={{
+                borderColor: '#ECECF3',
+                boxShadow: '0 8px 24px rgba(0,0,0,.10)',
+                fontSize: '12px',
+            }}
+        >
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{label}</p>
+            {payload.map((entry: any) => (
+                <div key={entry.dataKey} className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full" style={{ background: entry.color }} />
+                    <span className="font-medium text-gray-600">{entry.name}:</span>
+                    <span className="font-bold text-gray-900">{formatFull(entry.value)}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export function WeeklyTrendChart({ data }: WeeklyTrendChartProps) {
-  const hasData = data.some((item) => item.consignado > 0 || item.gastos > 0);
+    const hasData = data.some(d => d.consignado > 0 || d.gastos > 0);
 
-  return (
-    <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-      <h3 className="text-sm font-medium text-gray-900 mb-4">Tendencia Semanal</h3>
+    return (
+        <section
+            className="flex flex-col rounded-2xl border bg-white p-5"
+            style={{
+                borderColor: '#ECECF3',
+                boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
+            }}
+        >
+            {/* Header */}
+            <div className="mb-5 flex items-start justify-between">
+                <div>
+                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                        Tendencia semanal
+                    </p>
+                    <h2 className="mt-0.5 text-[15px] font-semibold text-gray-900">
+                        Consignado vs. gastado
+                    </h2>
+                </div>
+                <div className="flex items-center gap-4 text-[12px] font-medium text-gray-500">
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[#5B5CEB]" />
+                        Consignado
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[#E05A5A]" />
+                        Gastado
+                    </span>
+                </div>
+            </div>
 
-      {!hasData ? (
-        <div className="flex h-[250px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 px-6 text-center">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-slate-700">Sin movimientos esta semana</p>
-            <p className="text-xs text-slate-500">Cuando existan consignaciones o gastos, la tendencia se mostrara aqui.</p>
-          </div>
-        </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={data} margin={{ top: 8, right: 20, left: 12, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis
-              dataKey="day"
-              stroke="#9ca3af"
-              style={{ fontSize: '11px' }}
-            />
-            <YAxis
-              width={88}
-              tickMargin={6}
-              allowDecimals={false}
-              stroke="#9ca3af"
-              style={{ fontSize: '11px' }}
-              tickFormatter={(value) => formatCompactCurrency(value as number)}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                fontSize: '12px'
-              }}
-              formatter={(value: number | string | undefined) => formatCompactCurrency(Number(value ?? 0))}
-            />
-            <Legend
-              wrapperStyle={{ paddingTop: '12px', fontSize: '12px' }}
-              iconType="circle"
-            />
-            <Line
-              type="monotone"
-              dataKey="consignado"
-              stroke="#4f46e5"
-              dot={false}
-              strokeWidth={2.5}
-              name="CONSIGNADO"
-            />
-            <Line
-              type="monotone"
-              dataKey="gastos"
-              stroke="#cbd5e1"
-              dot={false}
-              strokeWidth={1.5}
-              strokeDasharray="5 5"
-              name="GASTOS"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  );
+            {!hasData ? (
+                <div className="flex h-[220px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50">
+                    <p className="text-[12px] text-gray-400">Sin movimientos esta semana</p>
+                </div>
+            ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id="grad-consignado" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor="#5B5CEB" stopOpacity={0.18} />
+                                <stop offset="95%" stopColor="#5B5CEB" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="grad-gastos" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor="#E05A5A" stopOpacity={0.14} />
+                                <stop offset="95%" stopColor="#E05A5A" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="#F3F4F6" strokeDasharray="0" vertical={false} />
+                        <XAxis
+                            dataKey="day"
+                            tick={{ fontSize: 11, fill: '#9CA3AF', fontWeight: 500 }}
+                            axisLine={false}
+                            tickLine={false}
+                            dy={8}
+                        />
+                        <YAxis
+                            width={60}
+                            tick={{ fontSize: 11, fill: '#9CA3AF', fontWeight: 500 }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(v) => formatMillions(v as number)}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area
+                            type="monotone"
+                            dataKey="consignado"
+                            name="Consignado"
+                            stroke="#5B5CEB"
+                            strokeWidth={2.2}
+                            fill="url(#grad-consignado)"
+                            dot={false}
+                            activeDot={{ r: 4, fill: '#5B5CEB', strokeWidth: 0 }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="gastos"
+                            name="Gastado"
+                            stroke="#E05A5A"
+                            strokeWidth={2}
+                            fill="url(#grad-gastos)"
+                            dot={false}
+                            activeDot={{ r: 4, fill: '#E05A5A', strokeWidth: 0 }}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            )}
+        </section>
+    );
 }
