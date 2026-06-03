@@ -16,6 +16,14 @@ function daysAgo(n, hour = 9) {
     return d.toISOString();
 }
 
+// Fecha fija en el mes actual para que el dashboard muestre datos reales
+function thisMonthDate(dayOfMonth, hour = 9) {
+    const d = new Date();
+    d.setDate(dayOfMonth);
+    d.setHours(hour, 0, 0, 0);
+    return d.toISOString();
+}
+
 function daysFromNow(n) {
     const d = new Date();
     d.setDate(d.getDate() + n);
@@ -112,7 +120,7 @@ async function main() {
     for (const [num, drv, veh, s, e, ori, dst, st, bud, sm, em] of tripRows) {
         await db.query(
             `INSERT INTO trips (trip_number, driver_id, vehicle_id, start_date, end_date, origin, destination, status, planned_budget, start_mileage, end_mileage)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8::trip_status,$9,$10,$11)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
             [`T-${num}`, drv, veh, s, e, ori, dst, st, bud, sm, em],
         );
     }
@@ -135,7 +143,7 @@ async function main() {
     for (const [num, pur, amt, dat, drv, veh, st, cl] of conRows) {
         await db.query(
             `INSERT INTO consignments (consignment_number, purpose, amount, consignment_date, driver_id, vehicle_id, status, closing_date)
-             VALUES ($1,$2::consignment_purpose,$3,$4,$5,$6,$7::consignment_status,$8)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
             [`CON-${num}`, pur, amt, dat, drv, veh, st, cl],
         );
     }
@@ -210,7 +218,7 @@ async function main() {
     for (const [drv, veh, type, amt, dat, desc, st, valAt, rej] of expenses) {
         await db.query(
             `INSERT INTO expenses (type, amount, expense_date, description, status, driver_id, vehicle_id, validated_at, rejection_reason)
-             VALUES ($1::expense_type,$2,$3,$4,$5::expense_status,$6,$7,$8,$9)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
             [type, amt, dat, desc, st, drv, veh, valAt, rej],
         );
     }
@@ -239,11 +247,55 @@ async function main() {
     for (const [veh, perf, type, title, dat, cost, inv, prov, mil, st, fu] of maintRows) {
         await db.query(
             `INSERT INTO maintenance_records (vehicle_id, performed_by_id, type, title, maintenance_date, cost, invoice_number, provider, mileage, status, requires_follow_up)
-             VALUES ($1,$2,$3::maintenance_type,$4,$5,$6,$7,$8,$9,$10::maintenance_status,$11)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
             [veh, perf, type, title, dat, cost, inv, prov, mil, st, fu],
         );
     }
     console.log(`  ${maintRows.length} registros de mantenimiento`);
+
+    // =====================================================================
+    // DATOS DEL MES ACTUAL (para que el dashboard muestre numeros reales)
+    // =====================================================================
+    console.log('Datos del mes actual...');
+
+    // Consignaciones abiertas este mes
+    await db.query(
+        `INSERT INTO consignments (consignment_number, purpose, amount, consignment_date, driver_id, vehicle_id, status)
+         VALUES ($1,'salary_advance',$2,$3,$4,$5,'open'),($6,'salary_advance',$7,$8,$9,$10,'open')`,
+        ['CON-MES-1', 2300000, thisMonthDate(1), did1, vid1,
+         'CON-MES-2', 2000000, thisMonthDate(1), did2, vid2],
+    );
+
+    // Gastos del mes actual — mix approved/pending
+    const currentMonthExpenses = [
+        // Carlos - aprobados este mes
+        [did1, vid1, 'fuel',    185000, thisMonthDate(1, 7),  'Combustible salida mes',   'approved', now],
+        [did1, vid1, 'toll',     48000, thisMonthDate(1, 9),  'Peajes autopista',          'approved', now],
+        [did1, vid1, 'food',     35000, thisMonthDate(1, 12), 'Almuerzo',                  'approved', now],
+        [did1, vid1, 'fuel',    162000, thisMonthDate(2, 7),  'Combustible retorno',       'approved', now],
+        [did1, vid1, 'parking',  28000, thisMonthDate(2, 18), 'Parqueadero',               'approved', now],
+        // Carlos - pendientes este mes
+        [did1, vid1, 'fuel',    170000, daysAgo(0, 8),  'Combustible hoy',               'pending', null],
+        [did1, vid1, 'food',     30000, daysAgo(0, 13), 'Almuerzo hoy',                  'pending', null],
+        // Edwin - aprobados este mes
+        [did2, vid2, 'fuel',    158000, thisMonthDate(1, 7),  'Combustible',              'approved', now],
+        [did2, vid2, 'toll',     35000, thisMonthDate(1, 9),  'Peajes',                   'approved', now],
+        [did2, vid2, 'food',     28000, thisMonthDate(1, 12), 'Almuerzo',                 'approved', now],
+        [did2, vid2, 'fuel',    145000, thisMonthDate(2, 7),  'Combustible',              'approved', now],
+        // Edwin - pendientes este mes
+        [did2, vid2, 'fuel',    152000, daysAgo(0, 7),  'Combustible hoy',              'pending', null],
+        [did2, vid2, 'food',     25000, daysAgo(0, 13), 'Almuerzo hoy',                 'pending', null],
+    ];
+
+    for (const [drv, veh, type, amt, dat, desc, st, valAt] of currentMonthExpenses) {
+        const rejReason = null;
+        await db.query(
+            `INSERT INTO expenses (type, amount, expense_date, description, status, driver_id, vehicle_id, validated_at, rejection_reason)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            [type, amt, dat, desc, st, drv, veh, valAt, rejReason],
+        );
+    }
+    console.log(`  ${currentMonthExpenses.length} gastos del mes actual`);
 
     await db.end();
 

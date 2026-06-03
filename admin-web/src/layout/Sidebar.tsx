@@ -161,8 +161,8 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
     top-16
     left-0
     h-[calc(100vh-64px)]
-    bg-[#f6f7fb]
-    border-r border-gray-200
+    bg-white
+    border-r border-gray-100
     flex flex-col
     transition-[width] duration-300 ease-out
     ${isCollapsed && isExpanded ? "z-[65]" : "z-40"}
@@ -183,7 +183,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
         {menuSections.map(section => (
           <div key={section.title} className="mb-6 overflow-visible last:mb-0">
             {isExpanded && (
-              <h3 className="px-3 mb-2 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+              <h3 className="px-3 mb-2 text-[11px] font-semibold text-gray-400 tracking-[0.14em] uppercase">
                 {section.title}
               </h3>
             )}
@@ -200,23 +200,14 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
                     title={item.label}
                     className={`
                 group relative flex items-center
-                justify-start px-3 py-2.5 rounded-xl
+                justify-start px-3 py-3 rounded-[14px]
                 transition-colors duration-300 ease-out
                 ${active
-                        ? "bg-[#e9e8fb] text-[#5c4df2]"
-                        : "text-[#64748b] hover:bg-gray-100 hover:text-slate-700"
+                        ? "bg-[rgba(91,92,235,0.12)] text-[#5B5CEB]"
+                        : "text-[#64748b] hover:bg-gray-50 hover:text-slate-700"
                       }
               `}
                   >
-
-                    <span
-                      className={`
-    absolute left-0 top-1/2 -translate-y-1/2
-    h-5 w-1 rounded-r
-    transition-all duration-300 ease-in-out
-    ${active ? "bg-[#5c4df2] opacity-100" : "opacity-0"}
-  `}
-                    />
 
                     <div className="flex items-center gap-3">
                       <div
@@ -224,20 +215,20 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
       flex h-5 w-5 items-center justify-center
       transition-colors duration-300 ease-out
       ${active
-                            ? "text-[#5c4df2]"
-                            : "text-slate-400 group-hover:text-slate-700"
+                            ? "text-[#5B5CEB]"
+                            : "text-slate-400 group-hover:text-slate-600"
                           }
     `}
                       >
-                        <Icon size={18} strokeWidth={2} />
+                        <Icon size={18} strokeWidth={1.8} />
                       </div>
 
                       {isExpanded && (
                         <span
                           className={`
-      text-[13.5px] tracking-tight whitespace-nowrap
+      text-[14px] tracking-tight whitespace-nowrap
       ${active
-                              ? "font-semibold text-[#5c4df2]"
+                              ? "font-semibold text-[#5B5CEB]"
                               : "font-medium text-slate-600 group-hover:text-slate-700"
                             }
     `}

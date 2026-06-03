@@ -34,6 +34,7 @@ export function StatCard({
     const trendPositive = (trend ?? 0) >= 0;
     const hasTrend = trend !== undefined;
     const hasSpark = sparklineData && sparklineData.length > 0;
+    const gradientId = `sg_${title.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
     return (
         <article
@@ -60,7 +61,7 @@ export function StatCard({
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={sparklineData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id={`sg-${title}`} x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%"  stopColor={sparklineColor} stopOpacity={0.25} />
                                         <stop offset="95%" stopColor={sparklineColor} stopOpacity={0} />
                                     </linearGradient>
@@ -70,7 +71,7 @@ export function StatCard({
                                     dataKey="v"
                                     stroke={sparklineColor}
                                     strokeWidth={1.8}
-                                    fill={`url(#sg-${title})`}
+                                    fill={`url(#${gradientId})`}
                                     dot={false}
                                     isAnimationActive={false}
                                 />

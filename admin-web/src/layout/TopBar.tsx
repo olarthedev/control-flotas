@@ -225,7 +225,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     };
 
     return (
-        <header className="relative h-[64px] bg-[#f6f7fb] border-b border-gray-200">
+        <header className="relative h-[64px] bg-white border-b border-gray-100">
             <div
                 data-sidebar-hover-zone="true"
                 onMouseEnter={() => onHoverChange(true)}
@@ -236,7 +236,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }
                     onHoverChange(false);
                 }}
-                className={`absolute left-0 top-0 flex h-full items-center border-r border-gray-200 bg-[#f6f7fb] px-4 justify-start transition-[width] duration-300 ease-out ${isSidebarPreviewExpanded ? "z-[70] shadow-lg" : "z-10"}`}
+                className={`absolute left-0 top-0 flex h-full items-center border-r border-gray-100 bg-white px-4 justify-start transition-[width] duration-300 ease-out ${isSidebarPreviewExpanded ? "z-[70] shadow-lg" : "z-10"}`}
                 style={{ width: `${effectiveSidebarWidth}px` }}
             >
                 <div className="flex w-full items-center gap-2.5">
@@ -253,7 +253,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                             transitionDelay: isSidebarExpanded ? "90ms" : "0ms",
                         }}
                     >
-                        <div className="text-lg font-bold text-gray-900 leading-none">
+                        <div className="text-[17px] font-bold text-gray-900 leading-none tracking-tight">
                             LogiControl
                         </div>
                     </div>
@@ -406,15 +406,15 @@ export const TopBar: React.FC<TopBarProps> = ({
                             aria-haspopup="menu"
                             aria-expanded={isUserMenuOpen}
                         >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#eef2ff] text-xs font-semibold text-[#5c4df2]">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eef2ff] text-[13px] font-bold text-[#5B5CEB]">
                                 {userInitials}
                             </div>
 
                             <div className="leading-tight">
-                                <p className="text-[13px] font-semibold text-gray-800">
+                                <p className="text-[14px] font-semibold text-gray-900">
                                     {userProfile.userFullName}
                                 </p>
-                                <p className="text-[11px] text-gray-400">
+                                <p className="text-[12px] text-gray-400">
                                     {userProfile.userRole}
                                 </p>
                             </div>
