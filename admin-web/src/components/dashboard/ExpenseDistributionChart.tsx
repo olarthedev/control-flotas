@@ -32,7 +32,7 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
 
     return (
         <section
-            className="flex flex-col rounded-2xl border bg-white p-5"
+            className="flex h-full w-full flex-col rounded-2xl border bg-white p-5"
             style={{
                 borderColor: '#ECECF3',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
@@ -85,9 +85,9 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
                                             fontSize: '12px',
                                             boxShadow: '0 8px 24px rgba(0,0,0,.08)',
                                         }}
-                                        formatter={(value: number, _n, payload) => {
+                                        formatter={(value: number | undefined, _n, payload) => {
                                             const pct = Number((payload as any)?.payload?.percentage ?? 0);
-                                            return [`${formatCurrency(value)} (${pct}%)`, ''];
+                                            return [`${formatCurrency(Number(value ?? 0))} (${pct}%)`, ''];
                                         }}
                                     />
                                 </PieChart>

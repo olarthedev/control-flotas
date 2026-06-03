@@ -67,9 +67,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         onHoverChange={setIsSidebarHovered}
       />
 
-      {/* Contenido principal */}
+      {/* Contenido principal — z-10 para quedar sobre el fondo de nodos (z-0) */}
       <main
-        className="pt-[64px]"
+        className="relative z-10 pt-[64px]"
         style={{ paddingLeft: `${sidebarWidth}px` }}
       >
         <div className="mx-auto min-h-[calc(100vh-64px)] w-full px-10 py-8">

@@ -15,7 +15,7 @@ export function FleetStatusWidget({ total, active, inWorkshop, inactive, documen
 
     return (
         <section
-            className="flex flex-col rounded-2xl border bg-white p-5"
+            className="flex h-full w-full flex-col rounded-2xl border bg-white p-5"
             style={{
                 borderColor: '#ECECF3',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',

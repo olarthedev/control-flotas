@@ -237,11 +237,11 @@ export const Dashboard = () => {
             </div>
 
             {/* Row 2: Alerts + Distribution */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                <div className="xl:col-span-7">
+            <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
+                <div className="flex xl:col-span-7">
                     <AlertsPanel alerts={alerts} />
                 </div>
-                <div className="xl:col-span-5">
+                <div className="flex xl:col-span-5">
                     <ExpenseDistributionChart
                         data={distribution}
                         totalApproved={summary?.totalApproved}
@@ -251,11 +251,11 @@ export const Dashboard = () => {
             </div>
 
             {/* Row 3: Weekly trend + Fleet status */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-                <div className="xl:col-span-2">
+            <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+                <div className="flex xl:col-span-2">
                     <WeeklyTrendChart data={weeklyTrend} />
                 </div>
-                <div className="xl:col-span-1">
+                <div className="flex xl:col-span-1">
                     <FleetStatusWidget
                         total={vehicleSummaries.length}
                         active={activeCount}
@@ -267,10 +267,10 @@ export const Dashboard = () => {
             </div>
 
             {/* Row 4: Maintenance + Drivers + Top vehicles */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <MaintenanceListWidget records={upcomingMaintenance} />
-                <DriverAttentionWidget drivers={driversNeedingAttention} />
-                <TopVehiclesWidget vehicles={topVehicles} />
+            <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="flex"><MaintenanceListWidget records={upcomingMaintenance} /></div>
+                <div className="flex"><DriverAttentionWidget drivers={driversNeedingAttention} /></div>
+                <div className="flex"><TopVehiclesWidget vehicles={topVehicles} /></div>
             </div>
         </div>
     );
