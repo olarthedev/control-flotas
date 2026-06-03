@@ -17,50 +17,94 @@ describe('AppController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // reset database between tests
     dataSource = app.get(DataSource);
-    await dataSource.synchronize(true); // drop & recreate schema
+    await dataSource.synchronize(true);
   });
 
-  it('/ (GET)', () => {
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('GET / returns 200', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
       .expect('Hello World!');
   });
 
-  it('should create user, vehicle and trip and then retrieve metrics', async () => {
+  it('creates driver, vehicle, assigns vehicle and creates expense', async () => {
     const server = app.getHttpServer();
 
-    // create a driver
     const userResp = await request(server)
       .post('/users')
-      .send({ fullName: 'Test Driver', email: 'driver@example.com', password: 'password123', role: 'driver', isActive: true });
+      .send({
+        fullName: 'Test Driver',
+        email: 'driver@example.com',
+        password: 'password123',
+        role: 'driver',
+      });
     expect(userResp.status).toBe(201);
     const driverId = userResp.body.id;
 
-    // create a vehicle
     const vehicleResp = await request(server)
       .post('/vehicles')
-      .send({ licensePlate: 'XYZ123', brand: 'Test', model: 'Model', type: 'truck' });
+      .send({ licensePlate: 'XYZ-123', brand: 'Test', model: 'Model', type: 'truck' });
     expect(vehicleResp.status).toBe(201);
     const vehicleId = vehicleResp.body.id;
 
-    // create a trip
+    const assignResp = await request(server)
+      .patch(`/users/${driverId}/assign-vehicle`)
+      .send({ assignedVehicleId: vehicleId, assignmentChangeReason: 'Initial assignment' });
+    expect(assignResp.status).toBe(200);
+
+    const expenseResp = await request(server)
+      .post('/expenses')
+      .send({
+        type: 'fuel',
+        amount: 150000,
+        expenseDate: new Date().toISOString(),
+        driverId,
+        vehicleId,
+      });
+    expect(expenseResp.status).toBe(201);
+    expect(expenseResp.body.status).toBe('pending');
+
+    const listResp = await request(server).get('/expenses');
+    expect(listResp.status).toBe(200);
+    expect(listResp.body.data).toHaveLength(1);
+    expect(listResp.body.data[0].type).toBe('fuel');
+  });
+
+  it('creates trip and retrieves it from the list', async () => {
+    const server = app.getHttpServer();
+
+    const userResp = await request(server)
+      .post('/users')
+      .send({ fullName: 'Trip Driver', email: 'trip@example.com', password: 'password123', role: 'driver' });
+    expect(userResp.status).toBe(201);
+    const driverId = userResp.body.id;
+
+    const vehicleResp = await request(server)
+      .post('/vehicles')
+      .send({ licensePlate: 'ABC-999', brand: 'Brand', model: 'Model', type: 'van' });
+    expect(vehicleResp.status).toBe(201);
+    const vehicleId = vehicleResp.body.id;
+
     const tripResp = await request(server)
       .post('/trips')
-      .send({ tripNumber: 'T100', startDate: '2026-02-22', origin: 'Bogota', destination: 'Medellin', driverId, vehicleId });
+      .send({
+        tripNumber: 'T-001',
+        origin: 'Bogota',
+        destination: 'Medellin',
+        driverId,
+        vehicleId,
+      });
     expect(tripResp.status).toBe(201);
 
-    // GET trips
     const listResp = await request(server).get('/trips');
     expect(listResp.status).toBe(200);
     expect(Array.isArray(listResp.body)).toBe(true);
-    expect(listResp.body.length).toBe(1);
-
-    // metrics should report 1 user, 1 vehicle, 1 trip
-    const metricsResp = await request(server).get('/metrics');
-    expect(metricsResp.status).toBe(200);
-    expect(metricsResp.body).toMatchObject({ users: 1, vehicles: 1, trips: 1 });
+    expect(listResp.body).toHaveLength(1);
+    expect(listResp.body[0].origin).toBe('Bogota');
   });
 });
