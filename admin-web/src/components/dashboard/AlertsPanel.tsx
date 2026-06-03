@@ -51,7 +51,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
             }}
         >
             {/* Header */}
-            <div className="flex items-start justify-between border-b px-5 py-4" style={{ borderColor: '#F3F4F6' }}>
+            <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
                 <div>
                     <p className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">
                         Alertas inteligentes
@@ -69,7 +69,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
             </div>
 
             {/* Alert list */}
-            <ul className="flex flex-col divide-y" style={{ borderColor: '#F9FAFB' }}>
+            <ul className="flex flex-col divide-y divide-gray-100/60">
                 {alerts.length === 0 && (
                     <li className="flex flex-col items-center justify-center gap-2 px-5 py-10 text-center">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">

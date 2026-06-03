@@ -14,7 +14,6 @@ import { fetchDriverSummaries, type DriverSummary } from '../services/drivers.se
 import { fetchVehicles, type VehicleCardData } from '../services/vehicles.service';
 
 import { DashboardTopBar } from '../components/dashboard/TopBar';
-import { NetworkBackground } from '../components/dashboard/NetworkBackground';
 import { StatCard } from '../components/dashboard/StatCard';
 import { AlertsPanel, type DashboardAlert } from '../components/dashboard/AlertsPanel';
 import { ExpenseDistributionChart } from '../components/dashboard/ExpenseDistributionChart';
@@ -199,8 +198,7 @@ export const Dashboard = () => {
 
     if (isLoading) {
         return (
-            <div className="relative min-h-[60vh] overflow-hidden">
-                <NetworkBackground />
+            <div className="space-y-4">
                 <DashboardTopBar />
                 <div className="grid grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
@@ -216,9 +214,7 @@ export const Dashboard = () => {
     }
 
     return (
-        <div className="relative space-y-4 overflow-hidden">
-            <NetworkBackground />
-
+        <div className="space-y-4">
             {/* Page header */}
             <DashboardTopBar />
 

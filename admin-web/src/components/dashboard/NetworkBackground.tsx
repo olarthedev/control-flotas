@@ -32,10 +32,12 @@ export function NetworkBackground() {
     return (
         <svg
             aria-hidden="true"
+            viewBox="0 0 1600 800"
+            preserveAspectRatio="xMidYMid slice"
             className="pointer-events-none absolute inset-0 h-full w-full"
             xmlns="http://www.w3.org/2000/svg"
         >
-            <g opacity="0.045" stroke="#4B5680" fill="#4B5680">
+            <g opacity="0.08" stroke="#4B5680" fill="#4B5680">
                 {EDGES.map((edge, i) => (
                     <line
                         key={i}

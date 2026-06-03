@@ -29,7 +29,7 @@ export function MaintenanceListWidget({ records }: MaintenanceListWidgetProps) {
             }}
         >
             {/* Header */}
-            <div className="flex items-start justify-between border-b px-5 py-4" style={{ borderColor: '#F3F4F6' }}>
+            <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
                 <div>
                     <p className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">
                         Próximos servicios
@@ -55,7 +55,7 @@ export function MaintenanceListWidget({ records }: MaintenanceListWidgetProps) {
                     <p className="text-[12px] text-gray-400">Sin mantenimientos próximos</p>
                 </div>
             ) : (
-                <ul className="divide-y" style={{ borderColor: '#F9FAFB' }}>
+                <ul className="divide-y divide-gray-100/60">
                     {shown.map((record) => {
                         const p = PRIORITY[record.type];
                         return (

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { NetworkBackground } from "../components/dashboard/NetworkBackground";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,6 +38,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="bg-[#FAFBFC] min-h-screen overflow-x-hidden">
+      {/* Fondo de nodos — fijo, detrás de todo el contenido */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 overflow-hidden"
+        style={{ top: '64px', zIndex: 0 }}
+      >
+        <NetworkBackground />
+      </div>
+
       {/* TopBar */}
       <div className="fixed top-0 left-0 w-full z-50">
         <TopBar
