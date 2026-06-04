@@ -92,6 +92,22 @@ export async function fetchExpenses(): Promise<ExpenseItem[]> {
     return data.map(normalizeExpense);
 }
 
+export async function fetchExpensesByFilters(params: {
+    vehicleId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+}): Promise<ExpenseItem[]> {
+    const query = new URLSearchParams({ limit: '500', page: '1' });
+    if (params.vehicleId) query.set('vehicleId', String(params.vehicleId));
+    if (params.dateFrom) query.set('dateFrom', params.dateFrom);
+    if (params.dateTo) query.set('dateTo', params.dateTo);
+
+    const { data } = await axios.get<{ data: ExpenseResponse[] }>(
+        `${apiConfig.BASE_URL}${apiConfig.ENDPOINTS.EXPENSES}?${query.toString()}`,
+    );
+    return (data.data ?? []).map(normalizeExpense);
+}
+
 export async function fetchPendingExpensesCount(): Promise<number> {
     const pendingExpenses = await fetchPendingExpenses();
     return pendingExpenses.length;
