@@ -7,7 +7,7 @@ export function DashboardTopBar() {
         <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
             {/* Left: breadcrumb + title */}
             <div className="min-w-0 flex-1">
-                <nav className="mb-3 flex items-center gap-1.5 text-[11px]">
+                <nav className="mb-4 flex items-center gap-1.5 text-[12px]">
                     <Link to="/" className="font-medium text-gray-400 transition hover:text-gray-600">
                         Inicio
                     </Link>
@@ -15,10 +15,10 @@ export function DashboardTopBar() {
                     <span className="font-semibold text-[#5B5CEB]">Dashboard</span>
                 </nav>
 
-                <h1 className="text-[22px] font-bold leading-tight tracking-tight text-gray-900">
+                <h1 className="text-[26px] font-bold leading-tight tracking-tight text-gray-900">
                     Centro de control
                 </h1>
-                <p className="mt-1.5 max-w-[640px] text-[13px] leading-relaxed text-gray-500">
+                <p className="mt-2 max-w-[640px] text-[15px] leading-relaxed text-gray-500">
                     Estado financiero y operativo de la flota en una sola vista.
                     Detecta riesgos, prioriza acciones y toma decisiones con contexto.
                 </p>

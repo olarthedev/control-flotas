@@ -32,23 +32,23 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
 
     return (
         <section
-            className="flex h-full w-full flex-col rounded-2xl border bg-white p-5"
+            className="flex h-full w-full flex-col rounded-2xl border bg-white p-6"
             style={{
                 borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
             }}
         >
             {/* Header */}
-            <div className="mb-4 flex items-start justify-between">
+            <div className="mb-5 flex items-start justify-between">
                 <div>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                         Distribución
                     </p>
-                    <h2 className="mt-0.5 text-[15px] font-semibold text-gray-900">
+                    <h2 className="mt-0.5 text-lg font-semibold text-gray-900">
                         Gastos por rubro
                     </h2>
                 </div>
-                <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-500">
+                <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">
                     Esta semana
                 </span>
             </div>
@@ -94,22 +94,22 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
                             </ResponsiveContainer>
                             {/* Center text */}
                             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-[17px] font-bold leading-none text-gray-900">100%</span>
-                                <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-gray-400">del gasto</span>
+                                <span className="text-xl font-semibold leading-none text-gray-900">100%</span>
+                                <span className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">del gasto</span>
                             </div>
                         </div>
 
                         {/* Legend */}
-                        <ul className="flex flex-1 flex-col gap-2">
+                        <ul className="flex flex-1 flex-col gap-2.5">
                             {chartData.map((item) => (
                                 <li key={item.name} className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: item.color }} />
-                                        <span className="truncate text-[12px] font-medium text-gray-600">
+                                        <span className="truncate text-sm font-medium text-gray-600">
                                             {item.displayName}
                                         </span>
                                     </div>
-                                    <span className="shrink-0 text-[12px] font-semibold text-gray-800">
+                                    <span className="shrink-0 text-sm font-semibold text-gray-800">
                                         {item.percentage}%
                                     </span>
                                 </li>
@@ -119,29 +119,29 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
 
                     {/* Bottom summary */}
                     {topItem && (
-                        <div className="mt-4 flex items-end justify-between border-t pt-4" style={{ borderColor: 'var(--card-border)' }}>
+                        <div className="mt-5 flex items-end justify-between border-t pt-5" style={{ borderColor: 'var(--card-border)' }}>
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                                     Rubro principal
                                 </p>
-                                <div className="mt-1 flex items-center gap-1.5">
+                                <div className="mt-1.5 flex items-center gap-1.5">
                                     <span className="h-2 w-2 rounded-full" style={{ background: topItem.color }} />
-                                    <span className="text-[13px] font-semibold text-gray-800">{topItem.displayName}</span>
+                                    <span className="text-sm font-semibold text-gray-800">{topItem.displayName}</span>
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-gray-400">
+                                <p className="mt-0.5 text-sm font-medium text-gray-400">
                                     {topItem.percentage}% del total gastado
                                 </p>
                             </div>
                             {totalApproved !== undefined && (
                                 <div className="text-right">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                                         Total gastado
                                     </p>
-                                    <p className="mt-1 text-[18px] font-bold leading-none text-gray-900">
+                                    <p className="mt-1.5 text-xl font-bold leading-none text-gray-900">
                                         {formatCurrency(totalApproved)}
                                     </p>
                                     {approvedTrend !== undefined && (
-                                        <p className={`mt-0.5 text-[11px] font-semibold ${approvedTrend >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                        <p className={`mt-0.5 text-sm font-semibold ${approvedTrend >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                                             {approvedTrend >= 0 ? '▲' : '▼'} {Math.abs(approvedTrend)}% vs. previa
                                         </p>
                                     )}

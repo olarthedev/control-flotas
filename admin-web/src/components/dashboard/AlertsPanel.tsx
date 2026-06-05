@@ -51,17 +51,17 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
             }}
         >
             {/* Header */}
-            <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
+            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
                 <div>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                         Alertas inteligentes
                     </p>
-                    <h2 className="mt-0.5 text-[15px] font-semibold text-gray-900">
+                    <h2 className="mt-0.5 text-lg font-semibold text-gray-900">
                         Requieren tu atención
                     </h2>
                 </div>
                 {urgentCount > 0 && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold text-red-600">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                         {urgentCount} crítica{urgentCount !== 1 ? 's' : ''}
                     </span>
@@ -71,35 +71,35 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
             {/* Alert list */}
             <ul className="flex flex-col divide-y divide-gray-100/60">
                 {alerts.length === 0 && (
-                    <li className="flex flex-col items-center justify-center gap-2 px-5 py-10 text-center">
+                    <li className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
                             <ShieldAlert size={18} className="text-emerald-500" />
                         </div>
-                        <p className="text-[13px] font-medium text-gray-700">Todo en orden</p>
-                        <p className="text-[12px] text-gray-400">No hay alertas activas en este momento.</p>
+                        <p className="text-sm font-medium text-gray-700">Todo en orden</p>
+                        <p className="text-sm text-gray-400">No hay alertas activas en este momento.</p>
                     </li>
                 )}
                 {alerts.map((alert) => {
                     const colors = SEVERITY_COLORS[alert.severity];
                     const IconComp = ICONS[alert.iconType];
                     return (
-                        <li key={alert.id} className="flex items-start gap-3.5 px-5 py-3.5 transition-colors hover:bg-gray-50/70">
+                        <li key={alert.id} className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-gray-50/70">
                             <div
-                                className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                                 style={{ background: colors.iconBg }}
                             >
-                                <IconComp size={15} style={{ color: colors.iconColor }} />
+                                <IconComp size={16} style={{ color: colors.iconColor }} />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="text-[13px] font-semibold text-gray-900 leading-snug">
+                                <p className="text-[15px] font-semibold text-gray-900 leading-snug">
                                     {alert.title}
                                 </p>
-                                <p className="mt-0.5 text-[12px] leading-relaxed text-gray-500">
+                                <p className="mt-0.5 text-sm font-normal leading-relaxed text-gray-400">
                                     {alert.description}
                                 </p>
                             </div>
                             <span
-                                className="mt-1 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize"
+                                className="mt-0.5 shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold capitalize"
                                 style={{
                                     background: colors.iconBg,
                                     color: colors.iconColor,

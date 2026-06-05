@@ -198,14 +198,14 @@ export const Dashboard = () => {
 
     if (isLoading) {
         return (
-            <div className="space-y-4">
+            <div className="space-y-6">
                 <DashboardTopBar />
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-6">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-32 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
+                        <div key={i} className="h-36 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
                     ))}
                 </div>
-                <div className="mt-4 grid grid-cols-12 gap-4">
+                <div className="mt-6 grid grid-cols-12 gap-6">
                     <div className="col-span-7 h-64 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
                     <div className="col-span-5 h-64 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
                 </div>
@@ -214,12 +214,12 @@ export const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-6">
             {/* Page header */}
             <DashboardTopBar />
 
             {/* Row 1: KPI cards */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
                 {kpiCards.map(card => (
                     <StatCard
                         key={card.title}
@@ -237,7 +237,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Row 2: Alerts + Distribution */}
-            <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
+            <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-12">
                 <div className="flex xl:col-span-7">
                     <AlertsPanel alerts={alerts} />
                 </div>
@@ -251,7 +251,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Row 3: Weekly trend + Fleet status */}
-            <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+            <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-3">
                 <div className="flex xl:col-span-2">
                     <WeeklyTrendChart data={weeklyTrend} />
                 </div>
@@ -267,7 +267,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Row 4: Maintenance + Drivers + Top vehicles */}
-            <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
                 <div className="flex"><MaintenanceListWidget records={upcomingMaintenance} /></div>
                 <div className="flex"><DriverAttentionWidget drivers={driversNeedingAttention} /></div>
                 <div className="flex"><TopVehiclesWidget vehicles={topVehicles} /></div>

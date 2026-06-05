@@ -38,20 +38,20 @@ export function StatCard({
 
     return (
         <article
-            className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border bg-white p-5"
+            className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border bg-white p-6"
             style={{
                 borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
-                minHeight: '128px',
+                minHeight: '140px',
             }}
         >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400 leading-none">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 leading-none">
                         {title}
                     </p>
-                    <p className="mt-3 text-[28px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="mt-3 text-[30px] font-semibold leading-none tracking-tight text-gray-900">
                         {value}
                     </p>
                 </div>
@@ -89,26 +89,26 @@ export function StatCard({
             </div>
 
             {/* Footer */}
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2">
                 {hasTrend && (
-                    <div className={`inline-flex items-center gap-1 text-[12px] font-semibold ${trendPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+                    <div className={`inline-flex items-center gap-1 text-sm font-semibold ${trendPositive ? 'text-emerald-600' : 'text-red-500'}`}>
                         {trendPositive
-                            ? <TrendingUp size={13} />
-                            : <TrendingDown size={13} />
+                            ? <TrendingUp size={14} />
+                            : <TrendingDown size={14} />
                         }
                         <span>{trendPositive ? '+' : ''}{trend}%</span>
                     </div>
                 )}
                 {hasTrend && (
-                    <span className="text-[11px] text-gray-400">vs. semana previa</span>
+                    <span className="text-sm font-medium text-gray-400">vs. semana previa</span>
                 )}
                 {badge && (
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${BADGE_STYLES[badgeColor]}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${BADGE_STYLES[badgeColor]}`}>
                         {badge}
                     </span>
                 )}
                 {valueNote && !hasTrend && !badge && (
-                    <span className="text-[11px] text-gray-400">{valueNote}</span>
+                    <span className="text-sm font-medium text-gray-400">{valueNote}</span>
                 )}
             </div>
         </article>

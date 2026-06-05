@@ -56,7 +56,11 @@ export function NetworkBackground() {
             className="pointer-events-none absolute inset-0 h-full w-full"
             xmlns="http://www.w3.org/2000/svg"
         >
-            <g opacity="0.12" stroke="#243058" fill="#243058">
+            <g
+                className="text-[#243058] dark:text-[#a5b4fc] opacity-[0.13] dark:opacity-[0.45]"
+                stroke="currentColor"
+                fill="currentColor"
+            >
                 {EDGES.map((edge, i) => (
                     <line
                         key={i}

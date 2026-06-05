@@ -49,7 +49,7 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
 };
 
 const CARD_SHADOW = '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)';
-const CARD_BORDER = 'var(--card-border)';
+const CARD_BORDER = '#ECECF3';
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 function shiftWeek(weekKey: string, delta: number): string {
@@ -136,17 +136,17 @@ function CategoryIcon({ type }: { type: string }) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: ExpenseStatus }) {
     if (status === 'approved') return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[14px] font-semibold text-emerald-700">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Aprobado
         </span>
     );
     if (status === 'rejected') return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[14px] font-semibold text-red-600">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500" />Rechazado
         </span>
     );
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[14px] font-semibold text-amber-700">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Pendiente
         </span>
     );
@@ -342,28 +342,28 @@ export function VehicleExpensesDetailPage() {
             {/* ── Header ────────────────────────────────────────────────────── */}
             <header className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <nav className="mb-[18px] flex items-center gap-2 text-[11px] text-slate-400">
-                        <Link to="/" className="font-medium text-slate-500 hover:text-slate-700 transition">Inicio</Link>
-                        <ChevronRight size={12} className="text-slate-300" />
-                        <Link to="/expenses" className="font-medium text-slate-500 hover:text-slate-700 transition">Gastos</Link>
-                        <ChevronRight size={12} className="text-slate-300" />
-                        <span className="font-medium text-[#5B5CEB]">Control por ruta</span>
+                    <nav className="mb-4 flex items-center gap-1.5 text-[12px]">
+                        <Link to="/" className="font-medium text-gray-400 hover:text-gray-600 transition">Inicio</Link>
+                        <ChevronRight size={12} className="text-gray-300" />
+                        <Link to="/expenses" className="font-medium text-gray-400 hover:text-gray-600 transition">Gastos</Link>
+                        <ChevronRight size={12} className="text-gray-300" />
+                        <span className="font-semibold text-[#5B5CEB]">Control por ruta</span>
                     </nav>
-                    <h1 className="text-[19px] font-semibold leading-tight tracking-tight text-gray-900 sm:text-[20px]">
+                    <h1 className="text-[26px] font-bold leading-tight tracking-tight text-gray-900">
                         Control de gastos
                     </h1>
-                    <p className="mt-3 max-w-[560px] text-[13px] leading-relaxed text-slate-500">
+                    <p className="mt-2 max-w-[560px] text-[15px] leading-relaxed text-gray-500">
                         Revisa y aprueba gastos por semana, visualiza saldos a favor y exporta reportes.
                     </p>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2.5">
                     {/* Vehicle dropdown */}
                     <div ref={vehicleMenuRef} className="relative">
                         <button
                             type="button"
                             onClick={() => setVehicleMenuOpen(o => !o)}
-                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-3 py-1.5 text-[13px] font-medium text-gray-700 transition hover:bg-gray-50"
+                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[14px] font-medium text-gray-700 transition hover:bg-gray-50"
                             style={{ borderColor: CARD_BORDER }}
                         >
                             <Car size={14} className="text-gray-400" />
@@ -378,7 +378,7 @@ export function VehicleExpensesDetailPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleVehicleSelect(null)}
-                                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[13px] transition ${selectedVehicleId === null ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === null ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
                                     >
                                         Todos los vehículos
                                     </button>
@@ -387,9 +387,9 @@ export function VehicleExpensesDetailPage() {
                                             key={v.vehicleId}
                                             type="button"
                                             onClick={() => handleVehicleSelect(v.vehicleId)}
-                                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] transition ${selectedVehicleId === v.vehicleId ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === v.vehicleId ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
                                         >
-                                            <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[12px] font-semibold text-gray-600">
+                                            <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[14px] font-semibold text-gray-600">
                                                 {v.licensePlate}
                                             </span>
                                             <span className="truncate text-gray-500">{v.driverName}</span>
@@ -404,7 +404,7 @@ export function VehicleExpensesDetailPage() {
                     <button
                         type="button"
                         onClick={() => setShowConsignment(true)}
-                        className="inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-[13px] font-semibold text-white shadow-sm transition hover:opacity-90"
+                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-semibold text-white shadow-sm transition hover:opacity-90"
                         style={{ background: '#5B5CEB' }}
                     >
                         <DollarSign size={14} />
@@ -419,21 +419,21 @@ export function VehicleExpensesDetailPage() {
                     <button
                         type="button"
                         onClick={() => setTab('ACTIVOS')}
-                        className={`rounded-lg px-4 py-1 text-[13px] font-medium transition ${tab === 'ACTIVOS' ? 'tab-active' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`rounded-lg px-5 py-1.5 text-[14px] font-medium transition ${tab === 'ACTIVOS' ? 'border border-gray-200 bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         Activos
                     </button>
                     <button
                         type="button"
                         onClick={() => setTab('HISTORIAL')}
-                        className={`flex items-center gap-1.5 rounded-lg px-5 py-1.5 text-[14px] font-medium transition ${tab === 'HISTORIAL' ? 'tab-active' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`flex items-center gap-1.5 rounded-lg px-5 py-1.5 text-[14px] font-medium transition ${tab === 'HISTORIAL' ? 'border border-gray-200 bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         <Clock size={13} />
                         Historial
                     </button>
                 </div>
 
-                <div className="flex items-center gap-4 text-[12px] text-gray-500">
+                <div className="flex items-center gap-4 text-[14px] text-gray-500">
                     <span className="flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         Aprobado
@@ -451,12 +451,12 @@ export function VehicleExpensesDetailPage() {
                 <article className="rounded-2xl border bg-white p-5" style={{ borderColor: CARD_BORDER, boxShadow: CARD_SHADOW }}>
                     <div className="mb-3 flex items-center gap-2">
                         <FileText size={13} className="text-gray-400" />
-                        <span className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">Total Consignado</span>
+                        <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Total Consignado</span>
                     </div>
-                    <p className="text-[28px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="text-[28px] font-semibold leading-none tracking-tight text-gray-900">
                         {formatCurrency(totalConsigned)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">
+                    <p className="mt-2 text-[14px] text-gray-400">
                         {selectedVehicleId === null ? `${vehicleOptions.length} vehículos` : '1 vehículo'}
                     </p>
                 </article>
@@ -465,12 +465,12 @@ export function VehicleExpensesDetailPage() {
                 <article className="rounded-2xl border bg-white p-5" style={{ borderColor: CARD_BORDER, boxShadow: CARD_SHADOW }}>
                     <div className="mb-3 flex items-center gap-2">
                         <TrendingUp size={13} className="text-gray-400" />
-                        <span className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">Gastos Aprobados</span>
+                        <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Gastos Aprobados</span>
                     </div>
-                    <p className="text-[28px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="text-[28px] font-semibold leading-none tracking-tight text-gray-900">
                         {formatCurrency(approvedTotal)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">{approvedExpenses.length} registros</p>
+                    <p className="mt-2 text-[14px] text-gray-400">{approvedExpenses.length} registros</p>
                 </article>
 
                 {/* Por Aprobar */}
@@ -478,30 +478,30 @@ export function VehicleExpensesDetailPage() {
                     <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Clock size={13} className="text-gray-400" />
-                            <span className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">Por Aprobar</span>
+                            <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Por Aprobar</span>
                         </div>
                         {pendingExpenses.length > 0 && (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[14px] font-bold text-amber-700">
                                 {pendingExpenses.length} pend.
                             </span>
                         )}
                     </div>
-                    <p className="text-[28px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="text-[28px] font-semibold leading-none tracking-tight text-gray-900">
                         {formatCurrency(pendingTotal)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">{pendingExpenses.length} gastos pendientes</p>
+                    <p className="mt-2 text-[14px] text-gray-400">{pendingExpenses.length} gastos pendientes</p>
                 </article>
 
                 {/* Saldo a Favor */}
                 <article className="rounded-2xl border bg-white p-5" style={{ borderColor: CARD_BORDER, boxShadow: CARD_SHADOW }}>
                     <div className="mb-3 flex items-center gap-2">
                         <DollarSign size={13} className="text-gray-400" />
-                        <span className="text-[10.5px] font-semibold uppercase tracking-[0.15em] text-gray-400">Saldo a Favor Empresa</span>
+                        <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Saldo a Favor Empresa</span>
                     </div>
-                    <p className={`text-[28px] font-bold leading-none tracking-tight ${balance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
+                    <p className={`text-[28px] font-semibold leading-none tracking-tight ${balance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
                         {formatCurrency(balance)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">disponible</p>
+                    <p className="mt-2 text-[14px] text-gray-400">disponible</p>
                 </article>
             </div>
 
@@ -613,14 +613,14 @@ export function VehicleExpensesDetailPage() {
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="border-b border-gray-100 bg-gray-50/70">
-                                <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400">
-                                    <th className="px-4 py-3">Fecha</th>
-                                    <th className="px-4 py-3">Vehículo</th>
-                                    <th className="px-4 py-3">Ruta / Destino</th>
-                                    <th className="px-4 py-3">Conductor</th>
-                                    <th className="px-4 py-3">Categoría</th>
-                                    <th className="px-4 py-3">Estado</th>
-                                    <th className="px-4 py-3 text-right">Monto</th>
+                                <tr className="text-left text-[14px] font-semibold uppercase tracking-[0.10em] text-gray-400">
+                                    <th className="px-6 py-4">Fecha</th>
+                                    <th className="px-6 py-4">Vehículo</th>
+                                    <th className="px-6 py-4">Ruta / Destino</th>
+                                    <th className="px-6 py-4">Conductor</th>
+                                    <th className="px-6 py-4">Categoría</th>
+                                    <th className="px-6 py-4">Estado</th>
+                                    <th className="px-6 py-4 text-right">Monto</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -638,37 +638,37 @@ export function VehicleExpensesDetailPage() {
                                             onMouseLeave={() => setHoveredRowId(null)}
                                             className={`cursor-pointer border-b border-[#ECECF3] transition-colors hover:bg-[rgba(91,92,235,0.05)] ${rowIdx % 2 === 1 ? 'bg-[#F5F6FB]' : 'bg-white'}`}
                                         >
-                                            <td className="px-4 py-3">
-                                                <p className="text-[13px] font-semibold text-gray-900">{day}</p>
-                                                <p className="mt-0.5 text-[11px] text-gray-400">{weekday}</p>
+                                            <td className="px-6 py-4">
+                                                <p className="text-[14px] font-semibold text-gray-900">{day}</p>
+                                                <p className="mt-0.5 text-[14px] text-gray-400">{weekday}</p>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-600">
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center rounded-lg bg-gray-100 px-2.5 py-1 font-mono text-[14px] font-semibold text-gray-600">
                                                     {expense.vehicle?.licensePlate ?? '—'}
                                                 </span>
                                             </td>
-                                            <td className="max-w-[220px] px-4 py-3">
-                                                <p className="truncate text-[13px] font-medium text-gray-800">
+                                            <td className="max-w-[220px] px-6 py-4">
+                                                <p className="truncate text-[14px] font-medium text-gray-800">
                                                     {routeText}
                                                 </p>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <p className="text-[13px] font-medium text-gray-700">
+                                            <td className="px-6 py-4">
+                                                <p className="text-[14px] font-medium text-gray-700">
                                                     {expense.driver.fullName}
                                                 </p>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <span className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700">
-                                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: cfg.color }} />
+                                            <td className="px-6 py-4">
+                                                <span className="flex items-center gap-2 text-[14px] font-medium text-gray-700">
+                                                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cfg.color }} />
                                                     {cfg.label}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td className="px-6 py-4">
                                                 <StatusBadge status={expense.status} />
                                             </td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <span className="text-[13px] font-bold text-gray-900">
+                                                    <span className="text-[14px] font-semibold text-gray-700">
                                                         {formatCurrency(expense.amount)}
                                                     </span>
                                                     <span className="flex h-6 w-6 shrink-0 items-center justify-center">
@@ -697,8 +697,8 @@ export function VehicleExpensesDetailPage() {
                         </table>
                         {/* Footer: resumen + total visible */}
                         {displayedExpenses.length > 0 && (
-                            <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-                                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400">
+                            <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+                                <span className="text-[12px] font-semibold uppercase tracking-[0.10em] text-gray-400">
                                     Resumen — {displayedExpenses.length} gasto{displayedExpenses.length !== 1 ? 's' : ''}
                                 </span>
                                 <div className="flex items-center gap-3">
