@@ -72,7 +72,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         className="relative z-10 pt-[64px]"
         style={{ paddingLeft: `${sidebarWidth}px` }}
       >
-        <div className="mx-auto min-h-[calc(100vh-64px)] w-full px-10 py-8">
+        <div className="mx-auto min-h-[calc(100vh-64px)] w-full px-6 py-7">
           {children}
         </div>
       </main>

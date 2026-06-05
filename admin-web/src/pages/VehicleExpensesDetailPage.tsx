@@ -74,17 +74,17 @@ function formatExpenseDate(iso: string): { day: string; weekday: string } {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: ExpenseStatus }) {
     if (status === 'approved') return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[14px] font-semibold text-emerald-700">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Aprobado
         </span>
     );
     if (status === 'rejected') return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-600">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[14px] font-semibold text-red-600">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500" />Rechazado
         </span>
     );
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[14px] font-semibold text-amber-700">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Pendiente
         </span>
     );
@@ -256,17 +256,17 @@ export function VehicleExpensesDetailPage() {
             {/* ── Header ────────────────────────────────────────────────────── */}
             <header className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <nav className="mb-3 flex items-center gap-1.5 text-[11px]">
+                    <nav className="mb-3 flex items-center gap-1.5 text-[14px]">
                         <Link to="/" className="font-medium text-gray-400 hover:text-gray-600 transition">Inicio</Link>
                         <ChevronRight size={12} className="text-gray-300" />
                         <Link to="/expenses" className="font-medium text-gray-400 hover:text-gray-600 transition">Gastos</Link>
                         <ChevronRight size={12} className="text-gray-300" />
                         <span className="font-semibold text-[#5B5CEB]">Control por ruta</span>
                     </nav>
-                    <h1 className="text-[22px] font-bold leading-tight tracking-tight text-gray-900">
+                    <h1 className="text-[24px] font-bold leading-tight tracking-tight text-gray-900">
                         Control de gastos
                     </h1>
-                    <p className="mt-1.5 max-w-[560px] text-[13px] leading-relaxed text-gray-500">
+                    <p className="mt-1.5 max-w-[560px] text-[14px] leading-relaxed text-gray-500">
                         Revisa y aprueba gastos por semana, visualiza saldos a favor y exporta reportes.
                     </p>
                 </div>
@@ -277,7 +277,7 @@ export function VehicleExpensesDetailPage() {
                         <button
                             type="button"
                             onClick={() => setVehicleMenuOpen(o => !o)}
-                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 transition hover:bg-gray-50"
+                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[14px] font-medium text-gray-700 transition hover:bg-gray-50"
                             style={{ borderColor: CARD_BORDER }}
                         >
                             <Car size={14} className="text-gray-400" />
@@ -292,7 +292,7 @@ export function VehicleExpensesDetailPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleVehicleSelect(null)}
-                                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] transition ${selectedVehicleId === null ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === null ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
                                     >
                                         Todos los vehículos
                                     </button>
@@ -301,9 +301,9 @@ export function VehicleExpensesDetailPage() {
                                             key={v.vehicleId}
                                             type="button"
                                             onClick={() => handleVehicleSelect(v.vehicleId)}
-                                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] transition ${selectedVehicleId === v.vehicleId ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === v.vehicleId ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
                                         >
-                                            <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-600">
+                                            <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[14px] font-semibold text-gray-600">
                                                 {v.licensePlate}
                                             </span>
                                             <span className="truncate text-gray-500">{v.driverName}</span>
@@ -318,7 +318,7 @@ export function VehicleExpensesDetailPage() {
                     <button
                         type="button"
                         onClick={() => setShowConsignment(true)}
-                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:opacity-90"
+                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-semibold text-white shadow-sm transition hover:opacity-90"
                         style={{ background: '#5B5CEB' }}
                     >
                         <DollarSign size={14} />
@@ -333,21 +333,21 @@ export function VehicleExpensesDetailPage() {
                     <button
                         type="button"
                         onClick={() => setTab('ACTIVOS')}
-                        className={`rounded-lg px-5 py-1.5 text-[13px] font-medium transition ${tab === 'ACTIVOS' ? 'border border-gray-200 bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`rounded-lg px-5 py-1.5 text-[14px] font-medium transition ${tab === 'ACTIVOS' ? 'border border-gray-200 bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         Activos
                     </button>
                     <button
                         type="button"
                         onClick={() => setTab('HISTORIAL')}
-                        className={`flex items-center gap-1.5 rounded-lg px-5 py-1.5 text-[13px] font-medium transition ${tab === 'HISTORIAL' ? 'border border-gray-200 bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`flex items-center gap-1.5 rounded-lg px-5 py-1.5 text-[14px] font-medium transition ${tab === 'HISTORIAL' ? 'border border-gray-200 bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         <Clock size={13} />
                         Historial
                     </button>
                 </div>
 
-                <div className="flex items-center gap-4 text-[12px] text-gray-500">
+                <div className="flex items-center gap-4 text-[14px] text-gray-500">
                     <span className="flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         Aprobado
@@ -370,7 +370,7 @@ export function VehicleExpensesDetailPage() {
                         >
                             <ChevronLeft size={15} />
                         </button>
-                        <span className="flex items-center gap-2 px-1 text-[13px] font-medium text-gray-700">
+                        <span className="flex items-center gap-2 px-1 text-[14px] font-medium text-gray-700">
                             <Calendar size={13} className="text-gray-400" />
                             {formatWeekDisplay(selectedWeek)}
                         </span>
@@ -382,7 +382,7 @@ export function VehicleExpensesDetailPage() {
                             <ChevronRight size={15} />
                         </button>
                     </div>
-                    <span className="text-[12px] text-gray-400">
+                    <span className="text-[14px] text-gray-400">
                         Lun → Dom · {allExpenses.length} gasto{allExpenses.length !== 1 ? 's' : ''}
                     </span>
                 </div>
@@ -392,7 +392,7 @@ export function VehicleExpensesDetailPage() {
                     <button
                         type="button"
                         onClick={() => setStatusMenuOpen(o => !o)}
-                        className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[13px] font-medium text-gray-600 transition hover:bg-gray-50"
+                        className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[14px] font-medium text-gray-600 transition hover:bg-gray-50"
                         style={{ borderColor: CARD_BORDER }}
                     >
                         {STATUS_LABELS[statusFilter]}
@@ -407,7 +407,7 @@ export function VehicleExpensesDetailPage() {
                                         key={s}
                                         type="button"
                                         onClick={() => { setStatusFilter(s); setStatusMenuOpen(false); }}
-                                        className={`flex w-full items-center rounded-xl px-3 py-2.5 text-[13px] transition ${statusFilter === s ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                        className={`flex w-full items-center rounded-xl px-3 py-2.5 text-[14px] transition ${statusFilter === s ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
                                     >
                                         {STATUS_LABELS[s]}
                                     </button>
@@ -420,14 +420,14 @@ export function VehicleExpensesDetailPage() {
 
             {/* ── Category chips ────────────────────────────────────────────── */}
             <div className="flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1.5 text-[12px] text-gray-400">
+                <span className="flex items-center gap-1.5 text-[14px] text-gray-400">
                     <SlidersHorizontal size={13} />
                     Filtrar:
                 </span>
                 <button
                     type="button"
                     onClick={() => setCategoryFilter('all')}
-                    className={`rounded-full px-3 py-1 text-[12px] font-medium transition ${categoryFilter === 'all' ? 'border-b-2 border-[#5B5CEB] text-[#5B5CEB]' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`rounded-full px-3 py-1 text-[14px] font-medium transition ${categoryFilter === 'all' ? 'border-b-2 border-[#5B5CEB] text-[#5B5CEB]' : 'text-gray-500 hover:text-gray-800'}`}
                 >
                     Todos
                 </button>
@@ -436,7 +436,7 @@ export function VehicleExpensesDetailPage() {
                         key={type}
                         type="button"
                         onClick={() => setCategoryFilter(type)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-medium transition ${categoryFilter === type ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'}`}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-medium transition ${categoryFilter === type ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'}`}
                     >
                         <span className="h-2 w-2 rounded-full" style={{ background: cfg.color }} />
                         {cfg.label}
@@ -450,12 +450,12 @@ export function VehicleExpensesDetailPage() {
                 <article className="rounded-2xl border bg-white p-5" style={{ borderColor: CARD_BORDER, boxShadow: CARD_SHADOW }}>
                     <div className="mb-3 flex items-center gap-2">
                         <FileText size={13} className="text-gray-400" />
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Total Consignado</span>
+                        <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Total Consignado</span>
                     </div>
-                    <p className="text-[26px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="text-[28px] font-bold leading-none tracking-tight text-gray-900">
                         {formatCurrency(totalConsigned)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">
+                    <p className="mt-2 text-[14px] text-gray-400">
                         {selectedVehicleId === null ? `${vehicleOptions.length} vehículos` : '1 vehículo'}
                     </p>
                 </article>
@@ -464,12 +464,12 @@ export function VehicleExpensesDetailPage() {
                 <article className="rounded-2xl border bg-white p-5" style={{ borderColor: CARD_BORDER, boxShadow: CARD_SHADOW }}>
                     <div className="mb-3 flex items-center gap-2">
                         <TrendingUp size={13} className="text-gray-400" />
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Gastos Aprobados</span>
+                        <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Gastos Aprobados</span>
                     </div>
-                    <p className="text-[26px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="text-[28px] font-bold leading-none tracking-tight text-gray-900">
                         {formatCurrency(approvedTotal)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">{approvedExpenses.length} registros</p>
+                    <p className="mt-2 text-[14px] text-gray-400">{approvedExpenses.length} registros</p>
                 </article>
 
                 {/* Por Aprobar */}
@@ -477,30 +477,30 @@ export function VehicleExpensesDetailPage() {
                     <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Clock size={13} className="text-gray-400" />
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Por Aprobar</span>
+                            <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Por Aprobar</span>
                         </div>
                         {pendingExpenses.length > 0 && (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[14px] font-bold text-amber-700">
                                 {pendingExpenses.length} pend.
                             </span>
                         )}
                     </div>
-                    <p className="text-[26px] font-bold leading-none tracking-tight text-gray-900">
+                    <p className="text-[28px] font-bold leading-none tracking-tight text-gray-900">
                         {formatCurrency(pendingTotal)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">{pendingExpenses.length} gastos pendientes</p>
+                    <p className="mt-2 text-[14px] text-gray-400">{pendingExpenses.length} gastos pendientes</p>
                 </article>
 
                 {/* Saldo a Favor */}
                 <article className="rounded-2xl border bg-white p-5" style={{ borderColor: CARD_BORDER, boxShadow: CARD_SHADOW }}>
                     <div className="mb-3 flex items-center gap-2">
                         <DollarSign size={13} className="text-gray-400" />
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Saldo a Favor Empresa</span>
+                        <span className="text-[14px] font-semibold uppercase tracking-[0.14em] text-gray-400">Saldo a Favor Empresa</span>
                     </div>
-                    <p className={`text-[26px] font-bold leading-none tracking-tight ${balance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
+                    <p className={`text-[28px] font-bold leading-none tracking-tight ${balance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
                         {formatCurrency(balance)}
                     </p>
-                    <p className="mt-2 text-[12px] text-gray-400">disponible</p>
+                    <p className="mt-2 text-[14px] text-gray-400">disponible</p>
                 </article>
             </div>
 
@@ -510,7 +510,7 @@ export function VehicleExpensesDetailPage() {
                     <div className="flex items-center justify-center py-16">
                         <div className="space-y-2 text-center">
                             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-[#5B5CEB]" />
-                            <p className="text-[13px] text-gray-400">Cargando gastos...</p>
+                            <p className="text-[14px] text-gray-400">Cargando gastos...</p>
                         </div>
                     </div>
                 ) : displayedExpenses.length === 0 ? (
@@ -519,7 +519,7 @@ export function VehicleExpensesDetailPage() {
                             <FileText size={22} />
                         </div>
                         <p className="text-[14px] font-medium text-gray-700">Sin registros esta semana</p>
-                        <p className="text-[12px] text-gray-400">
+                        <p className="text-[14px] text-gray-400">
                             {categoryFilter !== 'all' || statusFilter !== 'all'
                                 ? 'Prueba cambiando los filtros.'
                                 : 'No hay gastos para el período seleccionado.'}
@@ -529,7 +529,7 @@ export function VehicleExpensesDetailPage() {
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="border-b border-gray-100 bg-gray-50/70">
-                                <tr className="text-left text-[11px] font-semibold uppercase tracking-[0.10em] text-gray-400">
+                                <tr className="text-left text-[14px] font-semibold uppercase tracking-[0.10em] text-gray-400">
                                     <th className="px-6 py-4">Fecha</th>
                                     <th className="px-6 py-4">Vehículo</th>
                                     <th className="px-6 py-4">Ruta / Destino</th>
@@ -550,26 +550,26 @@ export function VehicleExpensesDetailPage() {
                                             className="cursor-pointer transition-colors hover:bg-gray-50/60"
                                         >
                                             <td className="px-6 py-4">
-                                                <p className="text-[13px] font-semibold text-gray-900">{day}</p>
-                                                <p className="mt-0.5 text-[11px] text-gray-400">{weekday}</p>
+                                                <p className="text-[14px] font-semibold text-gray-900">{day}</p>
+                                                <p className="mt-0.5 text-[14px] text-gray-400">{weekday}</p>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="inline-flex items-center rounded-lg bg-gray-100 px-2.5 py-1 font-mono text-[12px] font-semibold text-gray-600">
+                                                <span className="inline-flex items-center rounded-lg bg-gray-100 px-2.5 py-1 font-mono text-[14px] font-semibold text-gray-600">
                                                     {expense.vehicle?.licensePlate ?? '—'}
                                                 </span>
                                             </td>
                                             <td className="max-w-[200px] px-6 py-4">
-                                                <p className="truncate text-[13px] font-medium text-gray-700">
+                                                <p className="truncate text-[14px] font-medium text-gray-700">
                                                     {expense.description ?? '—'}
                                                 </p>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <p className="text-[13px] font-medium text-gray-700">
+                                                <p className="text-[14px] font-medium text-gray-700">
                                                     {expense.driver.fullName}
                                                 </p>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="flex items-center gap-2 text-[13px] font-medium text-gray-700">
+                                                <span className="flex items-center gap-2 text-[14px] font-medium text-gray-700">
                                                     <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cfg.color }} />
                                                     {cfg.label}
                                                 </span>
@@ -579,7 +579,7 @@ export function VehicleExpensesDetailPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <span className="text-[13px] font-bold text-gray-900">
+                                                    <span className="text-[14px] font-bold text-gray-900">
                                                         {formatCurrency(expense.amount)}
                                                     </span>
                                                     {expense.status !== 'pending' && (
