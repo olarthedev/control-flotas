@@ -87,6 +87,62 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     );
 }
 
+interface EvidenceItem {
+    id: number;
+    fileUrl: string;
+    isPrimary: boolean;
+}
+
+function EvidenceCard({ ev, index }: { ev: EvidenceItem; index: number }) {
+    const [imgFailed, setImgFailed] = useState(false);
+    const label = ev.isPrimary ? 'Comprobante principal' : `Adjunto ${index + 1}`;
+
+    return (
+        <div
+            className="overflow-hidden rounded-2xl border border-gray-100"
+            style={{ boxShadow: '0 1px 6px rgba(0,0,0,.05)' }}
+        >
+            {/* Área de imagen */}
+            <div className="relative w-full overflow-hidden bg-gray-50" style={{ aspectRatio: '4/3' }}>
+                {!imgFailed ? (
+                    <img
+                        src={ev.fileUrl}
+                        alt={label}
+                        className="h-full w-full object-contain"
+                        onError={() => setImgFailed(true)}
+                    />
+                ) : (
+                    <div className="flex h-full flex-col items-center justify-center gap-2.5 text-gray-300">
+                        <FileText size={36} />
+                        <span className="text-[13px] text-gray-400">Vista previa no disponible</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer de la tarjeta */}
+            <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/60 px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                    {ev.isPrimary && (
+                        <span className="rounded-full bg-[rgba(91,92,235,0.10)] px-2 py-0.5 text-[11px] font-semibold text-[#5B5CEB]">
+                            Principal
+                        </span>
+                    )}
+                    <span className="text-[12px] text-gray-400">{label}</span>
+                </div>
+                <a
+                    href={ev.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-[#5B5CEB] transition hover:bg-[rgba(91,92,235,0.08)]"
+                >
+                    <ExternalLink size={12} />
+                    Ver original
+                </a>
+            </div>
+        </div>
+    );
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: ExpenseStatus }) {
     if (status === 'approved') return (
@@ -693,25 +749,25 @@ export function VehicleExpensesDetailPage() {
                                 )}
                                 <DetailRow label="Categoría"      value={cfg.label} />
 
-                                {/* Soporte — solo si hay evidencia */}
+                                {/* Soporte — foto(s) subida(s) por el conductor */}
                                 {selectedExpense.evidence.length > 0 && (
                                     <div className="mt-5">
-                                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
-                                            Soporte
+                                        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                            Soporte · {selectedExpense.evidence.length} archivo{selectedExpense.evidence.length !== 1 ? 's' : ''}
                                         </p>
-                                        {selectedExpense.evidence.map(ev => (
-                                            <a
-                                                key={ev.id}
-                                                href={ev.fileUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[13px] font-medium text-gray-700 transition hover:bg-gray-100"
-                                            >
-                                                <FileText size={16} className="shrink-0 text-gray-400" />
-                                                <span className="flex-1 truncate">Ver archivo adjunto</span>
-                                                <ExternalLink size={14} className="shrink-0 text-gray-400" />
-                                            </a>
-                                        ))}
+                                        <div className="space-y-3">
+                                            {selectedExpense.evidence.map((ev, idx) => (
+                                                <EvidenceCard key={ev.id} ev={ev} index={idx} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Sin soporte registrado */}
+                                {selectedExpense.evidence.length === 0 && (
+                                    <div className="mt-5 flex items-center gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-4">
+                                        <FileText size={16} className="shrink-0 text-gray-300" />
+                                        <span className="text-[13px] text-gray-400">Sin soporte adjunto</span>
                                     </div>
                                 )}
 
