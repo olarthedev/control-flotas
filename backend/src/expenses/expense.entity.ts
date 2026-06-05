@@ -6,6 +6,7 @@ import {
     UpdateDateColumn,
     ManyToOne,
     OneToMany,
+    JoinColumn,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Vehicle } from '../vehicles/vehicle.entity';
@@ -95,6 +96,7 @@ export class Expense {
         nullable: true,
         onDelete: 'SET NULL',
     })
+    @JoinColumn({ name: 'validated_by' })
     validatedBy: User | null;
 
     @OneToMany(() => Evidence, (evidence) => evidence.expense, {

@@ -8,6 +8,7 @@ import {
     Delete,
     Query,
     UseInterceptors,
+    NotFoundException,
 } from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
@@ -88,8 +89,10 @@ export class ExpensesController {
 
     /** GET /expenses/:id */
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.expensesService.findById(+id);
+    async findOne(@Param('id') id: string) {
+        const expense = await this.expensesService.findById(+id);
+        if (!expense) throw new NotFoundException(`Expense ${id} not found`);
+        return expense;
     }
 
     /** PATCH /expenses/:id */

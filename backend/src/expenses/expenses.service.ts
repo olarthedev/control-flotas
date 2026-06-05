@@ -112,9 +112,9 @@ export class ExpensesService {
             .where('expense.status IN (:...statuses)', { statuses: this.pendingStatuses });
 
         if (vehicleId) {
-            qb.andWhere('expense.vehicleId = :vehicleId', { vehicleId });
+            qb.andWhere('expense.vehicle = :vehicleId', { vehicleId });
         } else {
-            qb.andWhere('expense.driverId = :driverId', { driverId });
+            qb.andWhere('expense.driver = :driverId', { driverId });
         }
 
         const openExpenses = await qb.getMany();
@@ -300,29 +300,36 @@ export class ExpensesService {
 
         await this.enforceSequentialWeekClosure(existing, updateExpenseDto.status);
 
-        if (updateExpenseDto.type !== undefined) existing.type = updateExpenseDto.type;
-        if (updateExpenseDto.amount !== undefined) existing.amount = updateExpenseDto.amount;
-        if (updateExpenseDto.expenseDate !== undefined) existing.expenseDate = new Date(updateExpenseDto.expenseDate);
-        if (updateExpenseDto.description !== undefined) existing.description = updateExpenseDto.description ?? null;
-        if (updateExpenseDto.status !== undefined) existing.status = updateExpenseDto.status;
-        if (updateExpenseDto.rejectionReason !== undefined) existing.rejectionReason = updateExpenseDto.rejectionReason ?? null;
+        // Use a targeted patch to avoid cascade-saving evidence (could fail if
+        // the evidence table has columns not present in the current DB schema).
+        const patch: Parameters<typeof this.expensesRepository.update>[1] = {};
+
+        if (updateExpenseDto.type !== undefined)          patch.type = updateExpenseDto.type;
+        if (updateExpenseDto.amount !== undefined)        patch.amount = updateExpenseDto.amount;
+        if (updateExpenseDto.expenseDate !== undefined)   patch.expenseDate = new Date(updateExpenseDto.expenseDate);
+        if (updateExpenseDto.description !== undefined)   patch.description = updateExpenseDto.description ?? null;
+        if (updateExpenseDto.status !== undefined)        patch.status = updateExpenseDto.status;
+        if (updateExpenseDto.rejectionReason !== undefined) patch.rejectionReason = updateExpenseDto.rejectionReason ?? null;
         if (updateExpenseDto.validatedAt !== undefined) {
-            existing.validatedAt = updateExpenseDto.validatedAt ? new Date(updateExpenseDto.validatedAt) : null;
+            patch.validatedAt = updateExpenseDto.validatedAt ? new Date(updateExpenseDto.validatedAt) : null;
         }
 
         if (updateExpenseDto.validatedById !== undefined) {
             if (updateExpenseDto.validatedById === null) {
-                existing.validatedBy = null;
+                (patch as Record<string, unknown>).validatedBy = null;
             } else {
                 const validator = await this.usersRepository.findOne({ where: { id: updateExpenseDto.validatedById } });
                 if (!validator) {
                     throw new NotFoundException(`User con id ${updateExpenseDto.validatedById} no encontrado`);
                 }
-                existing.validatedBy = validator;
+                (patch as Record<string, unknown>).validatedBy = validator;
             }
         }
 
-        await this.expensesRepository.save(existing);
+        if (Object.keys(patch).length > 0) {
+            await this.expensesRepository.update(id, patch);
+        }
+
         return this.findById(id) as Promise<Expense>;
     }
 

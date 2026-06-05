@@ -11,7 +11,7 @@ export class CreateExpenseDto {
     @IsNumber({ maxDecimalPlaces: 2 }, { message: 'amount debe ser un número válido' })
     @IsPositive({ message: 'amount debe ser mayor que cero' })
     @IsNotEmpty({ message: 'amount es requerido' })
-    @Transform(({ value }) => parseFloat(value))
+    @Transform(({ value }) => value !== undefined && value !== null ? parseFloat(value) : undefined)
     amount: number;
 
     @IsDateString({}, { message: 'expenseDate debe ser una fecha válida en formato ISO' })
@@ -25,12 +25,12 @@ export class CreateExpenseDto {
 
     @IsNumber({}, { message: 'driverId debe ser un número' })
     @IsNotEmpty({ message: 'driverId es requerido' })
-    @Transform(({ value }) => parseInt(value, 10))
+    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
     driverId: number;
 
     @IsNumber({}, { message: 'vehicleId debe ser un número' })
     @IsNotEmpty({ message: 'vehicleId es requerido' })
-    @Transform(({ value }) => parseInt(value, 10))
+    @Transform(({ value }) => value !== undefined && value !== null ? parseInt(value, 10) : undefined)
     vehicleId: number;
 
     @IsOptional()
