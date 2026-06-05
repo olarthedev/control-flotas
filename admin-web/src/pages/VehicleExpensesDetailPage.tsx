@@ -619,15 +619,18 @@ export function VehicleExpensesDetailPage() {
                                     <th className="px-6 py-4 text-right">Monto</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {displayedExpenses.map(expense => {
+                            <tbody>
+                                {displayedExpenses.map((expense, rowIdx) => {
                                     const { day, weekday } = formatExpenseDate(expense.expenseDate);
                                     const cfg = TYPE_CONFIG[expense.type] ?? TYPE_CONFIG.other;
+                                    const routeText = expense.trip
+                                        ? `${expense.trip.origin} → ${expense.trip.destination}`
+                                        : expense.description ?? '—';
                                     return (
                                         <tr
                                             key={expense.id}
                                             onClick={() => setSelectedExpense(expense)}
-                                            className="cursor-pointer transition-colors hover:bg-gray-50/60"
+                                            className={`cursor-pointer border-b border-gray-100 transition-colors hover:bg-[rgba(91,92,235,0.04)] ${rowIdx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'}`}
                                         >
                                             <td className="px-6 py-4">
                                                 <p className="text-[14px] font-semibold text-gray-900">{day}</p>
@@ -638,9 +641,9 @@ export function VehicleExpensesDetailPage() {
                                                     {expense.vehicle?.licensePlate ?? '—'}
                                                 </span>
                                             </td>
-                                            <td className="max-w-[200px] px-6 py-4">
-                                                <p className="truncate text-[14px] font-medium text-gray-700">
-                                                    {expense.description ?? '—'}
+                                            <td className="max-w-[220px] px-6 py-4">
+                                                <p className="truncate text-[14px] font-medium text-gray-800">
+                                                    {routeText}
                                                 </p>
                                             </td>
                                             <td className="px-6 py-4">
@@ -670,13 +673,18 @@ export function VehicleExpensesDetailPage() {
                                 })}
                             </tbody>
                         </table>
-                        {/* Total visible */}
+                        {/* Footer: resumen + total visible */}
                         {displayedExpenses.length > 0 && (
-                            <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
-                                <span className="text-[14px] text-gray-400">Total visible</span>
-                                <span className="text-[16px] font-bold text-[#5B5CEB]">
-                                    {formatCurrency(displayedExpenses.reduce((s, e) => s + e.amount, 0))}
+                            <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+                                <span className="text-[12px] font-semibold uppercase tracking-[0.10em] text-gray-400">
+                                    Resumen — {displayedExpenses.length} gasto{displayedExpenses.length !== 1 ? 's' : ''}
                                 </span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[14px] text-gray-400">Total visible</span>
+                                    <span className="text-[16px] font-bold text-[#5B5CEB]">
+                                        {formatCurrency(displayedExpenses.reduce((s, e) => s + e.amount, 0))}
+                                    </span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -744,8 +752,17 @@ export function VehicleExpensesDetailPage() {
                                     <DetailRow label="Vehículo"   value={selectedExpense.vehicle.licensePlate} />
                                 )}
                                 <DetailRow label="Conductor"      value={selectedExpense.driver.fullName} />
+                                {selectedExpense.trip && (
+                                    <DetailRow
+                                        label="Ruta"
+                                        value={`${selectedExpense.trip.origin} → ${selectedExpense.trip.destination}`}
+                                    />
+                                )}
                                 {selectedExpense.description && (
-                                    <DetailRow label="Ruta / Destino" value={selectedExpense.description} />
+                                    <DetailRow
+                                        label={selectedExpense.trip ? 'Descripción' : 'Ruta / Destino'}
+                                        value={selectedExpense.description}
+                                    />
                                 )}
                                 <DetailRow label="Categoría"      value={cfg.label} />
 

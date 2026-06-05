@@ -10,6 +10,12 @@ export interface ExpenseEvidence {
     isPrimary: boolean;
 }
 
+export interface ExpenseTripInfo {
+    id: number;
+    origin: string;
+    destination: string;
+}
+
 export interface ExpenseItem {
     id: number;
     type: ExpenseType;
@@ -29,6 +35,7 @@ export interface ExpenseItem {
         model?: string;
     } | null;
     evidence: ExpenseEvidence[];
+    trip: ExpenseTripInfo | null;
 }
 
 export interface DriverLiquidationByVehicleItem {
@@ -70,6 +77,11 @@ interface ExpenseResponse {
         fileUrl: string;
         isPrimary: boolean;
     }>;
+    trip?: {
+        id: number;
+        origin: string;
+        destination: string;
+    } | null;
 }
 
 export function normalizeExpense(item: ExpenseResponse): ExpenseItem {
@@ -84,6 +96,9 @@ export function normalizeExpense(item: ExpenseResponse): ExpenseItem {
         driver: item.driver,
         vehicle: item.vehicle,
         evidence: item.evidence ?? [],
+        trip: item.trip
+            ? { id: item.trip.id, origin: item.trip.origin, destination: item.trip.destination }
+            : null,
     };
 }
 
