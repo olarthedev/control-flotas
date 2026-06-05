@@ -630,7 +630,7 @@ export function VehicleExpensesDetailPage() {
                                         <tr
                                             key={expense.id}
                                             onClick={() => setSelectedExpense(expense)}
-                                            className={`cursor-pointer border-b border-gray-100 transition-colors hover:bg-[rgba(91,92,235,0.04)] ${rowIdx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'}`}
+                                            className={`cursor-pointer border-b border-[#ECECF3] transition-colors hover:bg-[rgba(91,92,235,0.05)] ${rowIdx % 2 === 1 ? 'bg-[#F5F6FB]' : 'bg-white'}`}
                                         >
                                             <td className="px-6 py-4">
                                                 <p className="text-[14px] font-semibold text-gray-900">{day}</p>
