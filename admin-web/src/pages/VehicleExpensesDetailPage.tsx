@@ -3,6 +3,7 @@ import {
     ChevronLeft, ChevronRight, ChevronDown,
     Clock, Calendar, FileText, TrendingUp,
     DollarSign, SlidersHorizontal, Car,
+    X, CheckCircle, XCircle, ExternalLink,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -14,7 +15,6 @@ import {
 import { fetchExpensesByVehicle, fetchAllVehiclesWithExpensesSummary, type VehicleExpenseSummary } from '../services/expenses-grouped.service';
 import { fetchAllConsignments, createConsignment, type ConsignmentItem } from '../services/consignments.service';
 import { Toast, type ToastType } from '../components/Toast';
-import { ExpenseAuditModal } from '../components/expenses/ExpenseAuditModal';
 import { ConsignmentModal } from '../components/expenses/ConsignmentModal';
 import { formatCurrency } from '../utils/format';
 import { getApiErrorMessage } from '../utils/api-error';
@@ -71,6 +71,22 @@ function formatExpenseDate(iso: string): { day: string; weekday: string } {
     return { day: `${d.getDate()} de ${M[d.getMonth()]}`, weekday: W[d.getDay()] };
 }
 
+function formatFullDate(iso: string): string {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-CO', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-start justify-between gap-4 py-3 border-b border-gray-50 last:border-0">
+            <span className="text-[14px] text-gray-400 shrink-0">{label}</span>
+            <span className="text-[14px] font-semibold text-gray-900 text-right">{value}</span>
+        </div>
+    );
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: ExpenseStatus }) {
     if (status === 'approved') return (
@@ -104,6 +120,8 @@ export function VehicleExpensesDetailPage() {
     const [categoryFilter,  setCategoryFilter]  = useState<CategoryFilter>('all');
     const [statusFilter,    setStatusFilter]    = useState<StatusFilter>('all');
     const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
+    const [isRejecting,     setIsRejecting]     = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
     const [isSubmitting,    setIsSubmitting]    = useState(false);
     const [showConsignment, setShowConsignment] = useState(false);
     const [vehicleMenuOpen, setVehicleMenuOpen] = useState(false);
@@ -213,12 +231,18 @@ export function VehicleExpensesDetailPage() {
         if (!selectedExpense) return;
         setIsSubmitting(true);
         try {
-            const updated = await updateExpenseStatus(selectedExpense.id, { status });
+            const payload: Parameters<typeof updateExpenseStatus>[1] = { status };
+            if (status === 'rejected' && rejectionReason.trim()) {
+                payload.rejectionReason = rejectionReason.trim();
+            }
+            const updated = await updateExpenseStatus(selectedExpense.id, payload);
             setAllExpenses(cur => cur.map(e => e.id === updated.id ? updated : e));
+            setSelectedExpense(updated);
+            setIsRejecting(false);
+            setRejectionReason('');
             if (status === 'approved' || status === 'rejected') {
                 window.dispatchEvent(new Event('expenseUpdated'));
             }
-            setSelectedExpense(null);
             setToast({
                 message: status === 'approved' ? 'Gasto aprobado.' : 'Gasto rechazado.',
                 type: 'success',
@@ -582,9 +606,7 @@ export function VehicleExpensesDetailPage() {
                                                     <span className="text-[14px] font-bold text-gray-900">
                                                         {formatCurrency(expense.amount)}
                                                     </span>
-                                                    {expense.status !== 'pending' && (
-                                                        <ChevronRight size={14} className="text-gray-300" />
-                                                    )}
+                                                    <ChevronRight size={14} className="text-gray-300" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -592,18 +614,190 @@ export function VehicleExpensesDetailPage() {
                                 })}
                             </tbody>
                         </table>
+                        {/* Total visible */}
+                        {displayedExpenses.length > 0 && (
+                            <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                                <span className="text-[14px] text-gray-400">Total visible</span>
+                                <span className="text-[16px] font-bold text-[#5B5CEB]">
+                                    {formatCurrency(displayedExpenses.reduce((s, e) => s + e.amount, 0))}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
-            {/* ── Modals ────────────────────────────────────────────────────── */}
-            <ExpenseAuditModal
-                isOpen={selectedExpense !== null}
-                onClose={() => setSelectedExpense(null)}
-                expense={selectedExpense}
-                onStatusChange={handleStatusChange}
-                isSubmitting={isSubmitting}
-            />
+            {/* ── Panel lateral de detalle ──────────────────────────────────── */}
+            {selectedExpense && (() => {
+                const cfg   = TYPE_CONFIG[selectedExpense.type] ?? TYPE_CONFIG.other;
+                const isPending  = selectedExpense.status === 'pending';
+                const isApproved = selectedExpense.status === 'approved';
+                return (
+                    <>
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+                            onClick={() => { setSelectedExpense(null); setIsRejecting(false); setRejectionReason(''); }}
+                        />
+
+                        {/* Panel */}
+                        <aside
+                            className="fixed right-0 top-0 z-50 flex h-full w-[400px] flex-col overflow-y-auto bg-white"
+                            style={{ boxShadow: '-20px 0 60px rgba(0,0,0,.12)' }}
+                        >
+                            {/* Header: estado + cerrar */}
+                            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+                                <StatusBadge status={selectedExpense.status} />
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedExpense(null); setIsRejecting(false); setRejectionReason(''); }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            {/* Monto + ruta/vehículo */}
+                            <div className="border-b border-gray-100 px-6 py-6">
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className="text-[36px] font-bold leading-none text-gray-900">
+                                        {formatCurrency(selectedExpense.amount)}
+                                    </p>
+                                    <div
+                                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                                        style={{ background: `${cfg.color}20` }}
+                                    >
+                                        <span className="h-3 w-3 rounded-full" style={{ background: cfg.color }} />
+                                    </div>
+                                </div>
+                                {(selectedExpense.description || selectedExpense.vehicle) && (
+                                    <p className="mt-2 text-[14px] text-gray-400">
+                                        {[selectedExpense.description, selectedExpense.vehicle?.licensePlate]
+                                            .filter(Boolean).join(' · ')}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Detalle */}
+                            <div className="flex-1 px-6 py-5">
+                                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                    Detalle
+                                </p>
+                                <DetailRow label="Fecha"          value={formatFullDate(selectedExpense.expenseDate)} />
+                                {selectedExpense.vehicle && (
+                                    <DetailRow label="Vehículo"   value={selectedExpense.vehicle.licensePlate} />
+                                )}
+                                <DetailRow label="Conductor"      value={selectedExpense.driver.fullName} />
+                                {selectedExpense.description && (
+                                    <DetailRow label="Ruta / Destino" value={selectedExpense.description} />
+                                )}
+                                <DetailRow label="Categoría"      value={cfg.label} />
+
+                                {/* Soporte — solo si hay evidencia */}
+                                {selectedExpense.evidence.length > 0 && (
+                                    <div className="mt-5">
+                                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+                                            Soporte
+                                        </p>
+                                        {selectedExpense.evidence.map(ev => (
+                                            <a
+                                                key={ev.id}
+                                                href={ev.fileUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[13px] font-medium text-gray-700 transition hover:bg-gray-100"
+                                            >
+                                                <FileText size={16} className="shrink-0 text-gray-400" />
+                                                <span className="flex-1 truncate">Ver archivo adjunto</span>
+                                                <ExternalLink size={14} className="shrink-0 text-gray-400" />
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Motivo de rechazo */}
+                                {selectedExpense.status === 'rejected' && selectedExpense.rejectionReason && (
+                                    <div className="mt-4 rounded-xl bg-red-50 p-4">
+                                        <p className="text-[12px] font-semibold uppercase tracking-wider text-red-400">
+                                            Motivo del rechazo
+                                        </p>
+                                        <p className="mt-1 text-[14px] text-red-700">
+                                            {selectedExpense.rejectionReason}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer: acciones / mensaje de estado */}
+                            <div className="border-t border-gray-100 px-6 py-5">
+                                {isApproved && (
+                                    <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-[14px] font-medium text-emerald-700">
+                                        <CheckCircle size={16} className="shrink-0" />
+                                        Este gasto ya fue aprobado.
+                                    </div>
+                                )}
+
+                                {selectedExpense.status === 'rejected' && (
+                                    <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-[14px] font-medium text-red-700">
+                                        <XCircle size={16} className="shrink-0" />
+                                        Este gasto fue rechazado.
+                                    </div>
+                                )}
+
+                                {isPending && !isRejecting && (
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting}
+                                            onClick={() => handleStatusChange('approved')}
+                                            className="flex-1 rounded-xl bg-emerald-500 py-3 text-[14px] font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-50"
+                                        >
+                                            {isSubmitting ? 'Procesando...' : 'Aprobar'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting}
+                                            onClick={() => setIsRejecting(true)}
+                                            className="flex-1 rounded-xl border border-red-200 py-3 text-[14px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                        >
+                                            Rechazar
+                                        </button>
+                                    </div>
+                                )}
+
+                                {isPending && isRejecting && (
+                                    <div className="space-y-3">
+                                        <textarea
+                                            value={rejectionReason}
+                                            onChange={e => setRejectionReason(e.target.value)}
+                                            placeholder="Motivo del rechazo (opcional)"
+                                            rows={3}
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[14px] text-gray-700 outline-none transition focus:border-[#5B5CEB] focus:ring-2 focus:ring-[#5B5CEB]/20"
+                                        />
+                                        <div className="flex gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setIsRejecting(false); setRejectionReason(''); }}
+                                                className="flex-1 rounded-xl border border-gray-200 py-3 text-[14px] font-medium text-gray-600 transition hover:bg-gray-50"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={isSubmitting}
+                                                onClick={() => handleStatusChange('rejected')}
+                                                className="flex-1 rounded-xl bg-red-500 py-3 text-[14px] font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? 'Procesando...' : 'Confirmar rechazo'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </aside>
+                    </>
+                );
+            })()}
 
             <ConsignmentModal
                 isOpen={showConsignment}
