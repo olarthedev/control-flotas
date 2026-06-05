@@ -49,7 +49,7 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
 };
 
 const CARD_SHADOW = '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)';
-const CARD_BORDER = '#ECECF3';
+const CARD_BORDER = 'var(--card-border)';
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 function shiftWeek(weekKey: string, delta: number): string {

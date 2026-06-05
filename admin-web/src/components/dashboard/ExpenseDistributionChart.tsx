@@ -80,7 +80,7 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
                                     <Tooltip
                                         contentStyle={{
                                             background: '#fff',
-                                            border: '1px solid #ECECF3',
+                                            border: '1px solid var(--card-border)',
                                             borderRadius: '10px',
                                             fontSize: '12px',
                                             boxShadow: '0 8px 24px rgba(0,0,0,.08)',

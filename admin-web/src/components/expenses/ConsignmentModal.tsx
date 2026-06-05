@@ -163,7 +163,7 @@ export function ConsignmentModal({
                                 onClick={() => setVehicleOpen(o => !o)}
                                 className="flex w-full items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 text-left transition focus:outline-none"
                                 style={{
-                                    borderColor: vehicleOpen ? '#5B5CEB' : '#ECECF3',
+                                    borderColor: vehicleOpen ? '#5B5CEB' : 'var(--card-border)',
                                     boxShadow: vehicleOpen
                                         ? '0 0 0 3px rgba(91,92,235,0.12), 0 1px 3px rgba(0,0,0,.04)'
                                         : '0 1px 3px rgba(0,0,0,.04)',
@@ -189,7 +189,7 @@ export function ConsignmentModal({
                             {vehicleOpen && (
                                 <div
                                     className="absolute left-0 top-[calc(100%+8px)] z-10 w-full overflow-hidden rounded-2xl border bg-white p-1.5"
-                                    style={{ borderColor: '#ECECF3', boxShadow: '0 20px 60px rgba(0,0,0,.14)' }}
+                                    style={{ borderColor: 'var(--card-border)', boxShadow: '0 20px 60px rgba(0,0,0,.14)' }}
                                 >
                                     {vehicleOptions.map(v => {
                                         const selected = selectedVehicleId === v.vehicleId;
@@ -247,7 +247,7 @@ export function ConsignmentModal({
                         </label>
                         <div
                             className="flex items-center gap-3 rounded-2xl border bg-white px-4 py-3.5"
-                            style={{ borderColor: '#ECECF3', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}
+                            style={{ borderColor: 'var(--card-border)', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}
                         >
                             <div
                                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
