@@ -225,6 +225,12 @@ html.dark [class*="ring-gray-"] {
   --tw-ring-color: var(--dark-border) !important;
 }
 
+html.dark [class*="divide-gray-"] > * + *,
+html.dark [class*="divide-slate-"] > * + *,
+html.dark [class*="divide-zinc-"] > * + * {
+  border-color: var(--dark-border) !important;
+}
+
 html.dark .border-\[\#cfcafe\],
 html.dark .border-\[\#d7cbf8\],
 html.dark .border-\[\#d9d6fe\],
