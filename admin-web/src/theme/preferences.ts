@@ -17,12 +17,12 @@ const LIGHT_PALETTE = {
 };
 
 const DARK_PALETTE = {
-  primary: "#9B87F5",
-  background: "#151521",
-  surface: "#1F2030",
-  text: "#F1F2F8",
-  muted: "#B2B4C6",
-  border: "#36384C",
+  primary: "#818CF8",
+  background: "#08080C",
+  surface: "#121219",
+  text: "#F4F4F7",
+  muted: "#8A8B97",
+  border: "#20202B",
 };
 
 let detachSystemThemeListener: (() => void) | null = null;

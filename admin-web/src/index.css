@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --card-border: #ECECF3;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -49,20 +50,21 @@ body {
 /* Dark mode only: keep light mode untouched. */
 html.dark {
   color-scheme: dark;
-  --dark-bg: #0f1626;
-  --dark-surface: #182238;
-  --dark-surface-soft: #1d2943;
-  --dark-surface-strong: #243251;
-  --dark-text: #eef2fb;
-  --dark-muted: #aab5cc;
-  --dark-border: #33486d;
-  --dark-primary: #9f8cff;
-  --dark-primary-soft: color-mix(in srgb, var(--dark-primary) 24%, var(--dark-surface) 76%);
-  --dark-primary-border: color-mix(in srgb, var(--dark-primary) 56%, var(--dark-border) 44%);
-  --dark-success-bg: #163b2f;
-  --dark-success-bg-soft: #1b4638;
-  --dark-success-text: #8de7bc;
-  --dark-success-border: #2e7860;
+  --dark-bg: #08080c;
+  --dark-surface: #121219;
+  --dark-surface-soft: #121219;
+  --dark-surface-strong: #1b1b24;
+  --dark-text: #f4f4f7;
+  --dark-muted: #8a8b97;
+  --dark-border: #20202b;
+  --dark-primary: #818cf8;
+  --dark-primary-soft: color-mix(in srgb, var(--dark-primary) 18%, var(--dark-surface) 82%);
+  --dark-primary-border: color-mix(in srgb, var(--dark-primary) 44%, var(--dark-border) 56%);
+  --card-border: var(--dark-border);
+  --dark-success-bg: #0f2e22;
+  --dark-success-bg-soft: #143a2c;
+  --dark-success-text: #6ee7a8;
+  --dark-success-border: #1f5a44;
 }
 
 html.dark body {
@@ -89,8 +91,27 @@ html.dark [class*="bg-zinc-200"] {
 
 /* Hardcoded app backgrounds that remained white in dark mode. */
 html.dark .bg-\[\#f8fafc\],
-html.dark .bg-\[\#f6f7fb\] {
+html.dark .bg-\[\#f6f7fb\],
+html.dark .bg-\[\#FAFBFC\],
+html.dark .bg-\[\#fafbfc\] {
   background-color: var(--dark-bg) !important;
+}
+
+/* Alternating table row stripe */
+html.dark .bg-\[\#F5F6FB\],
+html.dark .bg-\[\#f5f6fb\] {
+  background-color: color-mix(in srgb, white 4%, var(--dark-surface) 96%) !important;
+}
+
+/* Hardcoded ECECF3 / gray-100 / slate-100 as Tailwind arbitrary border classes */
+html.dark .border-\[\#ECECF3\],
+html.dark .border-\[\#ececf3\] {
+  border-color: var(--dark-border) !important;
+}
+
+html.dark [class*="border-gray-100"],
+html.dark [class*="border-slate-100"] {
+  border-color: var(--dark-border) !important;
 }
 
 /* Accent-selected backgrounds remain tinted, not white. */
@@ -306,4 +327,35 @@ html.dark .dashboard-intelligence-alert-close {
 
 html.dark .dashboard-intelligence-alert-close:hover {
   color: #eef2ff !important;
+}
+
+/* Segmented tab control — active pill */
+.tab-active {
+  border: 1px solid var(--card-border);
+  background-color: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+html.dark .tab-active {
+  background-color: var(--dark-surface-strong);
+  color: var(--dark-text);
+}
+
+/* Background effects: nodes only in light, diffused color glow only in dark. */
+.ambient-glow {
+  display: none;
+}
+
+html.dark .network-bg {
+  display: none;
+}
+
+html.dark .ambient-glow {
+  display: block;
+  background:
+    radial-gradient(900px 520px at 14% -6%, rgba(99, 102, 241, 0.16), transparent 62%),
+    radial-gradient(820px 520px at 88% 4%, rgba(56, 122, 255, 0.12), transparent 60%),
+    radial-gradient(760px 620px at 70% 100%, rgba(139, 92, 246, 0.10), transparent 60%),
+    radial-gradient(640px 520px at 4% 92%, rgba(45, 212, 191, 0.06), transparent 62%);
 }

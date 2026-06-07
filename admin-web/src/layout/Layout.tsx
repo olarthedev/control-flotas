@@ -38,14 +38,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="bg-[#FAFBFC] min-h-screen overflow-x-hidden">
-      {/* Fondo de nodos — fijo, detrás de todo el contenido */}
+      {/* Fondo de nodos — fijo, detrás de todo el contenido (solo modo claro) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 overflow-hidden"
+        className="network-bg pointer-events-none fixed inset-0 overflow-hidden"
         style={{ top: '64px', zIndex: 0 }}
       >
         <NetworkBackground />
       </div>
+
+      {/* Glow difuminado — fijo, detrás de todo el contenido (solo modo oscuro) */}
+      <div
+        aria-hidden="true"
+        className="ambient-glow pointer-events-none fixed inset-0 overflow-hidden"
+        style={{ zIndex: 0 }}
+      />
 
       {/* TopBar */}
       <div className="fixed top-0 left-0 w-full z-50">
