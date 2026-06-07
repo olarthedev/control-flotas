@@ -55,7 +55,7 @@ export function MaintenanceListWidget({ records }: MaintenanceListWidgetProps) {
                     <p className="text-[12px] text-gray-400">Sin mantenimientos próximos</p>
                 </div>
             ) : (
-                <ul className="divide-y divide-gray-100/60">
+                <ul className="divide-y divide-gray-100/60 dark:divide-[var(--dark-border)]">
                     {shown.map((record) => {
                         const p = PRIORITY[record.type];
                         return (

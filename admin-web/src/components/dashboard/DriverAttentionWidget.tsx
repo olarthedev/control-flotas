@@ -60,7 +60,7 @@ export function DriverAttentionWidget({ drivers }: DriverAttentionWidgetProps) {
                     <p className="text-[12px] text-gray-400">Todos los conductores al día</p>
                 </div>
             ) : (
-                <ul className="divide-y divide-gray-100/60">
+                <ul className="divide-y divide-gray-100/60 dark:divide-[var(--dark-border)]">
                     {shown.map((driver, index) => (
                         <li key={driver.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-gray-50/60">
                             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}>

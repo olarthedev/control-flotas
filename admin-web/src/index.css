@@ -226,8 +226,11 @@ html.dark [class*="ring-gray-"] {
 }
 
 html.dark [class*="divide-gray-"] > * + *,
+html.dark [class*="divide-gray-"] > :not([hidden]) ~ :not([hidden]),
 html.dark [class*="divide-slate-"] > * + *,
-html.dark [class*="divide-zinc-"] > * + * {
+html.dark [class*="divide-slate-"] > :not([hidden]) ~ :not([hidden]),
+html.dark [class*="divide-zinc-"] > * + *,
+html.dark [class*="divide-zinc-"] > :not([hidden]) ~ :not([hidden]) {
   border-color: var(--dark-border) !important;
 }
 

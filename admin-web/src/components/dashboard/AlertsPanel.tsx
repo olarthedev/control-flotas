@@ -69,7 +69,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
             </div>
 
             {/* Alert list */}
-            <ul className="flex flex-col divide-y divide-gray-100/60">
+            <ul className="flex flex-col divide-y divide-gray-100/60 dark:divide-[var(--dark-border)]">
                 {alerts.length === 0 && (
                     <li className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
