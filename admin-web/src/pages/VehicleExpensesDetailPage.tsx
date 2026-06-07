@@ -6,7 +6,7 @@ import {
     X, Check, CheckCircle, XCircle, Eye,
     Droplet, Coffee, MapPin, Home, Wrench, Tag,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { PageHeader } from '../components/layout/PageHeader';
 import {
     fetchExpensesByFilters,
     type ExpenseItem,
@@ -340,78 +340,73 @@ export function VehicleExpensesDetailPage() {
     return (
         <section className="space-y-4">
             {/* ── Header ────────────────────────────────────────────────────── */}
-            <header className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <nav className="mb-4 flex items-center gap-1.5 text-[12px]">
-                        <Link to="/" className="font-medium text-gray-400 hover:text-gray-600 transition">Inicio</Link>
-                        <ChevronRight size={12} className="text-gray-300" />
-                        <Link to="/expenses" className="font-medium text-gray-400 hover:text-gray-600 transition">Gastos</Link>
-                        <ChevronRight size={12} className="text-gray-300" />
-                        <span className="font-semibold text-[#5B5CEB]">Control por ruta</span>
-                    </nav>
-                    <h1 className="text-[26px] font-bold leading-tight tracking-tight text-gray-900">
-                        Control de gastos
-                    </h1>
-                    <p className="mt-2 max-w-[560px] text-[15px] leading-relaxed text-gray-500">
-                        Revisa y aprueba gastos por semana, visualiza saldos a favor y exporta reportes.
-                    </p>
-                </div>
+            <PageHeader
+                breadcrumbs={[
+                    { label: 'Inicio', to: '/' },
+                    { label: 'Gastos', to: '/expenses' },
+                    'Control por ruta',
+                ]}
+                title="Control de gastos"
+                subtitle="Revisa y aprueba gastos por semana, visualiza saldos a favor y exporta reportes."
+                actions={
+                    <>
+                        {/* Vehicle dropdown */}
+                        <div ref={vehicleMenuRef} className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setVehicleMenuOpen(o => !o)}
+                                className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[14px] font-medium text-gray-700 transition hover:bg-gray-50"
+                                style={{ borderColor: CARD_BORDER }}
+                            >
+                                <Car size={14} className="text-gray-400" />
+                                {selectedVehicleLabel}
+                                <ChevronDown size={13} className={`text-gray-400 transition-transform ${vehicleMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
 
-                <div className="flex shrink-0 items-center gap-2.5">
-                    {/* Vehicle dropdown */}
-                    <div ref={vehicleMenuRef} className="relative">
+                            {vehicleMenuOpen && (
+                                <div
+                                    className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[220px] overflow-hidden rounded-2xl border bg-white shadow-xl"
+                                    style={{ borderColor: CARD_BORDER, boxShadow: '0 16px 48px rgba(0,0,0,.12)' }}
+                                >
+                                    <div className="p-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleVehicleSelect(null)}
+                                            className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === null ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                            Todos los vehículos
+                                        </button>
+                                        {vehicleOptions.map(v => (
+                                            <button
+                                                key={v.vehicleId}
+                                                type="button"
+                                                onClick={() => handleVehicleSelect(v.vehicleId)}
+                                                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === v.vehicleId ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
+                                            >
+                                                <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[14px] font-semibold text-gray-600">
+                                                    {v.licensePlate}
+                                                </span>
+                                                <span className="truncate text-gray-500">{v.driverName}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Consignar */}
                         <button
                             type="button"
-                            onClick={() => setVehicleMenuOpen(o => !o)}
-                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-3.5 py-2 text-[14px] font-medium text-gray-700 transition hover:bg-gray-50"
-                            style={{ borderColor: CARD_BORDER }}
+                            onClick={() => setShowConsignment(true)}
+                            className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-semibold text-white shadow-sm transition hover:opacity-90"
+                            style={{ background: '#5B5CEB' }}
                         >
-                            <Car size={14} className="text-gray-400" />
-                            {selectedVehicleLabel}
-                            <ChevronDown size={13} className={`text-gray-400 transition-transform ${vehicleMenuOpen ? 'rotate-180' : ''}`} />
+                            <DollarSign size={14} />
+                            Consignar
                         </button>
-
-                        {vehicleMenuOpen && (
-                            <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[220px] overflow-hidden rounded-2xl border bg-white shadow-xl"
-                                style={{ borderColor: CARD_BORDER, boxShadow: '0 16px 48px rgba(0,0,0,.12)' }}>
-                                <div className="p-1.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleVehicleSelect(null)}
-                                        className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === null ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
-                                    >
-                                        Todos los vehículos
-                                    </button>
-                                    {vehicleOptions.map(v => (
-                                        <button
-                                            key={v.vehicleId}
-                                            type="button"
-                                            onClick={() => handleVehicleSelect(v.vehicleId)}
-                                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] transition ${selectedVehicleId === v.vehicleId ? 'bg-[rgba(91,92,235,0.1)] font-semibold text-[#5B5CEB]' : 'text-gray-700 hover:bg-gray-50'}`}
-                                        >
-                                            <span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[14px] font-semibold text-gray-600">
-                                                {v.licensePlate}
-                                            </span>
-                                            <span className="truncate text-gray-500">{v.driverName}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Consignar */}
-                    <button
-                        type="button"
-                        onClick={() => setShowConsignment(true)}
-                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-semibold text-white shadow-sm transition hover:opacity-90"
-                        style={{ background: '#5B5CEB' }}
-                    >
-                        <DollarSign size={14} />
-                        Consignar
-                    </button>
-                </div>
-            </header>
+                    </>
+                }
+            />
 
             {/* ── Tabs + legend ─────────────────────────────────────────────── */}
             <div className="flex items-center justify-between">
@@ -541,7 +536,7 @@ export function VehicleExpensesDetailPage() {
                 <button
                     type="button"
                     onClick={() => setCategoryFilter('all')}
-                    className={`rounded-full px-3 py-1 text-[14px] font-medium transition ${categoryFilter === 'all' ? 'border-b-2 border-[#5B5CEB] text-[#5B5CEB]' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`rounded-full px-3 py-1 text-[14px] font-medium transition ${categoryFilter === 'all' ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'}`}
                 >
                     Todos
                 </button>

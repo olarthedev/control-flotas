@@ -261,6 +261,14 @@ html.dark [class*="hover:bg-indigo-100"] {
   background-color: transparent !important;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 html.dark input:not([type="color"]),
 html.dark select,
 html.dark textarea {
