@@ -40,7 +40,7 @@ export function StatCard({
         <article
             className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border bg-white p-5"
             style={{
-                borderColor: '#ECECF3',
+                borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
                 minHeight: '128px',
             }}

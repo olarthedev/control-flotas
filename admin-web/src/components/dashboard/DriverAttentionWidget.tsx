@@ -30,7 +30,7 @@ export function DriverAttentionWidget({ drivers }: DriverAttentionWidgetProps) {
         <section
             className="flex h-full w-full flex-col rounded-2xl border bg-white"
             style={{
-                borderColor: '#ECECF3',
+                borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
             }}
         >
@@ -45,7 +45,7 @@ export function DriverAttentionWidget({ drivers }: DriverAttentionWidgetProps) {
                 <Link
                     to="/drivers"
                     className="flex h-7 w-7 items-center justify-center rounded-lg border text-gray-400 transition hover:border-gray-300 hover:text-gray-600"
-                    style={{ borderColor: '#ECECF3' }}
+                    style={{ borderColor: 'var(--card-border)' }}
                     title="Ver todos"
                 >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

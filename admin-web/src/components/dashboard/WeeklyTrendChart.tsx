@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div
             className="rounded-xl border bg-white px-4 py-3"
             style={{
-                borderColor: '#ECECF3',
+                borderColor: 'var(--card-border)',
                 boxShadow: '0 8px 24px rgba(0,0,0,.10)',
                 fontSize: '12px',
             }}
@@ -48,7 +48,7 @@ export function WeeklyTrendChart({ data }: WeeklyTrendChartProps) {
         <section
             className="flex h-full w-full flex-col rounded-2xl border bg-white p-5"
             style={{
-                borderColor: '#ECECF3',
+                borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
             }}
         >
@@ -91,7 +91,7 @@ export function WeeklyTrendChart({ data }: WeeklyTrendChartProps) {
                                 <stop offset="95%" stopColor="#E05A5A" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid stroke="#F3F4F6" strokeDasharray="0" vertical={false} />
+                        <CartesianGrid stroke="var(--card-border)" strokeDasharray="0" vertical={false} />
                         <XAxis
                             dataKey="day"
                             tick={{ fontSize: 11, fill: '#9CA3AF', fontWeight: 500 }}

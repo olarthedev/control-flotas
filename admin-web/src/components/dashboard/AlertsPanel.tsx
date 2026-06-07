@@ -46,7 +46,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
         <section
             className="flex h-full w-full flex-col rounded-2xl border bg-white"
             style={{
-                borderColor: '#ECECF3',
+                borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
             }}
         >

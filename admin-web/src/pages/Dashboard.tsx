@@ -202,12 +202,12 @@ export const Dashboard = () => {
                 <DashboardTopBar />
                 <div className="grid grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-32 animate-pulse rounded-2xl border bg-white" style={{ borderColor: '#ECECF3' }} />
+                        <div key={i} className="h-32 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
                     ))}
                 </div>
                 <div className="mt-4 grid grid-cols-12 gap-4">
-                    <div className="col-span-7 h-64 animate-pulse rounded-2xl border bg-white" style={{ borderColor: '#ECECF3' }} />
-                    <div className="col-span-5 h-64 animate-pulse rounded-2xl border bg-white" style={{ borderColor: '#ECECF3' }} />
+                    <div className="col-span-7 h-64 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
+                    <div className="col-span-5 h-64 animate-pulse rounded-2xl border bg-white" style={{ borderColor: 'var(--card-border)' }} />
                 </div>
             </div>
         );

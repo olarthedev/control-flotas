@@ -29,7 +29,7 @@ export function DashboardTopBar() {
                 <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[13px] font-medium text-gray-600 transition hover:bg-gray-50"
-                    style={{ borderColor: '#ECECF3' }}
+                    style={{ borderColor: 'var(--card-border)' }}
                 >
                     <CalendarDays size={14} className="text-gray-400" />
                     Esta semana

@@ -34,7 +34,7 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
         <section
             className="flex h-full w-full flex-col rounded-2xl border bg-white p-5"
             style={{
-                borderColor: '#ECECF3',
+                borderColor: 'var(--card-border)',
                 boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)',
             }}
         >
@@ -119,7 +119,7 @@ export function ExpenseDistributionChart({ data, totalApproved, approvedTrend }:
 
                     {/* Bottom summary */}
                     {topItem && (
-                        <div className="mt-4 flex items-end justify-between border-t pt-4" style={{ borderColor: '#F3F4F6' }}>
+                        <div className="mt-4 flex items-end justify-between border-t pt-4" style={{ borderColor: 'var(--card-border)' }}>
                             <div>
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">
                                     Rubro principal
