@@ -58,7 +58,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="fixed top-0 left-0 w-full z-50">
         <TopBar
           isSidebarCollapsed={isSidebarCollapsed}
-          onToggleSidebar={() => setIsSidebarCollapsed((current) => !current)}
+          onToggleSidebar={() => {
+            setIsSidebarCollapsed(current => !current);
+            setIsSidebarHovered(false);
+          }}
           sidebarWidth={sidebarWidth}
           effectiveSidebarWidth={effectiveSidebarWidth}
           isSidebarExpanded={isSidebarExpanded}

@@ -253,8 +253,8 @@ export const TopBar: React.FC<TopBarProps> = ({
                             transitionDelay: isSidebarExpanded ? "90ms" : "0ms",
                         }}
                     >
-                        <div className="text-[17px] font-bold text-gray-900 leading-none tracking-tight">
-                            LogiControl
+                        <div className="brand-glitch text-[21px] leading-none tracking-tight">
+                            <span className="font-normal text-[#5B5CEB] dark:text-[#c4b5fd]">in</span><span className="font-bold text-gray-900">Truck</span>
                         </div>
                     </div>
 

@@ -261,6 +261,16 @@ html.dark [class*="hover:bg-indigo-100"] {
   background-color: transparent !important;
 }
 
+.brand-glitch {
+  text-shadow: none;
+}
+
+html.dark .brand-glitch {
+  text-shadow:
+    -1.5px 0 rgba(255, 80, 80, 0.60),
+    1.5px 0 rgba(80, 110, 255, 0.60);
+}
+
 button:not(:disabled) {
   cursor: pointer;
 }
