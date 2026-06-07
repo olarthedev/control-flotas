@@ -522,6 +522,11 @@ export function VehicleExpensesDetailPage() {
                         <ChevronRight size={15} />
                     </button>
                 </div>
+                {selectedWeek === getCurrentWeekKey() && (
+                    <span className="text-[13px] font-semibold text-[#5B5CEB] dark:text-[#818cf8]">
+                        Semana actual
+                    </span>
+                )}
                 <span className="text-[14px] text-gray-400">
                     Lun → Dom · {allExpenses.length} gasto{allExpenses.length !== 1 ? 's' : ''}
                 </span>
@@ -536,7 +541,7 @@ export function VehicleExpensesDetailPage() {
                 <button
                     type="button"
                     onClick={() => setCategoryFilter('all')}
-                    className={`rounded-full px-3 py-1 text-[14px] font-medium transition ${categoryFilter === 'all' ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`rounded-full px-3 py-1 text-[13px] font-medium transition ${categoryFilter === 'all' ? 'bg-[rgba(91,92,235,0.12)] font-semibold text-[#5B5CEB] dark:bg-[rgba(129,140,248,0.22)] dark:text-[#818cf8]' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                 >
                     Todos
                 </button>
@@ -545,7 +550,7 @@ export function VehicleExpensesDetailPage() {
                         key={type}
                         type="button"
                         onClick={() => setCategoryFilter(type)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-medium transition ${categoryFilter === type ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800'}`}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium transition ${categoryFilter === type ? 'bg-[rgba(91,92,235,0.12)] font-semibold text-[#5B5CEB] dark:bg-[rgba(129,140,248,0.22)] dark:text-[#818cf8]' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                     >
                         <span className="h-2 w-2 rounded-full" style={{ background: cfg.color }} />
                         {cfg.label}
