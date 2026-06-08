@@ -245,7 +245,7 @@ export function Sidebar({ isCollapsed, isExpanded, sidebarWidth, onHoverChange }
                           ref={item.path === "/expenses" ? expensesBadgeRef : null}
                           onMouseEnter={item.path === "/expenses" ? openExpensesTooltip : undefined}
                           onMouseLeave={item.path === "/expenses" ? scheduleExpensesTooltipClose : undefined}
-                          className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#f26419] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm"
+                          className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold shadow-sm ${active ? 'bg-[#5B5CEB] text-white' : 'bg-slate-200 text-slate-500'}`}
                         >
                           {item.badge}
                         </span>
